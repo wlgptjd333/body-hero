@@ -1,0 +1,19 @@
+# ML pose classifier (data collection / training / inference)
+# Use: pip install -r requirements_ml.txt (Python 3.9–3.12)
+# Note: TensorFlow does not support Python 3.14 yet.
+mediapipe>=0.10.30
+opencv-python
+numpy
+scikit-learn
+tensorflow>=2.15
+flask
+
+# ML 포즈 분류용 (데이터 수집·학습·추론 서버)
+# 사용: Python 3.9~3.12 가상환경에서 pip install -r requirements_ml.txt
+# 참고: TensorFlow는 Python 3.14 미지원. 3.14 사용 중이면 아래 "Python 버전" 참고.
+mediapipe>=0.10.30
+opencv-python
+numpy
+scikit-learn
+tensorflow>=2.15
+flask

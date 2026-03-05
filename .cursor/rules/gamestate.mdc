@@ -1,0 +1,37 @@
+---
+description: Health Fighter에서 GameState AutoLoad 싱글톤을 통해 HP, 스태미너, 제자리걸음 등 전역 상태를 관리하는 규칙.
+alwaysApply: false
+globs:
+  - "scripts/game_state.gd"
+  - "scripts/player.gd"
+  - "scripts/enemy.gd"
+  - "scripts/main.gd"
+---
+
+# GameState - 전역 상태 관리
+
+## 기본 원칙
+
+- `scripts/game_state.gd`는 AutoLoad 싱글톤 `GameState`로 등록되어 있다.
+- HP/스태미너/제자리걸음/플레이어 체력 비율 등 **게임 전역 수치**는 모두 `GameState`를 통해서만 읽고 쓴다.
+
+## 제공 함수/상수 활용
+
+- 스태미너:
+  - `GameState.STAMINA_JAB`, `GameState.STAMINA_HOOK`, `GameState.STAMINA_UPPERCUT`
+  - `GameState.consume_stamina(amount: float) -> bool`
+  - `GameState.get_stamina_ratio() -> float`
+- HP:
+  - `GameState.player_hp`, `GameState.player_max_hp`
+  - `GameState.get_player_hp_ratio() -> float`
+- 제자리걸음/회복:
+  - `GameState.is_jogging`, `GameState.tick_jog()`, `GameState.set_jogging(on: bool)`
+  - `_process`에서 `STAMINA_RECOVER_PER_SEC`를 기준으로 회복
+
+## 확장 시 규칙
+
+- 새로운 전역 수치(예: 콤보 게이지, 가드 게이지)를 도입할 때:
+  1. `game_state.gd`에 필드/상수/보조 함수를 정의
+  2. HUD, 플레이어, 적 등 다른 스크립트는 `GameState`만 참조
+- 동일한 정보를 각 씬/노드에 중복 저장하는 변수를 만들지 않는다.
+

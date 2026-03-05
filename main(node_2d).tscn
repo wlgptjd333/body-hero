@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://bq0llgabovour"]
+
+[sub_resource type="ImageTexture" id="ImageTexture_yqhnj"]
+
+[node name="Main(Node2D)" type="Node2D" unique_id=1960419433]
+
+[node name="Background(Sprite2D)" type="Sprite2D" parent="." unique_id=819446951]
+
+[node name="Enemy(CharacterBody2D)" type="CharacterBody2D" parent="." unique_id=1871282240]
+
+[node name="AnimatableBody2D" type="AnimatableBody2D" parent="Enemy(CharacterBody2D)" unique_id=1300425843]
+
+[node name="Player(Node2D)" type="Node2D" parent="." unique_id=3688440]
+
+[node name="LeftGlove(Sprite2D)" type="Sprite2D" parent="Player(Node2D)" unique_id=1152736656]
+texture = SubResource("ImageTexture_yqhnj")
+
+[node name="RightGlove(Sprite2D)" type="Sprite2D" parent="Player(Node2D)" unique_id=1812406899]
+
+[node name="HUD(CanvasLayer)" type="CanvasLayer" parent="." unique_id=1622764681]

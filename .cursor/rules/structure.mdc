@@ -1,0 +1,41 @@
+---
+description: Health Fighter 프로젝트의 Godot 씬/스크립트/도구 구조와 각 파일의 역할을 정리한 규칙. 구조를 깨지 않고 기존 역할에 맞춰 코드를 추가하도록 돕는다.
+alwaysApply: false
+globs:
+  - "project.godot"
+  - "scenes/**/*.tscn"
+  - "scripts/**/*.gd"
+---
+
+# Structure - 프로젝트 구조 및 역할
+
+## 엔진/버전
+
+- 이 프로젝트는 **Godot 4.6.1**을 기준으로 한다.
+- 사용자가 명시적으로 요청하지 않는 한, Godot 버전을 올리거나 `project.godot` 포맷을 변경하자는 제안을 하지 않는다.
+
+## 주요 구조
+
+- 메인 진입 씬: `scenes/main.tscn`
+- 메인 게임 스크립트: `scripts/main.gd` (UDP 수신 + 글러브 위치 보정)
+- 전역 상태(싱글톤): `scripts/game_state.gd` (AutoLoad `GameState`)
+- 플레이어 글러브 로직: `scripts/player.gd`
+- 적/히트 판정: `scripts/enemy.gd`
+- Python/ML/UDP 도구: `tools/*.py` (웹캠, 마우스 테스트, 포즈 판정 등)
+
+## 구조 변경 시 원칙
+
+- 위 역할을 존중하는 방향으로 코드를 작성하고, 한 파일에 여러 책임을 섞지 않는다.
+- 새로운 기능을 추가할 때:
+  - 전역 수치/상태: `GameState`에 추가
+  - 플레이어 동작/애니: `player.gd`에 추가
+  - 적 피격/HP: `enemy.gd`에 추가
+  - UDP 수신/파싱: `main.gd`에서 처리
+  - 웹캠/ML/UDP 전송: `tools/*.py`에서 처리
+
+## 씬/리소스 편집
+
+- `.tscn` 파일은 텍스트로 직접 수정할 수 있으나, **노드 구조 변경/리소스 연결**은 가능하면 Godot 에디터에서 수행하도록 안내한다.
+- 코드 제안 시:
+  - 노드 이름/경로를 추측해서 바꾸기보다는, 기존 이름을 존중하거나 에디터에서 확인하도록 유도한다.
+

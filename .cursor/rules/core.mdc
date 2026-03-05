@@ -1,0 +1,39 @@
+---
+description: Health Fighter 프로젝트에서 Godot 4.6.1 GDScript 코드를 작성할 때 항상 지켜야 할 핵심 규칙. GDScript 2 문법, 타입 힌트, snake_case, 공식 문서 우선, GameState 싱글톤 활용 원칙을 정의한다.
+alwaysApply: true
+globs:
+  - "**/*.gd"
+  - "project.godot"
+---
+
+# Core - Godot 4.6.1 / GDScript 규칙
+
+## 공식 문서 우선
+
+- Godot/GDScript 관련 API, 클래스, 메서드, 시그니처는 **항상 Godot 4.6 stable 공식 문서**를 1차 기준으로 삼는다.
+  - [Godot 4.6 공식 문서](https://docs.godotengine.org/en/stable/)
+- API 이름이 확실하지 않을 때는 **새 API를 지어내지 말고**, 이미 문서에 존재하는 메서드/속성만 사용한다.
+
+## GDScript 2 스타일
+
+- **언어/버전**: GDScript 2 (Godot 4.x) 문법을 사용한다.
+- **타입 힌트**:
+  - 가능하면 변수/함수 모두 타입을 명시한다.
+  - 예: `var stamina: float = 100.0`, `func _process(delta: float) -> void:`
+- **이름 규칙**:
+  - 변수, 함수, 상수 이름은 snake_case를 기본으로 한다.
+  - 상수는 대문자 스네이크(`STAMINA_JAB`)를 사용한다.
+- **라이프사이클 함수**:
+  - `_ready`, `_process`, `_physics_process`, 신호 콜백 등 Godot 라이프사이클 함수에 맞춰 로직을 배치한다.
+  - 별도의 전역 루프(while true 등)를 새로 만들지 않는다.
+
+## 상태 관리 - GameState 싱글톤
+
+- HP/스태미너/제자리걸음 등 게임 전역 상태는 **반드시 AutoLoad 싱글톤 `GameState`**를 통해 관리한다.
+  - 예: `GameState.consume_stamina(GameState.STAMINA_JAB)`
+  - 예: `GameState.get_stamina_ratio()`, `GameState.get_player_hp_ratio()`
+- 씬/노드 안에 전역과 같은 의미의 값을 중복 저장하는 새 필드를 만들지 않는다.
+- 새로운 전역 수치를 추가해야 할 때는:
+  1. `GameState`에 필드/상수 추가
+  2. 다른 스크립트는 `GameState`를 통해 접근
+

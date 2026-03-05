@@ -1,0 +1,38 @@
+---
+description: Health Fighter에서 플레이어/적의 펀치, 가드, 회피 애니메이션과 히트박스 on/off 패턴을 다룰 때 지켜야 할 규칙.
+alwaysApply: false
+globs:
+  - "scripts/player.gd"
+  - "scripts/enemy.gd"
+---
+
+# Animation & Hitbox - Tween 패턴
+
+## 플레이어 글러브 애니메이션 (player.gd)
+
+- 기본 패턴:
+  - `_busy` 플래그로 동작 중 중복 입력 방지
+  - `_guarding` 등 상태 플래그로 가드 상태 관리
+  - `_play_jab`, `_play_hook`, `_play_uppercut`, `_play_guard_enter`, `_play_guard_exit`, `_play_dodge` 등 전용 함수에서 Tween 생성
+  - `create_tween()` + `set_parallel(true/false)`로 위치/스케일을 함께 조정
+- 히트박스 on/off:
+  - `_set_glove_hit(glove, enabled)`에서 `collision_layer`를 토글
+  - 펀치 임팩트 구간에만 `true`, 나머지 구간은 `false`
+
+## 새 동작 추가 규칙
+
+새 펀치/동작을 추가할 때는 다음 순서를 따른다:
+
+1. (필요 시) `GameState`에 스태미너 상수 추가 (`STAMINA_*`)
+2. `player.gd`의 `play_action`에 새 액션 분기 추가
+3. 기존 `_play_*` 함수 패턴을 복사해 새 동작용 함수를 만든다.
+4. Tween 안에서:
+   - 시작 시 기본 위치/스케일 복원
+   - 임팩트 직전/후에 `_set_glove_hit`으로 충돌 켜기/끄기
+5. 마지막에 콜백에서 `_busy = false`로 상태를 되돌린다.
+
+## 적 히트 판정 (enemy.gd)
+
+- 가능하면 플레이어 글러브의 히트 레이어/마스크 설정을 기준으로 피격 판정을 구현한다.
+- 히트 레이어 값은 상수로 관리하고, 숫자 리터럴(예: `2`)을 여러 곳에 중복해서 쓰지 않는다.
+

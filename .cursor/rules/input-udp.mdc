@@ -1,0 +1,44 @@
+---
+description: Health Fighter에서 InputMap, 키 입력, UDP 데이터 포맷, 액션 문자열과 play_action 패턴을 다룰 때 지켜야 할 규칙.
+alwaysApply: false
+globs:
+  - "scripts/main.gd"
+  - "scripts/player.gd"
+  - "tools/**/*.py"
+---
+
+# Input & UDP - 액션/포맷 규칙
+
+## InputMap / 키보드 입력
+
+- README에 정의된 InputMap 이름을 그대로 사용한다:
+  - `punch_left`, `punch_right`
+  - `upper_left`, `upper_right`
+  - `guard` (및 필요 시 `guard_end`)
+- 키보드 예시는 항상 다음 경로 기준으로 설명한다:
+  - `프로젝트 → 프로젝트 설정(Project Settings) → Input Map`
+- 새 액션 추가 시:
+  1. InputMap에 액션 이름 등록
+  2. `player.gd`의 `_process`/`play_action` 패턴을 따라 분기 추가
+
+## UDP 데이터 포맷 (절대 변경 금지)
+
+- **좌표 기반 모드**: `"left_x,left_y,right_x,right_y"`
+- **액션 기반 모드 (threshold/ML 공통)**:
+  - `"jab_l"`, `"jab_r"`, `"upper_l"`, `"upper_r"`, `"hook_l"`, `"hook_r"`, `"guard"`, `"guard_end"`
+
+**규칙**:
+
+- GDScript 쪽에서 **UDP 데이터 포맷을 변경하거나 새 포맷을 제안하지 않는다.**
+- 포맷 변경/확장은 항상 Python/ML 쪽(`tools/*.py`, `pose_server.py` 등)에서만 처리하도록 안내한다.
+
+## play_action 연동
+
+- UDP로 받은 액션 문자열을 해석할 때는 가능하면 `player.gd`의 `play_action(action: String)`을 호출하는 구조를 유지한다.
+- 새 액션(예: `"cross_l"`)을 도입할 때 권장 순서:
+  1. (필요하면) `GameState`에 `STAMINA_CROSS` 상수 추가
+  2. `player.gd`의 `play_action`에 `"cross_l"` 분기 추가
+  3. `_play_cross` 등의 전용 함수 작성 (기존 `_play_jab` 패턴 복사/수정)
+  4. `_set_glove_hit` 호출로 히트박스 on/off 구간 설정
+  5. `_busy` 플래그 체크/설정을 기존 패턴과 동일하게 유지
+

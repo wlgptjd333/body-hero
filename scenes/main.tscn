@@ -1,0 +1,218 @@
+[gd_scene format=3 uid="uid://7kbu855s0lc2"]
+
+[ext_resource type="Script" uid="uid://jyn3p6dy5xk0" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://d05ifnr4s4ngl" path="res://scripts/player.gd" id="2_player"]
+[ext_resource type="Script" uid="uid://clkrypd4h0gr4" path="res://scripts/enemy.gd" id="3_enemy"]
+[ext_resource type="Texture2D" uid="uid://dh1fwlysevax3" path="res://assets/textures/bg/bg_leftovers_ko.png" id="4_bg"]
+[ext_resource type="Texture2D" uid="uid://wdgjqx3sn4qn" path="res://assets/textures/characters/placeholder_glove.svg" id="5_glove"]
+[ext_resource type="Texture2D" uid="uid://c2urlw4ldm82g" path="res://assets/textures/characters/placeholder_enemy.svg" id="6_enemy"]
+[ext_resource type="AudioStream" uid="uid://bdde7gq6tn0t5" path="res://assets/audio/sfx/sfx_punch_hit.wav" id="7_hit"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(80, 100)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_glove"]
+size = Vector2(24, 24)
+
+[node name="Main" type="Node2D" unique_id=1572593569]
+script = ExtResource("1_main")
+
+[node name="Background" type="Sprite2D" parent="." unique_id=1284943906]
+position = Vector2(576, 324)
+texture = ExtResource("4_bg")
+
+[node name="Enemy" type="Node2D" parent="." unique_id=2072129645]
+position = Vector2(576, 280)
+script = ExtResource("3_enemy")
+
+[node name="Sprite2D" type="Sprite2D" parent="Enemy" unique_id=1932976256]
+scale = Vector2(4, 4)
+texture = ExtResource("6_enemy")
+
+[node name="HitSound" type="AudioStreamPlayer" parent="Enemy" unique_id=1728256143]
+stream = ExtResource("7_hit")
+
+[node name="Hitbox" type="Area2D" parent="Enemy" unique_id=2021066205]
+position = Vector2(0, 20)
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy/Hitbox" unique_id=778437540]
+shape = SubResource("RectangleShape2D_hitbox")
+
+[node name="Player" type="Node2D" parent="." unique_id=1714765436]
+position = Vector2(576, 500)
+script = ExtResource("2_player")
+
+[node name="LeftGlove" type="Area2D" parent="Player" unique_id=551696513]
+position = Vector2(-80, 0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/LeftGlove" unique_id=1638369496]
+scale = Vector2(2, 2)
+texture = ExtResource("5_glove")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/LeftGlove" unique_id=1134440812]
+shape = SubResource("RectangleShape2D_glove")
+
+[node name="RightGlove" type="Area2D" parent="Player" unique_id=943256665]
+position = Vector2(80, 0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/RightGlove" unique_id=474359649]
+scale = Vector2(2, 2)
+texture = ExtResource("5_glove")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/RightGlove" unique_id=966375476]
+shape = SubResource("RectangleShape2D_glove")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=924921472]
+
+[node name="TopBar" type="Control" parent="HUD" unique_id=978807284]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 40.0
+offset_top = 20.0
+offset_right = -40.0
+offset_bottom = 72.0
+grow_horizontal = 2
+
+[node name="EnemyHPLabel" type="Label" parent="HUD/TopBar" unique_id=207978804]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 22.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 16
+text = "ENEMY"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EnemyHPBarBg" type="ColorRect" parent="HUD/TopBar" unique_id=711000928]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -14.0
+offset_bottom = 14.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.2, 0.15, 0.15, 0.92)
+
+[node name="EnemyHPBarFill" type="ColorRect" parent="HUD/TopBar" unique_id=1315400903]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -14.0
+offset_bottom = 14.0
+grow_vertical = 2
+color = Color(0.9, 0.25, 0.2, 0.95)
+
+[node name="BottomBars" type="Control" parent="HUD" unique_id=1181706802]
+layout_mode = 3
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -120.0
+offset_right = -40.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="PlayerHPLabel" type="Label" parent="HUD/BottomBars" unique_id=928252941]
+layout_mode = 1
+offset_right = 80.0
+offset_bottom = 28.0
+theme_override_font_sizes/font_size = 14
+text = "HP"
+
+[node name="PlayerHPBarBg" type="ColorRect" parent="HUD/BottomBars" unique_id=277781212]
+layout_mode = 1
+offset_left = 88.0
+offset_right = 388.0
+offset_bottom = 28.0
+color = Color(0.15, 0.12, 0.12, 0.92)
+
+[node name="PlayerHPBarFill" type="ColorRect" parent="HUD/BottomBars" unique_id=921988005]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.5
+anchor_bottom = 1.0
+offset_left = 88.0
+offset_right = 388.0
+offset_bottom = 28.0
+grow_vertical = 2
+color = Color(0.2, 0.75, 0.35, 0.95)
+
+[node name="StaminaLabel" type="Label" parent="HUD/BottomBars" unique_id=589231087]
+layout_mode = 1
+offset_top = 36.0
+offset_right = 80.0
+offset_bottom = 64.0
+theme_override_font_sizes/font_size = 14
+text = "STAMINA"
+
+[node name="PlayerStaminaBarBg" type="ColorRect" parent="HUD/BottomBars" unique_id=654661167]
+layout_mode = 1
+offset_left = 88.0
+offset_top = 36.0
+offset_right = 388.0
+offset_bottom = 64.0
+color = Color(0.15, 0.14, 0.1, 0.92)
+
+[node name="PlayerStaminaBarFill" type="ColorRect" parent="HUD/BottomBars" unique_id=1620210767]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.5
+anchor_bottom = 1.0
+offset_left = 88.0
+offset_top = 36.0
+offset_right = 388.0
+offset_bottom = 64.0
+grow_vertical = 2
+color = Color(0.95, 0.8, 0.2, 0.95)
+
+[node name="BGM" type="AudioStreamPlayer" parent="." unique_id=981556812]
+volume_db = -6.0
+
+[node name="PauseLayer" type="CanvasLayer" parent="." unique_id=159195956]
+process_mode = 1
+visible = false
+
+[node name="PauseOverlay" type="ColorRect" parent="PauseLayer" unique_id=232127143]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.05, 0.06, 0.75)
+
+[node name="PauseVBox" type="VBoxContainer" parent="PauseLayer" unique_id=1627383563]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -80.0
+offset_right = 120.0
+offset_bottom = 80.0
+theme_override_constants/separation = 16
+
+[node name="PauseLabel" type="Label" parent="PauseLayer/PauseVBox" unique_id=2068167561]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "일시정지"
+horizontal_alignment = 1
+
+[node name="BtnPauseSettings" type="Button" parent="PauseLayer/PauseVBox" unique_id=1857433933]
+layout_mode = 2
+text = "설정"
+
+[node name="BtnPauseQuit" type="Button" parent="PauseLayer/PauseVBox" unique_id=1318215608]
+layout_mode = 2
+text = "나가기"

@@ -1,0 +1,79 @@
+[gd_scene load_steps=2 format=3 uid="uid://how_to_play_panel"]
+
+[ext_resource type="Script" path="res://scripts/ui/how_to_play_panel.gd" id="1_script"]
+
+[node name="HowToPlayPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.08, 0.1, 0.9)
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -240.0
+offset_right = 320.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = -20.0
+offset_bottom = -20.0
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "← 뒤로"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Content" type="RichTextLabel" parent="Panel/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = "[b]Health Fighter[/b] — 웹캠 1인칭 피트니스 복싱 게임
+
+[b]준비[/b]
+• Godot으로 게임 실행 후, tools 폴더에서 [code]python udp_send_webcam.py[/code] 실행
+• 웹캠에 비치는 동작으로 펀치·가드·회피·제자리걸음을 인식합니다
+
+[b]조작 (웹캠)</b]
+• [b]잽[/b]: 한 손을 앞으로 빠르게 뻗기
+• [b]어퍼컷[/b]: 한 손을 위로 빠르게 올리기
+• [b]가드[/b]: 양손을 얼굴 앞에 모아 유지
+• [b]회피[/b]: 몸을 좌우로 확실히 움직이기
+• [b]제자리걸음[/b]: 어깨를 위아래로 요동 (스태미너 회복)
+
+[b]키보드 (테스트용)[/b]
+• A: 왼손 잽  D: 오른손 잽  Q/E: 어퍼컷  S: 가드
+
+[b]목표[/b]
+• 적의 체력을 0으로 만들어 KO 시키세요. 스태미너를 관리하면서 펀치와 회피를 활용하세요."

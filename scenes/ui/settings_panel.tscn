@@ -1,0 +1,155 @@
+[gd_scene load_steps=2 format=3 uid="uid://settings_panel"]
+
+[ext_resource type="Script" path="res://scripts/ui/settings_panel.gd" id="1_script"]
+
+[node name="SettingsPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.1, 0.1, 0.12, 0.88)
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -260.0
+offset_right = 220.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scroll" type="ScrollContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="BackButton" type="Button" parent="Panel/Scroll/VBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "← 뒤로"
+
+[node name="ResolutionSection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ResolutionSection"]
+layout_mode = 2
+text = "해상도 설정"
+
+[node name="ResolutionRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ResolutionSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ResolutionSection/ResolutionRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "해상도"
+
+[node name="OptionButton" type="OptionButton" parent="Panel/Scroll/VBox/ResolutionSection/ResolutionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 0
+selected = -1
+
+[node name="SoundSection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/SoundSection"]
+layout_mode = 2
+text = "소리 설정"
+
+[node name="MasterRow" type="HBoxContainer" parent="Panel/Scroll/VBox/SoundSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/SoundSection/MasterRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "전체 볼륨"
+
+[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/SoundSection/MasterRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
+value = 80.0
+
+[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/SoundSection/MasterRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "80%"
+
+[node name="GameRow" type="HBoxContainer" parent="Panel/Scroll/VBox/SoundSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/SoundSection/GameRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "게임 볼륨"
+
+[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/SoundSection/GameRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
+value = 100.0
+
+[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/SoundSection/GameRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "100%"
+
+[node name="MusicRow" type="HBoxContainer" parent="Panel/Scroll/VBox/SoundSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/SoundSection/MusicRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "음악 볼륨"
+
+[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/SoundSection/MusicRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
+value = 100.0
+
+[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/SoundSection/MusicRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "100%"
+
+[node name="ApplyButton" type="Button" parent="Panel/Scroll/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "적용"
