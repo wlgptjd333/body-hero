@@ -1,17 +1,17 @@
-# Health Fighter
+# Body Hero
 
-웹캠 1인칭 헬스 복싱 게임 (Godot 4.6)
+웹캠 1인칭 헬스 복싱 게임 (Godot 4.6) — Punch your screen to fight! Real-time body tracking with webcam.
 
 ## CMD 명령어 정리 (Windows)
 
 프로젝트 폴더로 이동:
 ```cmd
-cd c:\Users\User\Documents\health-fighter
+cd c:\Users\User\Documents\body-hero
 ```
 
 **웹캠으로 게임 플레이 (threshold 판정):**
 ```cmd
-cd c:\Users\User\Documents\health-fighter\tools
+cd c:\Users\User\Documents\body-hero\tools
 pip install mediapipe opencv-python
 python udp_send_webcam.py
 ```
@@ -19,7 +19,7 @@ python udp_send_webcam.py
 
 **ML(딥러닝) 판정 사용 시 (데이터 수집 → 학습 → 서버 → ML 웹캠):**
 ```cmd
-cd c:\Users\User\Documents\health-fighter\tools
+cd c:\Users\User\Documents\body-hero\tools
 py -3.12 -m venv venv_ml
 venv_ml\Scripts\activate
 pip install -r requirements_ml.txt
@@ -29,14 +29,14 @@ python pose_server.py
 ```
 다른 터미널에서:
 ```cmd
-cd c:\Users\User\Documents\health-fighter\tools
+cd c:\Users\User\Documents\body-hero\tools
 venv_ml\Scripts\activate
 python udp_send_webcam_ml.py
 ```
 
 **마우스로 글러브 테스트:**
 ```cmd
-cd c:\Users\User\Documents\health-fighter\tools
+cd c:\Users\User\Documents\body-hero\tools
 python udp_send_mouse.py
 ```
 
