@@ -419,6 +419,18 @@ def main():
                     cv2.putText(frame_small, f"RECORD {RECORD_FRAMES} frames", (20, 52), cv2.FONT_HERSHEY_DUPLEX, 0.8, (0, 255, 200), 2)
                     cv2.putText(frame_small, f"{n_frame}/{RECORD_FRAMES}", (process_w // 2 - 45, 90), cv2.FONT_HERSHEY_DUPLEX, 1.2, (0, 255, 100), 3)
                     cv2.putText(frame_small, label, (20, 120), cv2.FONT_HERSHEY_DUPLEX, 0.7, (255, 255, 255), 2)
+                    # 녹화 중에도 뼈대 표시 (평상시와 동일)
+                    if result.pose_landmarks and len(result.pose_landmarks) > 0:
+                        lm = result.pose_landmarks[0]
+                        h, w = frame_small.shape[0], frame_small.shape[1]
+                        for (i, j) in POSE_CONNECTIONS:
+                            if i < len(lm) and j < len(lm):
+                                a = (int(lm[i].x * w), int(lm[i].y * h))
+                                b = (int(lm[j].x * w), int(lm[j].y * h))
+                                cv2.line(frame_small, a, b, (0, 255, 100), 2)
+                        for p in lm:
+                            x, y = int(p.x * w), int(p.y * h)
+                            cv2.circle(frame_small, (x, y), 4, (0, 200, 255), -1)
                     cv2.imshow("Pose data collection", frame_small)
                     if cv2.waitKey(1) & 0xFF == ord("q"):
                         recording_aborted = True
@@ -426,6 +438,17 @@ def main():
 
                 if recording_aborted:
                     continue
+                # 포즈 손실로 60프레임 미만이면 패딩(마지막 프레임 복제) 또는 해당 회차 스킵 → 60프레임 단위 유지
+                if len(frames_flat) < RECORD_FRAMES:
+                    shortfall = RECORD_FRAMES - len(frames_flat)
+                    if len(frames_flat) >= 50:
+                        last = frames_flat[-1] if frames_flat else None
+                        while len(frames_flat) < RECORD_FRAMES and last is not None:
+                            frames_flat.append(last)
+                        print(f"  [경고] 포즈 손실로 {shortfall}프레임 부족 → 마지막 프레임으로 패딩하여 {RECORD_FRAMES}프레임 유지")
+                    else:
+                        print(f"  [스킵] 프레임 수 부족 ({len(frames_flat)}/{RECORD_FRAMES}). 해당 회차 저장 안 함. 다시 녹화해 주세요.")
+                        continue
                 labeled, impact_idx = _label_recorded_frames(
                     label, frames_flat,
                     hold_frames=args.hold_frames,

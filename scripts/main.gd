@@ -94,6 +94,7 @@ func _process(_delta: float) -> void:
 		return
 	_update_ui_bars()
 	_server.poll()
+	var action_applied_this_frame := false
 	while _server.is_connection_available():
 		var peer: PacketPeerUDP = _server.take_connection()
 		var packet: PackedByteArray = peer.get_packet()
@@ -103,16 +104,22 @@ func _process(_delta: float) -> void:
 		_received_count += 1
 		if _debug_received and _received_count == 1:
 			print("UDP 수신됨! (액션 연동 정상) 데이터: ", data)
-		_apply_glove_data(data)
+		# jog가 아닌 액션은 프레임당 1회만 적용 (UDP 버스트로 같은 동작이 여러 번 들어오는 것 방지)
+		if data != "jog" and action_applied_this_frame:
+			continue
+		if _apply_glove_data(data):
+			action_applied_this_frame = true
 
 
-func _apply_glove_data(data: String) -> void:
+func _apply_glove_data(data: String) -> bool:
 	if data in VALID_ACTIONS:
 		if data == "jog":
 			GameState.tick_jog()
+			return false
 		elif _player.has_method("play_action"):
 			_player.play_action(data)
-		return
+			return true
+		return false
 	# 레거시: "left_x,left_y,right_x,right_y" (디버그용, _use_position_mode 시에만)
 	if _use_position_mode:
 		var parts := data.split(",")
@@ -127,6 +134,8 @@ func _apply_glove_data(data: String) -> void:
 				Vector2(lx * view_size.x, ly * view_size.y) - player_global,
 				Vector2(rx * view_size.x, ry * view_size.y) - player_global
 			)
+			return true
+	return false
 
 
 func _get_view_size() -> Vector2:

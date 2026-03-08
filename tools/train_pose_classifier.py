@@ -172,7 +172,18 @@ def main():
         counts_after = Counter(y)
         print(f"균형 조정 후 (ratio={args.balance_ratio}, 최대 다수 클래스={max_per_class}):", {class_names[i]: counts_after.get(i, 0) for i in range(len(class_names))})
 
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=args.val, stratify=y, random_state=42)
+    try:
+        X_train, X_val, y_train, y_val = train_test_split(
+            X, y, test_size=args.val, stratify=y, random_state=42
+        )
+    except ValueError as e:
+        if "stratify" in str(e).lower() or "least" in str(e).lower():
+            print("경고: 클래스별 샘플이 너무 적어 stratify 불가. 무작위 분할로 진행합니다.")
+            X_train, X_val, y_train, y_val = train_test_split(
+                X, y, test_size=args.val, random_state=42
+            )
+        else:
+            raise
     X_train_orig, y_train_orig = X_train.copy(), y_train.copy()
     rng_aug = np.random.RandomState(43)
 
