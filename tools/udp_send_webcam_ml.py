@@ -78,7 +78,7 @@ def predict_action(landmarks_flat):
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=0.1) as resp:
+        with urllib.request.urlopen(req, timeout=0.35) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             return data.get("result"), float(data.get("confidence", 0.0))
     except Exception:
@@ -194,7 +194,7 @@ def main():
                     x, y = int(p.x * w), int(p.y * h)
                     cv2.circle(frame_small, (x, y), 4, (0, 200, 255), -1)
 
-            cv2.imshow("Health Fighter — ML Pose", frame_small)
+            cv2.imshow("Body Hero — ML Pose", frame_small)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
             elapsed = time.time() - t0
