@@ -1,5 +1,5 @@
 ---
-description: Health Fighter 프로젝트에서 Godot 4.6.1 GDScript 코드를 작성할 때 항상 지켜야 할 핵심 규칙. GDScript 2 문법, 타입 힌트, snake_case, 공식 문서 우선, GameState 싱글톤 활용 원칙을 정의한다.
+description: Body Hero 프로젝트에서 Godot 4.6.1 GDScript 코드를 작성할 때 항상 지켜야 할 핵심 규칙. GDScript 2 문법, 타입 힌트, snake_case, 공식 문서 우선, GameState 싱글톤 활용 원칙을 정의한다.
 alwaysApply: true
 globs:
   - "**/*.gd"

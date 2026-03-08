@@ -1,5 +1,5 @@
 ---
-description: Health Fighter에서 플레이어/적의 펀치, 가드, 회피 애니메이션과 히트박스 on/off 패턴을 다룰 때 지켜야 할 규칙.
+description: Body Hero에서 플레이어/적의 펀치, 가드, 회피 애니메이션과 히트박스 on/off 패턴을 다룰 때 지켜야 할 규칙.
 alwaysApply: false
 globs:
   - "scripts/player.gd"

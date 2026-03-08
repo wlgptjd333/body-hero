@@ -1,13 +1,13 @@
 ---
-name: godot-health-fighter-4-6
-description: Godot 4.6.1 기반 Health Fighter 복싱 게임에서 GDScript, 씬, UDP 연동을 수정하거나 확장할 때 프로젝트 구조와 ML 파이프라인을 안전하게 유지하도록 돕는 스킬. Godot 4.6, GDScript, main.tscn, GameState, UDP 웹캠/ML 연동 작업이 언급될 때 사용한다.
+name: godot-body-hero-4-6
+description: Godot 4.6.1 기반 Body Hero 복싱 게임에서 GDScript, 씬, UDP 연동을 수정하거나 확장할 때 프로젝트 구조와 ML 파이프라인을 안전하게 유지하도록 돕는 스킬. Godot 4.6, GDScript, main.tscn, GameState, UDP 웹캠/ML 연동 작업이 언급될 때 사용한다.
 ---
 
-# Godot Health Fighter 4.6
+# Godot Body Hero 4.6
 
 ## 목적
 
-이 스킬은 **Health Fighter** 프로젝트에서 Godot 4.6.1과 GDScript를 다룰 때,
+이 스킬은 **Body Hero** 프로젝트에서 Godot 4.6.1과 GDScript를 다룰 때,
 
 - 기존 **씬/스크립트 구조**를 존중하고,
 - **전역 상태(GameState)**와 **UDP/ML 연동 규칙**을 지키며,
@@ -46,7 +46,7 @@ description: Godot 4.6.1 기반 Health Fighter 복싱 게임에서 GDScript, 씬
 
 - 엔진 전반의 기능, 노드/씬 구조, GDScript 문법, 베스트 프랙티스에 대해서는 **Godot 4.6 공식 문서**를 1차 기준으로 삼는다.  
   - [Godot 4.6 공식 문서](https://docs.godotengine.org/en/stable/)
-- 이 스킬은 위 문서의 내용을 **Health Fighter 프로젝트 구조와 UDP/ML 파이프라인에 맞게 적용**하는 역할을 한다.
+- 이 스킬은 위 문서의 내용을 **Body Hero 프로젝트 구조와 UDP/ML 파이프라인에 맞게 적용**하는 역할을 한다.
 
 ---
 
@@ -235,4 +235,3 @@ Godot 입장에서는:
   - Godot 쪽 수정이 필요한지 여부를 명확히 구분해 말한다.
 
 이 스킬을 사용할 때는 항상 **프로젝트에 이미 존재하는 패턴을 우선 관찰하고, 거기에 자연스럽게 이어 붙이는 형태**로 코드를 제안한다.
-

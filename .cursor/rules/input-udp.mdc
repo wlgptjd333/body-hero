@@ -1,5 +1,5 @@
 ---
-description: Health Fighter에서 InputMap, 키 입력, UDP 데이터 포맷, 액션 문자열과 play_action 패턴을 다룰 때 지켜야 할 규칙.
+description: Body Hero에서 InputMap, 키 입력, UDP 데이터 포맷, 액션 문자열과 play_action 패턴을 다룰 때 지켜야 할 규칙.
 alwaysApply: false
 globs:
   - "scripts/main.gd"

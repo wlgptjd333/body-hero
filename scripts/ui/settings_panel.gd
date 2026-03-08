@@ -110,7 +110,9 @@ func _apply_resolution() -> void:
 	var r: Vector2i = RESOLUTIONS[idx]
 	var w := get_viewport().get_window()
 	if w:
-		w.size = r
+		# 전체화면/최대화 시에는 창 크기가 바뀌지 않으므로, 먼저 창 모드로 전환한 뒤 크기 적용
+		w.set_mode(Window.MODE_WINDOWED)
+		w.set_size(r)
 
 
 func _apply_volumes() -> void:

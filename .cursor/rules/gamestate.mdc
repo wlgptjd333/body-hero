@@ -1,5 +1,5 @@
 ---
-description: Health Fighter에서 GameState AutoLoad 싱글톤을 통해 HP, 스태미너, 제자리걸음 등 전역 상태를 관리하는 규칙.
+description: Body Hero에서 GameState AutoLoad 싱글톤을 통해 HP, 스태미너, 제자리걸음 등 전역 상태를 관리하는 규칙.
 alwaysApply: false
 globs:
   - "scripts/game_state.gd"

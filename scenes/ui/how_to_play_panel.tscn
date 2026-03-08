@@ -59,7 +59,7 @@ size_flags_vertical = 3
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
-text = "[b]Health Fighter[/b] — 웹캠 1인칭 피트니스 복싱 게임
+text = "[b]Body Hero[/b] — 웹캠 1인칭 피트니스 복싱 게임
 
 [b]준비[/b]
 • Godot으로 게임 실행 후, tools 폴더에서 [code]python udp_send_webcam.py[/code] 실행

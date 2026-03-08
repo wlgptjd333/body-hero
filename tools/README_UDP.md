@@ -36,7 +36,7 @@ pip install mediapipe opencv-python
 
 실행 (CMD):
 ```cmd
-cd c:\Users\User\Documents\health-fighter\tools
+cd c:\Users\User\Documents\body-hero\tools
 python udp_send_webcam.py
 ```
 프로젝트 루트에서라면:

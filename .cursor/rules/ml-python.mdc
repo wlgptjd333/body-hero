@@ -1,5 +1,5 @@
 ---
-description: Health Fighter의 Python ML/UDP 도구와 Godot 사이 연동에 대한 규칙. Godot 쪽에서는 UDP 액션/좌표 인터페이스를 유지하고, ML 로직은 tools/*.py에서만 변경하도록 한다.
+description: Body Hero의 Python ML/UDP 도구와 Godot 사이 연동에 대한 규칙. Godot 쪽에서는 UDP 액션/좌표 인터페이스를 유지하고, ML 로직은 tools/*.py에서만 변경하도록 한다.
 alwaysApply: false
 globs:
   - "tools/**/*.py"

@@ -1,5 +1,5 @@
 ---
-description: Health Fighter 프로젝트의 Godot 씬/스크립트/도구 구조와 각 파일의 역할을 정리한 규칙. 구조를 깨지 않고 기존 역할에 맞춰 코드를 추가하도록 돕는다.
+description: Body Hero 프로젝트의 Godot 씬/스크립트/도구 구조와 각 파일의 역할을 정리한 규칙. 구조를 깨지 않고 기존 역할에 맞춰 코드를 추가하도록 돕는다.
 alwaysApply: false
 globs:
   - "project.godot"

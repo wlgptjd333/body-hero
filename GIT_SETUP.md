@@ -5,22 +5,16 @@
 - `.gitignore`에 `tools/venv_ml/`, `venv/` 추가 (가상환경 제외)
 - `git init` 실행됨 (저장소 생성됨)
 
-## 폴더 이름 바꾸기 (원할 경우)
-Cursor에서 이 폴더를 **닫은 뒤**, 탐색기에서  
-`c:\Users\User\Documents\health-fighter` → `body-hero` 로 이름 변경한 다음,  
-`c:\Users\User\Documents\body-hero` 를 Cursor에서 다시 열면 됩니다.
+## 폴더 이름 (현재)
+프로젝트 폴더는 **body-hero** 기준입니다. 터미널/경로는 `c:\Users\User\Documents\body-hero` 를 사용하세요.
 
 ## GitHub 연동 (직접 실행할 명령)
 
 **1) Lock 파일 정리**  
 다른 Git 작업이 없다면, 탐색기에서 아래 파일이 있으면 삭제하세요.  
-`health-fighter\.git\index.lock`
+`body-hero\.git\index.lock`
 
 **2) 터미널에서 프로젝트 폴더로 이동**
-```powershell
-cd "c:\Users\User\Documents\health-fighter"
-```
-(폴더 이름을 body-hero로 바꿨다면)
 ```powershell
 cd "c:\Users\User\Documents\body-hero"
 ```

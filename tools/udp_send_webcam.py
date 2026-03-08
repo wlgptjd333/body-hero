@@ -382,7 +382,7 @@ def main():
                     x, y = int(p.x * w), int(p.y * h)
                     cv2.circle(frame_small, (x, y), 4, (0, 200, 255), -1)
 
-            cv2.imshow("Health Fighter — Pose", frame_small)
+            cv2.imshow("Body Hero — Pose", frame_small)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
 
