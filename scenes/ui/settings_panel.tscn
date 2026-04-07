@@ -149,6 +149,225 @@ layout_mode = 2
 size_flags_vertical = 1
 text = "100%"
 
+[node name="HealthSection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection"]
+layout_mode = 2
+text = "헬스 정보"
+
+[node name="GenderRow" type="HBoxContainer" parent="Panel/Scroll/VBox/HealthSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection/GenderRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "성별"
+
+[node name="GenderOption" type="OptionButton" parent="Panel/Scroll/VBox/HealthSection/GenderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 4
+selected = 0
+popup/item_0/text = "미입력(기준값)"
+popup/item_0/id = 0
+popup/item_1/text = "남성"
+popup/item_1/id = 1
+popup/item_2/text = "여성"
+popup/item_2/id = 2
+popup/item_3/text = "기타"
+popup/item_3/id = 3
+
+[node name="AgeRow" type="HBoxContainer" parent="Panel/Scroll/VBox/HealthSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection/AgeRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "나이"
+
+[node name="AgeSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/HealthSection/AgeRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
+step = 1.0
+value = 0.0
+
+[node name="HeightRow" type="HBoxContainer" parent="Panel/Scroll/VBox/HealthSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection/HeightRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "키(cm)"
+
+[node name="HeightSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/HealthSection/HeightRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 220.0
+step = 0.5
+value = 0.0
+
+[node name="WeightRow" type="HBoxContainer" parent="Panel/Scroll/VBox/HealthSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection/WeightRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "체중(kg)"
+
+[node name="WeightSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/HealthSection/WeightRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 180.0
+step = 0.5
+value = 0.0
+
+[node name="IntensityRow" type="HBoxContainer" parent="Panel/Scroll/VBox/HealthSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection/IntensityRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "운동 강도 보정"
+
+[node name="IntensityOption" type="OptionButton" parent="Panel/Scroll/VBox/HealthSection/IntensityRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 3
+selected = 1
+popup/item_0/text = "완화 (0.9x)"
+popup/item_0/id = 0
+popup/item_1/text = "기본 (1.0x)"
+popup/item_1/id = 1
+popup/item_2/text = "강함 (1.1x)"
+popup/item_2/id = 2
+
+[node name="KeySection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection"]
+layout_mode = 2
+text = "키보드 설정"
+
+[node name="KeyRowPunchLeft" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchLeft"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "왼손 잽"
+
+[node name="KeyBtnPunchLeft" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchLeft"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "A"
+
+[node name="KeyRowPunchRight" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchRight"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "오른손 잽"
+
+[node name="KeyBtnPunchRight" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchRight"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "D"
+
+[node name="KeyRowUpperLeft" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowUpperLeft"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "왼쪽 어퍼컷"
+
+[node name="KeyBtnUpperLeft" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowUpperLeft"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Q"
+
+[node name="KeyRowUpperRight" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowUpperRight"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "오른쪽 어퍼컷"
+
+[node name="KeyBtnUpperRight" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowUpperRight"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "E"
+
+[node name="KeyRowHookLeft" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowHookLeft"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "왼손 훅"
+
+[node name="KeyBtnHookLeft" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowHookLeft"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Z"
+
+[node name="KeyRowHookRight" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowHookRight"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "오른손 훅"
+
+[node name="KeyBtnHookRight" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowHookRight"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "C"
+
+[node name="KeyRowGuard" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowGuard"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "가드"
+
+[node name="KeyBtnGuard" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowGuard"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Space"
+
 [node name="ApplyButton" type="Button" parent="Panel/Scroll/VBox"]
 layout_mode = 2
 size_flags_horizontal = 4

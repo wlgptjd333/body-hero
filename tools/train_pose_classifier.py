@@ -2,10 +2,14 @@
 포즈 분류 모델 학습: pose_data.json(정규화된 랜드마크) → Dense 네트워크 → none, guard, jab_l, jab_r, upper_l, upper_r, hook_l, hook_r.
 졸업작품용: 클래스 불균형 보정(class_weight), EarlyStopping, 회전/스케일/좌우반전 증강으로 다양한 사람·각도·거리 견고성 확보.
 
+좌우반전(flip-augment): 라벨만 L↔R 바꿔 추가. 반대편 정확도 떨어뜨리지 않음.
+반대편 유지하면서 약한 쪽만 보강: --extra-augment-weak jab_r,upper_l (해당 클래스만 노이즈·회전 추가 증강, 가중치 변경 없음).
+학습 횟수(녹화 횟수) 늘리기: jab_r, upper_l을 더 많이 녹화한 뒤 재학습해도 L/R 균형에 도움.
+
 저장: pose_classifier.keras, training_history.json (학습 곡선), classification_report.txt (클래스별 정확도)
 
 실행: cd tools → python train_pose_classifier.py
-옵션: --data pose_data.json --model pose_classifier.keras --epochs 120 --augment 0.02 --view-augment --flip-augment
+옵션: --extra-augment-weak jab_r,upper_l  (약한 쪽만 추가 증강, 반대편 유지)
 """
 import os
 import json
@@ -51,6 +55,34 @@ def load_data(path, class_names, skip_labels=None):
     return X, y
 
 
+def subsample_consecutive_blocks(X_list, y_list, max_per_block, rng):
+    """
+    같은 라벨이 연속된 구간(블록)마다 최대 max_per_block개만 랜덤 샘플링.
+    한 녹화에서 나온 40프레임 jab_l → 5프레임만 쓰는 식으로 중복·과적합 완화.
+    max_per_block <= 0 이면 샘플링 안 함.
+    """
+    if max_per_block <= 0 or len(y_list) == 0:
+        return X_list, y_list
+    # 연속 동일 라벨 구간 찾기
+    runs = []
+    i = 0
+    while i < len(y_list):
+        j = i
+        while j < len(y_list) and y_list[j] == y_list[i]:
+            j += 1
+        runs.append((i, j))
+        i = j
+    indices = []
+    for start, end in runs:
+        n = end - start
+        if n > max_per_block:
+            chosen = rng.choice(n, size=max_per_block, replace=False)
+            indices.extend((start + chosen).tolist())
+        else:
+            indices.extend(range(start, end))
+    return [X_list[i] for i in indices], [y_list[i] for i in indices]
+
+
 def apply_rotation_scale(X, rng, angle_deg_range=15.0, scale_range=(0.9, 1.1)):
     """2D 회전(±angle_deg) + 균일 스케일(scale_range) 적용. 정규화된 (x,y)에 대해 다양한 각도·거리 시뮬레이션."""
     out = np.empty_like(X)
@@ -65,6 +97,19 @@ def apply_rotation_scale(X, rng, angle_deg_range=15.0, scale_range=(0.9, 1.1)):
             row[j, 0] = (x * c - y * s) * scale
             row[j, 1] = (x * s + y * c) * scale
             row[j, 2] = z * scale
+        out[i] = row.flatten()
+    return out.astype(np.float32)
+
+
+def apply_translation(X, rng, max_shift=0.04):
+    """x, y에 작은 평행이동 추가. 카메라/몸 위치 오프셋 시뮬레이션."""
+    out = np.empty_like(X)
+    for i in range(len(X)):
+        row = X[i].reshape(NUM_LANDMARKS, 3).copy()
+        tx = rng.uniform(-max_shift, max_shift)
+        ty = rng.uniform(-max_shift, max_shift)
+        row[:, 0] += tx
+        row[:, 1] += ty
         out[i] = row.flatten()
     return out.astype(np.float32)
 
@@ -102,12 +147,12 @@ def main():
     parser.add_argument("--model", default=DEFAULT_MODEL, help="Output model path (.keras or .h5)")
     parser.add_argument("--epochs", type=int, default=120, help="Max training epochs (EarlyStopping으로 조기 종료)")
     parser.add_argument("--val", type=float, default=0.2, help="Validation split ratio")
-    parser.add_argument("--augment", type=float, default=0.02, help="Gaussian noise std for augmentation (0=off)")
-    parser.add_argument("--patience", type=int, default=18, help="EarlyStopping patience (epochs)")
+    parser.add_argument("--augment", type=float, default=0.03, help="Gaussian noise std for augmentation (0=off)")
+    parser.add_argument("--patience", type=int, default=22, help="EarlyStopping patience (epochs)")
     parser.add_argument("--classes", type=str, default=None,
                         help="Comma-separated classes only (e.g. none,jab_l). Load and train only those (sanity check).")
-    parser.add_argument("--balance-ratio", type=float, default=5.0,
-                        help="Downsample majority class so it has at most (smallest_class * this). 0 = no balancing. Default 5.")
+    parser.add_argument("--balance-ratio", type=float, default=4.0,
+                        help="Downsample majority class so it has at most (smallest_class * this). 0 = no balancing. Default 4.")
     parser.add_argument("--view-augment", action="store_true", default=True,
                         help="Apply rotation+scale augmentation (diverse angles/distances). Default on.")
     parser.add_argument("--no-view-augment", action="store_false", dest="view_augment",
@@ -116,6 +161,26 @@ def main():
                         help="Add horizontally flipped samples with L/R labels swapped. Default on.")
     parser.add_argument("--no-flip-augment", action="store_false", dest="flip_augment",
                         help="Disable flip augmentation.")
+    parser.add_argument("--balance-lr-pairs", action="store_true", default=True,
+                        help="After augment, oversample minority side of jab/upper/hook L:R pairs (default on).")
+    parser.add_argument("--no-balance-lr-pairs", action="store_false", dest="balance_lr_pairs",
+                        help="Disable L/R pair oversampling.")
+    parser.add_argument("--lr-oversample-max-ratio", type=float, default=6.0,
+                        help="Max factor to grow minority class per L/R pair toward majority count.")
+    parser.add_argument("--translate-augment", action="store_true", default=True,
+                        help="Add small x/y translation (camera offset). Default on.")
+    parser.add_argument("--no-translate-augment", action="store_false", dest="translate_augment",
+                        help="Disable translation augmentation.")
+    parser.add_argument("--max-frames-per-block", type=int, default=8,
+                        help="같은 라벨 연속 구간당 최대 N프레임만 랜덤 사용 (중복·과적합 완화). 0=제한 없음. 기본 8.")
+    parser.add_argument("--boost-classes", type=str, default=None,
+                        help="[트레이드오프 있음] recall 낮은 클래스만 복제+가중치. 반대편이 약해질 수 있음.")
+    parser.add_argument("--boost-weight", type=float, default=1.5,
+                        help="--boost-classes 사용 시 해당 클래스 class_weight 배수.")
+    parser.add_argument("--extra-augment-weak", type=str, default=None,
+                        help="recall 낮은 클래스만 노이즈·회전 추가 증강 (반대편 유지). 쉼표 구분 (예: jab_r,upper_l).")
+    parser.add_argument("--units", type=str, default="128,64",
+                        help="Dense 레이어 뉴런 수 쉼표 구분 (예: 256,128). 기본 128,64.")
     args = parser.parse_args()
 
     class_names = [c.strip() for c in args.classes.split(",")] if args.classes else ALL_CLASS_NAMES.copy()
@@ -140,6 +205,12 @@ def main():
     if len(X) < 30:
         print(f"샘플이 너무 적습니다 ({len(X)}개). 최소 30개 이상 수집 후 다시 실행하세요.")
         raise SystemExit(1)
+
+    # 연속 동일 라벨 구간당 최대 N프레임만 사용 (랜덤 프레임 샘플링)
+    rng_load = np.random.RandomState(42)
+    X, y = subsample_consecutive_blocks(X, y, args.max_frames_per_block, rng_load)
+    if args.max_frames_per_block > 0:
+        print(f"블록당 최대 {args.max_frames_per_block}프레임 샘플링 후: {len(X)}개")
 
     X = np.array(X, dtype=np.float32)
     label_to_idx = {c: i for i, c in enumerate(class_names)}
@@ -198,6 +269,17 @@ def main():
         X_train = np.concatenate([X_train, X_view], axis=0)
         y_train = np.concatenate([y_train, y_train_orig], axis=0)
         print(f"증강(회전±15°/스케일 0.9~1.1): 학습 샘플 {len(X_train)}")
+        rng_view2 = np.random.RandomState(44)
+        X_view2 = apply_rotation_scale(X_train_orig, rng_view2, angle_deg_range=20.0, scale_range=(0.85, 1.15))
+        X_train = np.concatenate([X_train, X_view2], axis=0)
+        y_train = np.concatenate([y_train, y_train_orig], axis=0)
+        print(f"증강(회전±20°/스케일 0.85~1.15): 학습 샘플 {len(X_train)}")
+    if args.translate_augment:
+        rng_trans = np.random.RandomState(45)
+        X_trans = apply_translation(X_train_orig, rng_trans, max_shift=0.04)
+        X_train = np.concatenate([X_train, X_trans], axis=0)
+        y_train = np.concatenate([y_train, y_train_orig], axis=0)
+        print(f"증강(x/y 평행이동 ±0.04): 학습 샘플 {len(X_train)}")
     if args.flip_augment:
         X_flip = apply_horizontal_flip(X_train_orig)
         flip_swap = build_flip_label_swap(class_names)
@@ -206,20 +288,81 @@ def main():
         y_train = np.concatenate([y_train, y_flip], axis=0)
         print(f"증강(좌우반전+L/R라벨스왑): 학습 샘플 {len(X_train)}")
 
-    # 클래스 가중치 (소수 클래스에 더 높은 가중치 → 학습 안정)
+    if args.balance_lr_pairs:
+        from lr_pose_utils import oversample_lr_minorities
+
+        rng_lr = np.random.RandomState(46)
+        n_before = len(X_train)
+        X_train, y_train = oversample_lr_minorities(
+            X_train,
+            y_train,
+            class_names,
+            rng_lr,
+            max_ratio=float(args.lr_oversample_max_ratio),
+        )
+        print(
+            f"L/R 쌍 소수 오버샘플(max_ratio={args.lr_oversample_max_ratio}): "
+            f"{n_before} → {len(X_train)} (train)"
+        )
+
+    # (1) 약한 클래스만 추가 증강: 노이즈+회전으로 샘플 수만 늘림. class_weight 안 건드림 → 반대편 유지
+    weak_class_indices = None
+    if args.extra_augment_weak:
+        names_weak = [s.strip() for s in args.extra_augment_weak.split(",") if s.strip()]
+        weak_class_indices = set()
+        for name in names_weak:
+            if name in label_to_idx:
+                weak_class_indices.add(label_to_idx[name])
+        if weak_class_indices:
+            mask = np.isin(y_train, list(weak_class_indices))
+            X_weak = X_train[mask].copy()
+            y_weak = y_train[mask].copy()
+            rng_weak = np.random.RandomState(99)
+            X_weak_noise = X_weak + rng_weak.normal(0, args.augment if args.augment > 0 else 0.02, X_weak.shape).astype(np.float32)
+            X_weak_rot = apply_rotation_scale(X_weak, rng_weak, angle_deg_range=12.0, scale_range=(0.92, 1.08))
+            X_train = np.concatenate([X_train, X_weak_noise, X_weak_rot], axis=0)
+            y_train = np.concatenate([y_train, y_weak, y_weak], axis=0)
+            print(f"약한 클래스만 추가 증강(노이즈+회전): {names_weak} → 학습 샘플 {len(X_train)} (반대편 유지)")
+
+    # (2) [선택] boost-classes: 복제 + class_weight 배수 (트레이드오프 있음)
+    boost_class_indices = None
+    if args.boost_classes:
+        names_boost = [s.strip() for s in args.boost_classes.split(",") if s.strip()]
+        boost_class_indices = set()
+        for name in names_boost:
+            if name in label_to_idx:
+                boost_class_indices.add(label_to_idx[name])
+        if boost_class_indices:
+            mask = np.isin(y_train, list(boost_class_indices))
+            X_extra = X_train[mask]
+            y_extra = y_train[mask]
+            X_train = np.concatenate([X_train, X_extra], axis=0)
+            y_train = np.concatenate([y_train, y_extra], axis=0)
+            print(f"보강(복제+가중치): {names_boost} → 학습 샘플 {len(X_train)} [반대편 약해질 수 있음]")
+
+    # 클래스 가중치 (balanced. --boost-classes 쓸 때만 해당 클래스에 배수 적용)
     classes = np.unique(y_train)
     weights = compute_class_weight("balanced", classes=classes, y=y_train)
     class_weight = dict(zip(classes, weights))
-    print("class_weight (balanced):", {class_names[i]: round(float(w), 3) for i, w in zip(classes, weights)})
+    if boost_class_indices and args.boost_weight != 1.0:
+        for c in boost_class_indices:
+            if c in class_weight:
+                class_weight[c] = float(class_weight[c]) * args.boost_weight
+        print("class_weight (balanced + 보강클래스 배수):", {class_names[i]: round(float(class_weight.get(i, 0)), 3) for i in range(num_classes) if i in class_weight})
+    else:
+        print("class_weight (balanced):", {class_names[i]: round(float(w), 3) for i, w in zip(classes, weights)})
 
-    model = tf.keras.Sequential([
-        tf.keras.layers.Dense(128, activation="relu", input_shape=(FEATURE_DIM,)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Dropout(0.3),
-        tf.keras.layers.Dense(64, activation="relu"),
-        tf.keras.layers.Dropout(0.25),
-        tf.keras.layers.Dense(num_classes, activation="softmax"),
-    ])
+    units = [int(u.strip()) for u in args.units.split(",") if u.strip()]
+    if not units:
+        units = [128, 64]
+    layers = [tf.keras.layers.Dense(units[0], activation="relu", input_shape=(FEATURE_DIM,))]
+    layers.append(tf.keras.layers.BatchNormalization())
+    layers.append(tf.keras.layers.Dropout(0.3))
+    for u in units[1:]:
+        layers.append(tf.keras.layers.Dense(u, activation="relu"))
+        layers.append(tf.keras.layers.Dropout(0.25))
+    layers.append(tf.keras.layers.Dense(num_classes, activation="softmax"))
+    model = tf.keras.Sequential(layers)
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
         loss="sparse_categorical_crossentropy",
@@ -232,6 +375,13 @@ def main():
         restore_best_weights=True,
         verbose=1,
     )
+    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor="val_loss",
+        factor=0.5,
+        patience=7,
+        min_lr=1e-6,
+        verbose=1,
+    )
 
     print(f"\n학습 데이터: {len(X_train)} / 검증: {len(X_val)}")
     print("클래스:", class_names)
@@ -241,7 +391,7 @@ def main():
         epochs=args.epochs,
         batch_size=32,
         class_weight=class_weight,
-        callbacks=[early],
+        callbacks=[early, reduce_lr],
         verbose=1,
     )
 
@@ -269,8 +419,14 @@ def main():
         y_val, y_val_pred, labels=list(range(num_classes)), target_names=class_names, digits=4, zero_division=0
     )
     print("[검증 세트 분류 리포트]\n" + report)
+    cm_val = confusion_matrix(y_val, y_val_pred, labels=list(range(num_classes)))
     print("혼동 행렬 (validation):")
-    print(confusion_matrix(y_val, y_val_pred, labels=list(range(num_classes))))
+    print(cm_val)
+
+    from lr_pose_utils import lr_confusion_hints
+
+    lr_hints = lr_confusion_hints(class_names, cm_val)
+    print("\n[L/R 쌍 상호 오분류 힌트]\n" + lr_hints)
 
     report_path = os.path.join(SCRIPT_DIR, "classification_report.txt")
     with open(report_path, "w", encoding="utf-8") as f:
@@ -282,7 +438,9 @@ def main():
         f.write("\n")
         f.write(report)
         f.write("\n\nConfusion matrix:\n")
-        f.write(str(confusion_matrix(y_val, y_val_pred, labels=list(range(num_classes)))))
+        f.write(str(cm_val))
+        f.write("\n\n[L/R 쌍 상호 오분류 힌트]\n")
+        f.write(lr_hints + "\n")
     print(f"분류 리포트 저장: {report_path}")
 
     val_loss, val_acc = model.evaluate(X_val, y_val, verbose=0)

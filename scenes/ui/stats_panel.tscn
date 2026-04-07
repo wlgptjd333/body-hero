@@ -1,0 +1,118 @@
+[gd_scene load_steps=3 format=3 uid="uid://stats_panel"]
+
+[ext_resource type="Script" path="res://scripts/ui/stats_panel.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/daily_calorie_chart.gd" id="2_chart"]
+
+[node name="StatsPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.08, 0.1, 0.9)
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.05
+anchor_top = 0.5
+anchor_right = 0.95
+anchor_bottom = 0.5
+offset_left = 0.0
+offset_top = -310.0
+offset_right = 0.0
+offset_bottom = 310.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = -20.0
+offset_bottom = -20.0
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "← 뒤로"
+
+[node name="TitleLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "통계"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 1
+
+[node name="ScrollInner" type="VBoxContainer" parent="Panel/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="StatsList" type="VBoxContainer" parent="Panel/VBox/Scroll/ScrollInner"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="DailyChartTitle" type="Label" parent="Panel/VBox/Scroll/ScrollInner"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "일일 칼로리 차트 (최근 30일)"
+horizontal_alignment = 1
+
+[node name="DailyChart" type="Control" parent="Panel/VBox/Scroll/ScrollInner"]
+layout_mode = 2
+custom_minimum_size = Vector2(920, 152)
+size_flags_horizontal = 3
+script = ExtResource("2_chart")
+
+[node name="WeightRow" type="HBoxContainer" parent="Panel/VBox/Scroll/ScrollInner"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="WeightRowLabel" type="Label" parent="Panel/VBox/Scroll/ScrollInner/WeightRow"]
+layout_mode = 2
+text = "오늘 체중 (kg)"
+
+[node name="WeightSpin" type="SpinBox" parent="Panel/VBox/Scroll/ScrollInner/WeightRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 30.0
+max_value = 180.0
+step = 0.1
+value = 70.0
+
+[node name="WeightSaveButton" type="Button" parent="Panel/VBox/Scroll/ScrollInner/WeightRow"]
+layout_mode = 2
+text = "저장"
+
+[node name="WeightChartTitle" type="Label" parent="Panel/VBox/Scroll/ScrollInner"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "체중 (최근 30일 · 직접 기록)"
+horizontal_alignment = 1
+
+[node name="WeightChart" type="Control" parent="Panel/VBox/Scroll/ScrollInner"]
+layout_mode = 2
+custom_minimum_size = Vector2(920, 152)
+size_flags_horizontal = 3
+script = ExtResource("2_chart")

@@ -41,16 +41,17 @@ offset_left = 20.0
 offset_top = 12.0
 offset_right = -20.0
 offset_bottom = -20.0
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="BackButton" type="Button" parent="Panel/VBox"]
 layout_mode = 2
 size_flags_horizontal = 0
-text = "← 뒤로"
+text = "← 메뉴로"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
 [node name="Content" type="RichTextLabel" parent="Panel/VBox/ScrollContainer"]
 layout_mode = 2
@@ -59,21 +60,23 @@ size_flags_vertical = 3
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
-text = "[b]Body Hero[/b] — 웹캠 1인칭 피트니스 복싱 게임
+text = ""
 
-[b]준비[/b]
-• Godot으로 게임 실행 후, tools 폴더에서 [code]python udp_send_webcam.py[/code] 실행
-• 웹캠에 비치는 동작으로 펀치·가드·회피·제자리걸음을 인식합니다
+[node name="NavRow" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
 
-[b]조작 (웹캠)</b]
-• [b]잽[/b]: 한 손을 앞으로 빠르게 뻗기
-• [b]어퍼컷[/b]: 한 손을 위로 빠르게 올리기
-• [b]가드[/b]: 양손을 얼굴 앞에 모아 유지
-• [b]회피[/b]: 몸을 좌우로 확실히 움직이기
-• [b]제자리걸음[/b]: 어깨를 위아래로 요동 (스태미너 회복)
+[node name="BtnPrev" type="Button" parent="Panel/VBox/NavRow"]
+layout_mode = 2
+text = "← 이전"
 
-[b]키보드 (테스트용)[/b]
-• A: 왼손 잽  D: 오른손 잽  Q/E: 어퍼컷  S: 가드
+[node name="PageLabel" type="Label" parent="Panel/VBox/NavRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 1
+text = "1 / 5"
 
-[b]목표[/b]
-• 적의 체력을 0으로 만들어 KO 시키세요. 스태미너를 관리하면서 펀치와 회피를 활용하세요."
+[node name="BtnNext" type="Button" parent="Panel/VBox/NavRow"]
+layout_mode = 2
+text = "다음 →"

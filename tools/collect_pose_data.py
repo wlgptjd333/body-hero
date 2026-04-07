@@ -3,13 +3,14 @@
 
 - 번호 키 누름 → 1초 지연(손 치우는 시간) → 2초 녹화. (한 번 녹화 = 한 번의 동작만)
 - 없음(none): 2초 전체를 none으로 저장.
-- 가드(5): 2초 안에서 "양손이 올라가 있고 가까운" 프레임만 guard, 나머지는 none (중립이 사라지지 않음).
-- 잽/어퍼컷/훅: 임팩트 3프레임 + 유지 구간 = 해당 라벨, 윈드업/회수 = drop(학습 제외).
-  → 유지 시에도 같은 동작으로 인식·채터링 방지.
+- 가드(1): 2초 녹화에서 "양손 올리고 가까이"가 처음 나온 프레임부터 끝까지 전부 guard, 그 전은 none. 가드 시작 시점 출력.
+- 잽/어퍼컷/훅: 동작을 뻗은 채 끝까지 유지하며 녹화. 임팩트 이후 ~끝까지 해당 라벨, 윈드업만 drop(학습 제외).
+  → 유지 길이를 사람이 맞출 필요 없어 라벨 일관성이 좋음.
 
-실행: cd tools → python collect_pose_data.py [--hold-frames 5] [--drop-frames 5]
+실행: cd tools → python collect_pose_data.py [--drop-frames 4]
 키: 0=none, 1=guard, 2=jab_l, 3=jab_r, 4=upper_l, 5=upper_r, 6=hook_l, 7=hook_r, Q=종료 및 저장
-10개 이상 동작 시: --key-map key_map.json 사용 (예: {"0":"none","1":"guard",...,"8":"extra1","a":"extra2"}).
+(기본) 각 녹화·백스페이스 직후 pose_data.json + pose_recordings_meta.json 자동 저장 — Q 전 크래시에도 디스크와 동기화.
+10개 이상 동작 시: --key-map key_map.json 사용.
 """
 import os
 import json
@@ -21,6 +22,33 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_OUTPUT = os.path.join(SCRIPT_DIR, "pose_data.json")
+
+
+def flush_pose_to_disk(data_path: str, meta_path: str, data: list, recordings_meta: list) -> tuple:
+    """
+    pose_data + 메타를 한 세트로 저장.
+    1) 두 파일 모두 .tmp 에 쓴 뒤 2) pose_data.json 교체 3) 메타 교체.
+    (메타를 먼저 교체하면 데이터보다 메타만 길어지는 불일치가 생기기 쉬워 data 먼저.)
+    성공 시 (True, ""), 실패 시 (False, 에러문자열).
+    """
+    d_tmp = data_path + ".tmp"
+    m_tmp = meta_path + ".tmp"
+    try:
+        with open(d_tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        with open(m_tmp, "w", encoding="utf-8") as f:
+            json.dump({"recordings": recordings_meta}, f, ensure_ascii=False, indent=2)
+        os.replace(d_tmp, data_path)
+        os.replace(m_tmp, meta_path)
+        return True, ""
+    except Exception as e:
+        for p in (d_tmp, m_tmp):
+            if os.path.isfile(p):
+                try:
+                    os.remove(p)
+                except OSError:
+                    pass
+        return False, str(e)
 
 # 라벨 매핑 (키 → 액션). 0=none, 1=guard, 2=jab_l, 3=jab_r, 4=upper_l, 5=upper_r, 6=hook_l, 7=hook_r
 LABELS = {
@@ -46,11 +74,23 @@ RECOVERY_DROP_FRAMES = 4    # 유지 직후 회수 drop (학습 제외), 그 다
 LABEL_DROP = "drop"         # 학습 시 제외할 라벨 (모호 구간)
 
 
-def _recording_counts_from_data(data):
-    """60프레임 단위로 한 회차씩 보고, 그 구간에서 가장 많은 비 drop 라벨을 해당 회차 라벨로 셈."""
+def _recording_counts_from_data(data, recordings_meta=None):
+    """
+    동작별 녹화 횟수. recordings_meta가 있으면 펀치류는 '누른 키' 기준으로 셈(늦게 펀치해도 jab_l로 집계).
+    나머지(none/가드) 구간은 60프레임 단위로 다수 라벨로 집계.
+    """
     from collections import Counter
     counts = {}
+    meta_starts = set()
+    if recordings_meta:
+        for rec in recordings_meta:
+            label = rec.get("label")
+            if label:
+                counts[label] = counts.get(label, 0) + 1
+            meta_starts.add(rec.get("start_index", -1))
     for i in range(0, len(data), RECORD_FRAMES):
+        if i in meta_starts:
+            continue
         chunk = data[i : i + RECORD_FRAMES]
         if not chunk:
             break
@@ -70,82 +110,176 @@ def _format_counts(counts):
             parts.append(f"{k}:{v}")
     return "  ".join(parts) if parts else "(없음)"
 
-# 정규화된 flat 랜드마크에서 인덱스 (33점 * 3 = 99)
-# 0=코, 11=왼쪽어깨, 12=오른쪽어깨, 15=왼쪽손목, 16=오른쪽손목
-IDX = {"nose_y": 1, "l_sh_x": 33, "l_sh_y": 34, "r_sh_x": 36, "r_sh_y": 37, "l_wr_x": 45, "r_wr_x": 48, "l_wr_y": 46, "r_wr_y": 49}
 
-# 가드 판정: 양손이 코 위(또는 비슷한 높이)이고, 양손이 가까울 때만 guard
-GUARD_WRIST_ABOVE_NOSE_MARGIN = 0.25   # 손목 y가 코보다 이만큼 위여도 OK (y 작을수록 위)
-GUARD_WRIST_X_DIFF_MAX = 0.85          # 양 손목 x 차이가 이하면 "가까이 모음" (정규화 좌표)
+def _wrap_text_for_display(text, max_chars_per_line=42):
+    """문자열을 공백 단위로 잘라 최대 max_chars_per_line 글자씩 여러 줄로. OpenCV putText용."""
+    if not text or len(text) <= max_chars_per_line:
+        return [text] if text else []
+    parts = text.split()
+    lines = []
+    current = []
+    current_len = 0
+    for p in parts:
+        need = len(p) + (2 if current else 0)  # 공백 2칸
+        if current and current_len + need > max_chars_per_line:
+            lines.append("  ".join(current))
+            current = [p]
+            current_len = len(p)
+        else:
+            current.append(p)
+            current_len = current_len + need if current_len else len(p)
+    if current:
+        lines.append("  ".join(current))
+    return lines
+
+# 정규화된 flat 랜드마크에서 인덱스 (33점 * 3 = 99, 각 랜드마크 x,y,z 순)
+# 11=왼쪽어깨, 12=오른쪽어깨, 15=왼쪽손목, 16=오른쪽손목
+IDX = {"nose_x": 0, "nose_y": 1, "l_sh_x": 33, "l_sh_y": 34, "r_sh_x": 36, "r_sh_y": 37,
+       "l_wr_x": 45, "l_wr_y": 46, "l_wr_z": 47, "r_wr_x": 48, "r_wr_y": 49, "r_wr_z": 50}
+
+# 0~20프레임(인덱스 0~20)은 임팩트/가드 시작 후보에서 제외. 21번째 프레임(인덱스 21)부터만 허용.
+MIN_IMPACT_FRAME = 21
+
+# 어퍼컷: 손이 얼굴(코) 높이 근처에 도달한 순간을 임팩트로 씀. 이만큼 아래여도 "얼굴 주변"으로 인정.
+UPPER_FACE_LEVEL_MARGIN = 0.06
+
+# 잽: "가장 가까운 프레임" 하나만 쓰면 끝까지 뻗고 있으면 60프레임이 됨. 대신 구간 내 z 최소값에 처음 도달한 프레임 사용.
+JAB_Z_NEAR_MARGIN = 0.02  # z가 이만큼 이상이면 "아직 뻗기 전"으로 봄
+
+# 훅: 얼굴(코) x 기준. 웹캠은 거울처럼 보이므로 화면 오른쪽=사용자 왼쪽(큰 x), 왼쪽=사용자 오른쪽(작은 x).
+# 왼손 훅 = 왼손(원래 큰 x)이 코를 넘어 사용자 오른쪽(작은 x)으로 지나갈 때. 오른손 훅 = 그 반대.
+HOOK_NOSE_MARGIN = 0.02  # 코 기준 넘어감 여유 (노이즈 방지)
+
+# 가드 판정 (잽/어퍼/훅과 별도 메커니즘)
+GUARD_WRIST_ABOVE_SHOULDER_MARGIN = 0.06
+GUARD_WRIST_X_DIFF_MAX = 0.80
+
+
+def _valid_impact_indices(n: int):
+    """임팩트 후보로 쓸 수 있는 인덱스 (MIN_IMPACT_FRAME 이상). 비면 마지막 프레임만 반환."""
+    start = min(MIN_IMPACT_FRAME, n)
+    r = list(range(start, n))
+    return r if r else [n - 1]
 
 
 def _impact_frame_jab_l(frames_flat):
-    """왼손 잽: 손목이 어깨보다 앞으로 가장 나간 프레임 (x 차이 최대)"""
+    """왼손 잽: 21프레임 이후 중 왼손목(l_wr)이 카메라에 가장 가까워진(z 최소) 순간에 처음 도달한 프레임."""
     if not frames_flat:
         return 0
-    ext = [f[IDX["l_wr_x"]] - f[IDX["l_sh_x"]] for f in frames_flat]
-    return max(range(len(ext)), key=lambda i: ext[i])
+    n = len(frames_flat)
+    zs = [f[IDX["l_wr_z"]] for f in frames_flat]
+    indices = list(_valid_impact_indices(n))
+    min_z = min(zs[i] for i in indices)
+    for i in indices:
+        if zs[i] <= min_z + JAB_Z_NEAR_MARGIN:
+            return i
+    return min(indices, key=lambda i: zs[i])
 
 
 def _impact_frame_jab_r(frames_flat):
-    ext = [f[IDX["r_wr_x"]] - f[IDX["r_sh_x"]] for f in frames_flat]
-    return max(range(len(ext)), key=lambda i: ext[i])
+    """오른손 잽: 21프레임 이후 중 오른손목(r_wr)이 카메라에 가장 가까워진(z 최소) 순간에 처음 도달한 프레임."""
+    if not frames_flat:
+        return 0
+    n = len(frames_flat)
+    zs = [f[IDX["r_wr_z"]] for f in frames_flat]
+    indices = list(_valid_impact_indices(n))
+    min_z = min(zs[i] for i in indices)
+    for i in indices:
+        if zs[i] <= min_z + JAB_Z_NEAR_MARGIN:
+            return i
+    return min(indices, key=lambda i: zs[i])
 
 
 def _impact_frame_upper_l(frames_flat):
-    """왼손 어퍼: 손목 y가 가장 위(작은 값)인 프레임"""
-    ys = [f[IDX["l_wr_y"]] for f in frames_flat]
-    return min(range(len(ys)), key=lambda i: ys[i])
+    """왼손 어퍼: 21프레임 이후 중 왼손이 얼굴(코) 높이 근처에 처음 도달한 프레임."""
+    if not frames_flat:
+        return 0
+    n = len(frames_flat)
+    indices = list(_valid_impact_indices(n))
+    for i in indices:
+        nose_y = frames_flat[i][IDX["nose_y"]]
+        wr_y = frames_flat[i][IDX["l_wr_y"]]
+        if wr_y <= nose_y + UPPER_FACE_LEVEL_MARGIN:
+            return i
+    # 도달한 프레임이 없으면 기존처럼 가장 위(y 최소)인 프레임
+    return min(indices, key=lambda i: frames_flat[i][IDX["l_wr_y"]])
 
 
 def _impact_frame_upper_r(frames_flat):
-    ys = [f[IDX["r_wr_y"]] for f in frames_flat]
-    return min(range(len(ys)), key=lambda i: ys[i])
+    """오른손 어퍼: 21프레임 이후 중 오른손이 얼굴(코) 높이 근처에 처음 도달한 프레임."""
+    if not frames_flat:
+        return 0
+    n = len(frames_flat)
+    indices = list(_valid_impact_indices(n))
+    for i in indices:
+        nose_y = frames_flat[i][IDX["nose_y"]]
+        wr_y = frames_flat[i][IDX["r_wr_y"]]
+        if wr_y <= nose_y + UPPER_FACE_LEVEL_MARGIN:
+            return i
+    return min(indices, key=lambda i: frames_flat[i][IDX["r_wr_y"]])
 
 
 def _impact_frame_hook_l(frames_flat):
-    """왼손 훅: 손목이 어깨 높이 근처에서 몸 안쪽(오른쪽)으로 가장 들어온 프레임."""
-    if not frames_flat:
+    """왼손 훅(hook_l): r_wr 기준, 작은 x→큰 x로 코 넘어가는 crossing (손 바꿨으니 방향도 반대)."""
+    if not frames_flat or len(frames_flat) < 2:
         return 0
-    # 어깨 높이와 비슷한 프레임 중에서 손목 x가 최대(몸 중앙/오른쪽 방향으로 가장 들어온 구간)
-    candidates = [
-        i for i in range(len(frames_flat))
-        if abs(frames_flat[i][IDX["l_wr_y"]] - frames_flat[i][IDX["l_sh_y"]]) < 0.35
-    ]
-    if not candidates:
-        return max(range(len(frames_flat)), key=lambda i: frames_flat[i][IDX["l_wr_x"]])
-    return max(candidates, key=lambda i: frames_flat[i][IDX["l_wr_x"]])
+    n = len(frames_flat)
+    indices = list(_valid_impact_indices(n))
+    wr_key = "r_wr_x"
+    for i in indices:
+        if i < 1:
+            continue
+        nose_prev = frames_flat[i - 1][IDX["nose_x"]]
+        nose_cur = frames_flat[i][IDX["nose_x"]]
+        wr_prev = frames_flat[i - 1][IDX[wr_key]]
+        wr_cur = frames_flat[i][IDX[wr_key]]
+        if wr_prev < nose_prev + HOOK_NOSE_MARGIN and wr_cur >= nose_cur + HOOK_NOSE_MARGIN:
+            return i
+    return max(indices, key=lambda i: frames_flat[i][IDX[wr_key]])
 
 
 def _impact_frame_hook_r(frames_flat):
-    """오른손 훅: 손목이 어깨 높이 근처에서 몸 안쪽(왼쪽)으로 가장 들어온 프레임."""
-    if not frames_flat:
+    """오른손 훅(hook_r): l_wr 기준, 큰 x→작은 x로 코 넘어가는 crossing (손 바꿨으니 방향도 반대)."""
+    if not frames_flat or len(frames_flat) < 2:
         return 0
-    candidates = [
-        i for i in range(len(frames_flat))
-        if abs(frames_flat[i][IDX["r_wr_y"]] - frames_flat[i][IDX["r_sh_y"]]) < 0.35
-    ]
-    if not candidates:
-        return min(range(len(frames_flat)), key=lambda i: frames_flat[i][IDX["r_wr_x"]])
-    return min(candidates, key=lambda i: frames_flat[i][IDX["r_wr_x"]])
+    n = len(frames_flat)
+    indices = list(_valid_impact_indices(n))
+    wr_key = "l_wr_x"
+    for i in indices:
+        if i < 1:
+            continue
+        nose_prev = frames_flat[i - 1][IDX["nose_x"]]
+        nose_cur = frames_flat[i][IDX["nose_x"]]
+        wr_prev = frames_flat[i - 1][IDX[wr_key]]
+        wr_cur = frames_flat[i][IDX[wr_key]]
+        if wr_prev > nose_prev - HOOK_NOSE_MARGIN and wr_cur <= nose_cur - HOOK_NOSE_MARGIN:
+            return i
+    return min(indices, key=lambda i: frames_flat[i][IDX[wr_key]])
 
 
 def _is_guard_pose(flat):
-    """정규화된 랜드마크 1프레임이 '가드 자세'(양손 올리고 가까이)인지 판별."""
-    nose_y = flat[IDX["nose_y"]]
+    """정규화된 랜드마크 1프레임이 '가드 자세'(양손 올리고 가까이)인지 판별.
+    얼굴을 가리면 코가 흔들리므로, 높이 기준을 어깨선으로 함."""
+    sh_y = (flat[IDX["l_sh_y"]] + flat[IDX["r_sh_y"]]) * 0.5  # 어깨 중심 높이
     l_wr_y, r_wr_y = flat[IDX["l_wr_y"]], flat[IDX["r_wr_y"]]
     l_wr_x, r_wr_x = flat[IDX["l_wr_x"]], flat[IDX["r_wr_x"]]
-    # 양손이 코 높이보다 위(또는 비슷)
-    both_high = (l_wr_y < nose_y + GUARD_WRIST_ABOVE_NOSE_MARGIN and
-                 r_wr_y < nose_y + GUARD_WRIST_ABOVE_NOSE_MARGIN)
+    # 양손이 어깨선보다 위(또는 비슷) → 얼굴 가려도 안정
+    both_high = (l_wr_y < sh_y + GUARD_WRIST_ABOVE_SHOULDER_MARGIN and
+                 r_wr_y < sh_y + GUARD_WRIST_ABOVE_SHOULDER_MARGIN)
     # 양손이 가까이 모여 있음
     both_close = abs(l_wr_x - r_wr_x) < GUARD_WRIST_X_DIFF_MAX
     return both_high and both_close
 
 
-def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_frames=None, recovery_drop_frames=None):
+def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_frames=None, recovery_drop_frames=None, hold_until_end=False):
     """
-    녹화된 60프레임에 라벨: 윈드업=drop, 임팩트3+유지=동작, 회수=drop, 그 외=none.
+    녹화된 60프레임에 라벨 부여. 임팩트/가드 시작은 21프레임(인덱스 21) 이후에서만 인정.
+    - none: 전부 none.
+    - guard: 21프레임 이후 첫 _is_guard_pose 프레임부터 끝까지 guard.
+    - 잽: 21프레임 이후 중 손목이 그 구간 내 z 최소에 처음 도달한 프레임 = 임팩트.
+    - 어퍼: 21프레임 이후 중 해당 손이 얼굴(코) 높이 근처에 처음 도달한 프레임 = 임팩트.
+    - 훅: 21프레임 이후 중 해당 손이 코를 넘어 반대쪽으로 지나가는 첫 프레임(웹캠 좌표: 왼손=큰x→작은x, 오른손=작은x→큰x).
+    윈드업=drop, 임팩트 전후 3프레임+끝까지=해당 동작. hold_until_end=True면 끝까지 동작.
     """
     if not frames_flat:
         return [], None
@@ -155,12 +289,22 @@ def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_fra
     n = len(frames_flat)
     if label == "none":
         return [{"label": "none", "landmarks": flat} for flat in frames_flat], None
+    # 가드: 21프레임 이후에서만 가드 시작 탐색. 한 번 인식되면 그 프레임부터 끝까지 전부 guard.
     if label == "guard":
-        out = [
-            {"label": "guard" if _is_guard_pose(flat) else "none", "landmarks": flat}
-            for flat in frames_flat
-        ]
-        return out, None
+        guard_start = None
+        for i, flat in enumerate(frames_flat):
+            if i < MIN_IMPACT_FRAME:
+                continue
+            if _is_guard_pose(flat):
+                guard_start = i
+                break
+        if guard_start is None:
+            out = [{"label": "none", "landmarks": flat} for flat in frames_flat]
+            return out, None
+        out = []
+        for i, flat in enumerate(frames_flat):
+            out.append({"label": "guard" if i >= guard_start else "none", "landmarks": flat})
+        return out, guard_start
 
     if label == "jab_l":
         idx = _impact_frame_jab_l(frames_flat)
@@ -179,7 +323,11 @@ def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_fra
 
     half = IMPACT_WINDOW // 2
     action_low = max(0, idx - half)
-    action_high = min(n, idx + half + 1 + hf)
+    if hold_until_end:
+        action_high = n  # 임팩트 이후 남은 프레임 전부 해당 동작
+        rdf = 0
+    else:
+        action_high = min(n, idx + half + 1 + hf)
     recovery_end = min(n, action_high + rdf)
     windup_start = max(0, idx - wdf)
     out = []
@@ -234,11 +382,14 @@ def _download_pose_model():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="포즈 데이터 수집 (기존 데이터 이어서 저장)")
-    parser.add_argument("--hold-frames", type=int, default=5, help="임팩트 직후 유지 구간 프레임 수 (기본 5)")
+    parser = argparse.ArgumentParser(description="포즈 데이터 수집 (기존 데이터 이어서 저장). 잽/어퍼/훅은 끝까지 유지로 통일.")
     parser.add_argument("--drop-frames", type=int, default=4, help="윈드업 drop 구간 프레임 수 (기본 4)")
-    parser.add_argument("--recovery-frames", type=int, default=4, help="유지 직후 회수 drop 구간 프레임 수 (기본 4)")
     parser.add_argument("--key-map", type=str, default=None, help="키→라벨 JSON (예: {\"0\":\"none\",\"1\":\"guard\",\"8\":\"extra1\",\"a\":\"extra2\"}). 10개 이상 동작 시 사용.")
+    parser.add_argument(
+        "--no-autosave",
+        action="store_true",
+        help="녹화/백스페이스 직후 디스크 자동 저장 끔 (기본: 매 녹화·삭제 후 저장)",
+    )
     args = parser.parse_args()
 
     labels_map = dict(LABELS)
@@ -297,6 +448,16 @@ def main():
             data = []
             load_ok = False
     meta_path = os.path.join(SCRIPT_DIR, "pose_recordings_meta.json")
+    # Q 종료 시·자동 저장 시 동일 경로 사용 (기존 파일 형식 오류 시 _new_session)
+    save_data_path = out_path
+    save_meta_path = meta_path
+    if not load_ok and os.path.isfile(out_path):
+        base, ext = os.path.splitext(out_path)
+        save_data_path = base + "_new_session" + ext
+        mb, me = os.path.splitext(meta_path)
+        save_meta_path = mb + "_new_session" + me
+        print(f"[참고] 기존 pose_data 형식 오류 → 이번 세션 저장 경로: {save_data_path}")
+
     if os.path.isfile(meta_path) and data:
         try:
             with open(meta_path, "r", encoding="utf-8") as f:
@@ -316,22 +477,35 @@ def main():
     counts_str = ""
     last_data_len = -1
     if data:
-        counts_str = _format_counts(_recording_counts_from_data(data))
+        counts_str = _format_counts(_recording_counts_from_data(data, recordings_meta))
         last_data_len = len(data)
-        print(f"기존 데이터 불러옴: {out_path} ({len(data)}프레임, 메타 {len(recordings_meta)}개). 추가 녹화 후 Q 시 이어서 저장됩니다.")
-        print(f"동작별 녹화 횟수: {counts_str}")
-    print(f"현재 설정: 유지={args.hold_frames}, 윈드업 drop={args.drop_frames}, 회수 drop={args.recovery_frames}")
+        print(f"기존 데이터 불러옴: {out_path} ({len(data)}프레임, 메타 {len(recordings_meta)}개). 추가 녹화 후 Q로 종료 시 저장됩니다.")
+        if not args.no_autosave:
+            print("  (자동 저장 켬: 녹화·백스페이스마다 디스크에 반영 — Q 전 크래시 대비)")
+        print(f"동작별 녹화 횟수(메타·키 누른 회차): {counts_str}")
+        print(
+            "  ※ 위 숫자는 pose_recordings_meta.json 의 녹화 횟수입니다. "
+            "프레임마다 찍힌 라벨(임팩트·drop)과 다를 수 있습니다. "
+            "데이터 점검: python report_pose_lr_balance.py / 라벨 재생성: python relabel_pose_with_collect.py"
+        )
+    print(f"현재 설정: 윈드업 drop={args.drop_frames}프레임 (잽/어퍼/훅은 끝까지 유지)")
     print("=" * 60)
+    if not args.no_autosave:
+        print(f"자동 저장: 켬 → {save_data_path} + 메타 (녹화·백스페이스마다)")
     print("포즈 데이터 수집 (2초 녹화 + 임팩트/가드 구간 라벨링)")
     key_line = "  " + "  ".join(f"[{chr(c)}]{labels_map[c]}" for c in sorted(labels_map.keys()))
     print(key_line)
     print()
     print("  사용법: 동작을 한 뒤 → 해당 번호 키를 누르세요.")
     print("  → 1초 지연 후 2초 녹화 (키 누르는 순간은 녹화에 안 들어감).")
-    print("  - none/가드: 해당 구간만 라벨; 잽/어퍼/훅: 임팩트+유지=라벨, 윈드업/회수=drop(학습 제외).")
+    print("  - 잽/어퍼/훅: 동작을 뻗은 채로 끝까지 유지하며 녹화 (회수하지 마세요). 임팩트 이후 끝까지 해당 라벨, 윈드업만 drop.")
+    print("  - none/가드: 해당 구간만 라벨.")
     print("  한 번 녹화 = 한 번의 동작만 (연속 2번 잽 등 하지 말 것).")
     print()
-    print("  Q: 종료 후 pose_data.json 저장")
+    print("  [팁] 잽/어퍼/훅: 처음 1초는 살짝 움직이다가 늦게 펀치하면(예: 마지막 20프레임만 펀치)")
+    print("       none 다양성↑, 펀치 구간 길이 자연 조절 → 학습에 도움.")
+    print()
+    print("  Q: 종료(저장 확인) | Backspace: 방금 녹화 1회 삭제" + ("" if args.no_autosave else " (자동 저장)"))
     print()
     print("  [참고] 학습 데이터 권장: 동작당 40~60회 녹화(실용), 60~100회(졸업작품 권장). none은 30회만 해도 됨.")
     print("=" * 60)
@@ -353,6 +527,25 @@ def main():
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q") or key == ord("Q"):
                 break
+            # Backspace: 방금 녹화한 1회분 삭제 (저장 전이므로 Q 누르면 반영됨)
+            if key == 8 and data and recordings_meta and cooldown <= 0:
+                rec = recordings_meta[-1]
+                start = rec["start_index"]
+                count = rec.get("frame_count", RECORD_FRAMES)
+                data = data[:start]
+                recordings_meta = recordings_meta[:-1]
+                print(f"  [삭제] 마지막 녹화 1회 제거 ({rec.get('label', '?')}, {count}프레임). 총 {len(data)}개.")
+                last_data_len = len(data)
+                cooldown = 1.0
+                if not args.no_autosave:
+                    ok_a, err_a = flush_pose_to_disk(
+                        save_data_path, save_meta_path, data, recordings_meta
+                    )
+                    if ok_a:
+                        print("  [자동저장] 디스크 반영 완료 (백스페이스)")
+                    else:
+                        print(f"  [자동저장 실패] {err_a}")
+                continue
             if key in labels_map and cooldown <= 0:
                 label = labels_map[key]
                 cooldown = RECORD_COOLDOWN_SEC
@@ -451,29 +644,43 @@ def main():
                         continue
                 labeled, impact_idx = _label_recorded_frames(
                     label, frames_flat,
-                    hold_frames=args.hold_frames,
                     windup_drop_frames=args.drop_frames,
-                    recovery_drop_frames=args.recovery_frames,
+                    hold_until_end=(label in PUNCH_LIKE),
                 )
+                # 모든 라벨을 메타에 넣어 '누른 횟수'로 카운트 (가드/none 포함)
+                rec_entry = {"label": label, "start_index": len(data), "frame_count": len(labeled)}
                 if label in PUNCH_LIKE and impact_idx is not None:
-                    recordings_meta.append({
-                        "label": label,
-                        "impact_idx": impact_idx,
-                        "start_index": len(data),
-                        "frame_count": len(labeled),
-                    })
+                    rec_entry["impact_idx"] = impact_idx
+                elif label == "guard" and impact_idx is not None:
+                    rec_entry["guard_start_idx"] = impact_idx
+                recordings_meta.append(rec_entry)
                 data.extend(labeled)
                 action_count = sum(1 for x in labeled if x["label"] == label)
                 drop_count = sum(1 for x in labeled if x.get("label") == LABEL_DROP)
                 if label in PUNCH_LIKE and impact_idx is not None:
-                    end_action = min(impact_idx + 2 + args.hold_frames, len(labeled))
                     print(f"  → 저장: {len(labeled)}프레임 (그중 '{label}' {action_count}, drop {drop_count}) | 총 {len(data)}개")
-                    print(f"     임팩트 추정: 프레임 {impact_idx + 1}/{len(labeled)}  (동작 구간: {impact_idx + 1}~{end_action} = 임팩트+유지)")
+                    print(f"     임팩트 추정: 프레임 {impact_idx + 1}/{len(labeled)}  (동작 구간: {impact_idx + 1}~{len(labeled)} = 임팩트~끝)")
+                elif label == "guard":
+                    if impact_idx is not None:
+                        sec = (impact_idx + 1) / RECORD_FPS
+                        print(f"  → 저장: {len(labeled)}프레임 (그중 '{label}' {action_count}, drop {drop_count}) | 총 {len(data)}개")
+                        print(f"     가드 인식 시작: 프레임 {impact_idx + 1}/{len(labeled)}  ({sec:.2f}초) → 끝까지 guard 유지")
+                    else:
+                        print(f"  → 저장: {len(labeled)}프레임 (그중 '{label}' {action_count}, drop {drop_count}) | 총 {len(data)}개")
+                        print(f"     [참고] 이 회차에서 가드 자세가 한 프레임도 없어 전부 none으로 저장됨. 손을 더 올리고 모아서 다시 녹화해 보세요.")
                 else:
                     print(f"  → 저장: {len(labeled)}프레임 (그중 '{label}' {action_count}, drop {drop_count}) | 총 {len(data)}개")
-                counts_str = _format_counts(_recording_counts_from_data(data))
+                counts_str = _format_counts(_recording_counts_from_data(data, recordings_meta))
                 last_data_len = len(data)
                 print(f"  동작별 녹화 횟수: {counts_str}")
+                if not args.no_autosave:
+                    ok_a, err_a = flush_pose_to_disk(
+                        save_data_path, save_meta_path, data, recordings_meta
+                    )
+                    if ok_a:
+                        print(f"  [자동저장] 디스크 반영 완료 ({save_data_path})")
+                    else:
+                        print(f"  [자동저장 실패] {err_a}")
 
             # 평상시: 라이브 스켈레톤만 표시 (타임스탬프는 항상 증가해야 함)
             video_ts_ms += MS_PER_FRAME
@@ -492,18 +699,22 @@ def main():
                     x, y = int(p.x * w), int(p.y * h)
                     cv2.circle(frame_small, (x, y), 4, (0, 200, 255), -1)
 
-            key_help = " ".join(f"{chr(c)}={labels_map[c]}" for c in sorted(labels_map.keys())[:12])
-            if len(key_help) > 55:
-                key_help = key_help[:52] + "..."
-            cv2.putText(frame_small, key_help + " | Q=quit", (10, 20),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
-            cv2.putText(frame_small, f"Collected: {len(data)}", (10, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+            key_help = " ".join(f"{chr(c)}={labels_map[c]}" for c in sorted(labels_map.keys())[:12]) + " | Q=quit"
+            key_lines = _wrap_text_for_display(key_help, max_chars_per_line=50)
+            for i, line in enumerate(key_lines[:2]):
+                cv2.putText(frame_small, line, (10, 20 + i * 16), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+            cv2.putText(frame_small, f"Collected: {len(data)}", (10, 52), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
             if data and len(data) != last_data_len:
-                counts_str = _format_counts(_recording_counts_from_data(data))
+                counts_str = _format_counts(_recording_counts_from_data(data, recordings_meta))
                 last_data_len = len(data)
             if counts_str:
-                line2 = counts_str if len(counts_str) <= 55 else counts_str[:52] + "..."
-                cv2.putText(frame_small, line2, (10, 62), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (200, 200, 255), 1)
+                count_lines = _wrap_text_for_display(counts_str, max_chars_per_line=42)
+                line_height = 16
+                for i, line in enumerate(count_lines):
+                    y = 62 + i * line_height
+                    if y >= frame_small.shape[0] - 10:
+                        break
+                    cv2.putText(frame_small, line, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (200, 200, 255), 1)
             cv2.imshow("Pose data collection", frame_small)
 
     except KeyboardInterrupt:
@@ -514,46 +725,17 @@ def main():
         if getattr(landmarker, "close", None):
             landmarker.close()
 
-    if data:
-        # 기존 파일이 있는데 로드에 실패했으면 덮어쓰지 않고 별도 파일로 저장
-        if not load_ok and os.path.isfile(out_path):
-            base, ext = os.path.splitext(out_path)
-            save_path = base + "_new_session" + ext
-            print(f"\n기존 파일 형식 오류로 불러오지 못했습니다. 이번 세션만 별도 저장: {save_path}")
+    if data or recordings_meta:
+        ok_q, err_q = flush_pose_to_disk(
+            save_data_path, save_meta_path, data, recordings_meta
+        )
+        if ok_q:
+            print(f"\n저장 완료: {save_data_path} (총 {len(data)}프레임)")
+            print(
+                f"녹화 메타: {save_meta_path} ({len(recordings_meta)}개, 유지·재라벨용)"
+            )
         else:
-            save_path = out_path
-        tmp_path = save_path + ".tmp"
-        try:
-            with open(tmp_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            os.replace(tmp_path, save_path)
-            print(f"\n저장 완료: {save_path} (총 {len(data)}개)")
-        except Exception as e:
-            if os.path.isfile(tmp_path):
-                try:
-                    os.remove(tmp_path)
-                except Exception:
-                    pass
-            print(f"\n저장 실패: {e}")
-        if recordings_meta:
-            if save_path != out_path:
-                base, ext = os.path.splitext(meta_path)
-                meta_save_path = base + "_new_session" + ext
-            else:
-                meta_save_path = meta_path
-            meta_tmp = meta_save_path + ".tmp"
-            try:
-                with open(meta_tmp, "w", encoding="utf-8") as f:
-                    json.dump({"recordings": recordings_meta}, f, ensure_ascii=False, indent=2)
-                os.replace(meta_tmp, meta_save_path)
-                print(f"녹화 메타: {meta_save_path} ({len(recordings_meta)}개, 유지 N 변경 시 재라벨용)")
-            except Exception as e:
-                if os.path.isfile(meta_tmp):
-                    try:
-                        os.remove(meta_tmp)
-                    except Exception:
-                        pass
-                print(f"메타 저장 실패: {e}")
+            print(f"\n저장 실패: {err_q}")
     else:
         print("\n수집된 데이터 없음. 저장하지 않음.")
 

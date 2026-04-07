@@ -3,16 +3,33 @@
 [ext_resource type="Script" uid="uid://jyn3p6dy5xk0" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" uid="uid://d05ifnr4s4ngl" path="res://scripts/player.gd" id="2_player"]
 [ext_resource type="Script" uid="uid://clkrypd4h0gr4" path="res://scripts/enemy.gd" id="3_enemy"]
-[ext_resource type="Texture2D" uid="uid://dh1fwlysevax3" path="res://assets/textures/bg/bg_leftovers_ko.png" id="4_bg"]
+[ext_resource type="Texture2D" uid="uid://invho4x6btls" path="res://work_images/reference/bg_stage1_burger.png.jpg" id="4_bg"]
 [ext_resource type="Texture2D" uid="uid://wdgjqx3sn4qn" path="res://assets/textures/characters/placeholder_glove.svg" id="5_glove"]
-[ext_resource type="Texture2D" uid="uid://c2urlw4ldm82g" path="res://assets/textures/characters/placeholder_enemy.svg" id="6_enemy"]
 [ext_resource type="AudioStream" uid="uid://bdde7gq6tn0t5" path="res://assets/audio/sfx/sfx_punch_hit.wav" id="7_hit"]
+[ext_resource type="Script" uid="uid://yiphslwybtui" path="res://scripts/ui/pause_layer.gd" id="8_pause_layer"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
 size = Vector2(80, 100)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_glove"]
 size = Vector2(24, 24)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
+bg_color = Color(0.12, 0.1, 0.1, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.22, 0.22, 0.9)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_fill"]
+bg_color = Color(0.88, 0.22, 0.18, 0.98)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
+bg_color = Color(0.18, 0.7, 0.32, 0.98)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stamina_fill"]
+bg_color = Color(0.95, 0.72, 0.15, 0.98)
 
 [node name="Main" type="Node2D" unique_id=1572593569]
 script = ExtResource("1_main")
@@ -24,10 +41,10 @@ texture = ExtResource("4_bg")
 [node name="Enemy" type="Node2D" parent="." unique_id=2072129645]
 position = Vector2(576, 280)
 script = ExtResource("3_enemy")
+max_hp = 10.0
 
-[node name="Sprite2D" type="Sprite2D" parent="Enemy" unique_id=1932976256]
-scale = Vector2(4, 4)
-texture = ExtResource("6_enemy")
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Enemy" unique_id=1932976256]
+scale = Vector2(0.75, 0.75)
 
 [node name="HitSound" type="AudioStreamPlayer" parent="Enemy" unique_id=1728256143]
 stream = ExtResource("7_hit")
@@ -86,27 +103,23 @@ anchor_right = 1.0
 offset_bottom = 22.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 16
-text = "ENEMY"
+text = "BULGOGI BURGER"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="EnemyHPBarBg" type="ColorRect" parent="HUD/TopBar" unique_id=711000928]
+[node name="EnemyHPBar" type="ProgressBar" parent="HUD/TopBar" unique_id=711000928]
+custom_minimum_size = Vector2(0, 22)
 layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
+anchors_preset = -1
+anchor_left = 0.15
+anchor_right = 0.85
 offset_top = 28.0
 offset_bottom = 52.0
 grow_horizontal = 2
-color = Color(0.2, 0.15, 0.15, 0.92)
-
-[node name="EnemyHPBarFill" type="ColorRect" parent="HUD/TopBar" unique_id=1315400903]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 28.0
-offset_bottom = 52.0
-grow_horizontal = 2
-color = Color(0.9, 0.25, 0.2, 0.95)
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_fill")
+value = 100.0
+show_percentage = false
 
 [node name="BottomBars" type="Control" parent="HUD" unique_id=1181706802]
 layout_mode = 3
@@ -128,23 +141,16 @@ offset_bottom = 28.0
 theme_override_font_sizes/font_size = 14
 text = "HP"
 
-[node name="PlayerHPBarBg" type="ColorRect" parent="HUD/BottomBars" unique_id=277781212]
+[node name="PlayerHPBar" type="ProgressBar" parent="HUD/BottomBars" unique_id=277781212]
+custom_minimum_size = Vector2(0, 22)
 layout_mode = 1
 offset_left = 88.0
 offset_right = 388.0
 offset_bottom = 28.0
-color = Color(0.15, 0.12, 0.12, 0.92)
-
-[node name="PlayerHPBarFill" type="ColorRect" parent="HUD/BottomBars" unique_id=921988005]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.5
-anchor_bottom = 1.0
-offset_left = 88.0
-offset_right = 388.0
-offset_bottom = 28.0
-grow_vertical = 2
-color = Color(0.2, 0.75, 0.35, 0.95)
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+value = 100.0
+show_percentage = false
 
 [node name="StaminaLabel" type="Label" parent="HUD/BottomBars" unique_id=589231087]
 layout_mode = 1
@@ -154,37 +160,45 @@ offset_bottom = 64.0
 theme_override_font_sizes/font_size = 14
 text = "STAMINA"
 
-[node name="PlayerStaminaBarBg" type="ColorRect" parent="HUD/BottomBars" unique_id=654661167]
+[node name="PlayerStaminaBar" type="ProgressBar" parent="HUD/BottomBars" unique_id=654661167]
+custom_minimum_size = Vector2(0, 22)
 layout_mode = 1
 offset_left = 88.0
 offset_top = 36.0
 offset_right = 388.0
 offset_bottom = 64.0
-color = Color(0.15, 0.14, 0.1, 0.92)
+theme_override_styles/background = SubResource("StyleBoxFlat_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_stamina_fill")
+value = 100.0
+show_percentage = false
 
-[node name="PlayerStaminaBarFill" type="ColorRect" parent="HUD/BottomBars" unique_id=1620210767]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.5
-anchor_bottom = 1.0
-offset_left = 88.0
-offset_top = 36.0
-offset_right = 388.0
-offset_bottom = 64.0
+[node name="BtnPauseIcon" type="Button" parent="HUD" unique_id=924921473]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -52.0
+offset_top = 20.0
+offset_right = -12.0
+offset_bottom = 58.0
+grow_horizontal = 0
 grow_vertical = 2
-color = Color(0.95, 0.8, 0.2, 0.95)
+theme_override_font_sizes/font_size = 22
+text = "⏸"
+flat = true
 
 [node name="BGM" type="AudioStreamPlayer" parent="." unique_id=981556812]
 volume_db = -6.0
 
 [node name="PauseLayer" type="CanvasLayer" parent="." unique_id=159195956]
-process_mode = 1
+process_mode = 3
 visible = false
+script = ExtResource("8_pause_layer")
 
 [node name="PauseOverlay" type="ColorRect" parent="PauseLayer" unique_id=232127143]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 color = Color(0.05, 0.05, 0.06, 0.75)
 
 [node name="PauseVBox" type="VBoxContainer" parent="PauseLayer" unique_id=1627383563]
@@ -194,9 +208,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -120.0
-offset_top = -80.0
+offset_top = -100.0
 offset_right = 120.0
-offset_bottom = 80.0
+offset_bottom = 100.0
 theme_override_constants/separation = 16
 
 [node name="PauseLabel" type="Label" parent="PauseLayer/PauseVBox" unique_id=2068167561]
@@ -205,10 +219,126 @@ theme_override_font_sizes/font_size = 20
 text = "일시정지"
 horizontal_alignment = 1
 
+[node name="BtnPauseResume" type="Button" parent="PauseLayer/PauseVBox" unique_id=1627383564]
+layout_mode = 2
+text = "돌아가기"
+
 [node name="BtnPauseSettings" type="Button" parent="PauseLayer/PauseVBox" unique_id=1857433933]
 layout_mode = 2
 text = "설정"
 
 [node name="BtnPauseQuit" type="Button" parent="PauseLayer/PauseVBox" unique_id=1318215608]
 layout_mode = 2
-text = "나가기"
+text = "메인화면으로"
+
+[node name="GameOverLayer" type="CanvasLayer" parent="." unique_id=2000000001]
+process_mode = 3
+visible = false
+
+[node name="GameOverOverlay" type="ColorRect" parent="GameOverLayer" unique_id=2000000002]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.08, 0.05, 0.05, 0.9)
+
+[node name="GameOverVBox" type="VBoxContainer" parent="GameOverLayer" unique_id=2000000003]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -100.0
+offset_right = 160.0
+offset_bottom = 100.0
+theme_override_constants/separation = 24
+
+[node name="GameOverLabel" type="Label" parent="GameOverLayer/GameOverVBox" unique_id=2000000004]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "게임오버"
+horizontal_alignment = 1
+
+[node name="GameOverCaloriesLabel" type="Label" parent="GameOverLayer/GameOverVBox" unique_id=2000000008]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "소모 칼로리: 0.0 kcal"
+horizontal_alignment = 1
+
+[node name="GameOverDailyCaloriesLabel" type="Label" parent="GameOverLayer/GameOverVBox" unique_id=2000000009]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "오늘 누적: 0.0 kcal"
+horizontal_alignment = 1
+
+[node name="GameOverButtons" type="VBoxContainer" parent="GameOverLayer/GameOverVBox" unique_id=2000000005]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BtnGameOverRestart" type="Button" parent="GameOverLayer/GameOverVBox/GameOverButtons" unique_id=2000000006]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+text = "다시하기"
+
+[node name="BtnGameOverBack" type="Button" parent="GameOverLayer/GameOverVBox/GameOverButtons" unique_id=2000000007]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+text = "메인화면으로"
+
+[node name="WinLayer" type="CanvasLayer" parent="." unique_id=-1294967295]
+process_mode = 3
+visible = false
+
+[node name="WinOverlay" type="ColorRect" parent="WinLayer" unique_id=-1294967294]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.05, 0.08, 0.05, 0.9)
+
+[node name="WinVBox" type="VBoxContainer" parent="WinLayer" unique_id=-1294967293]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -140.0
+offset_right = 180.0
+offset_bottom = 140.0
+theme_override_constants/separation = 20
+
+[node name="WinLabel" type="Label" parent="WinLayer/WinVBox" unique_id=-1294967292]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "승리"
+horizontal_alignment = 1
+
+[node name="WinCaloriesLabel" type="Label" parent="WinLayer/WinVBox" unique_id=-1294967287]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "소모 칼로리: 0.0 kcal"
+horizontal_alignment = 1
+
+[node name="WinDailyCaloriesLabel" type="Label" parent="WinLayer/WinVBox" unique_id=-1294967286]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "오늘 누적: 0.0 kcal"
+horizontal_alignment = 1
+
+[node name="WinButtons" type="VBoxContainer" parent="WinLayer/WinVBox" unique_id=-1294967290]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BtnWinRestart" type="Button" parent="WinLayer/WinVBox/WinButtons" unique_id=-1294967289]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+text = "다시하기"
+
+[node name="BtnWinBack" type="Button" parent="WinLayer/WinVBox/WinButtons" unique_id=-1294967288]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+text = "메인화면으로"

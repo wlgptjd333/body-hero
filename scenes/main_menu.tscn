@@ -34,6 +34,196 @@ expand_mode = 1
 stretch_mode = 4
 texture = ExtResource("2_bg")
 
+[node name="LeftPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 40.0
+offset_top = -280.0
+offset_right = 420.0
+offset_bottom = 280.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 16
+
+[node name="Scroll" type="ScrollContainer" parent="LeftPanel"]
+clip_contents = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="LeftPanel/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="DailyVBox" type="VBoxContainer" parent="LeftPanel/Scroll/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="DailyMainTitle" type="Label" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = false
+theme_override_font_sizes/font_size = 20
+text = "일일 도전과제"
+horizontal_alignment = 1
+
+[node name="DailySubTitle" type="Label" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = false
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.75, 0.72, 0.85, 1)
+text = "오늘 목표를 채워 보세요"
+horizontal_alignment = 1
+
+[node name="ChallengeRows" type="VBoxContainer" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Row0" type="VBoxContainer" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ChTitle0" type="Label" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows/Row0"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "—"
+autowrap_mode = 3
+clip_text = false
+
+[node name="ChBar0" type="ProgressBar" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows/Row0"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 1.0
+show_percentage = false
+
+[node name="Row1" type="VBoxContainer" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ChTitle1" type="Label" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows/Row1"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "—"
+autowrap_mode = 3
+clip_text = false
+
+[node name="ChBar1" type="ProgressBar" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows/Row1"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 1.0
+show_percentage = false
+
+[node name="Row2" type="VBoxContainer" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ChTitle2" type="Label" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows/Row2"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "—"
+autowrap_mode = 3
+clip_text = false
+
+[node name="ChBar2" type="ProgressBar" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows/Row2"]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 1.0
+show_percentage = false
+
+[node name="SepGoal" type="HSeparator" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+layout_mode = 2
+
+[node name="GoalTitle" type="Label" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "일일 칼로리 목표"
+horizontal_alignment = 1
+clip_text = false
+
+[node name="BmiHint" type="Label" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.75, 0.72, 0.85, 1)
+text = "BMI —"
+autowrap_mode = 3
+clip_text = false
+
+[node name="RecHint" type="Label" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.75, 0.72, 0.85, 1)
+text = "BMI 기준 권장 — kcal"
+autowrap_mode = 3
+clip_text = false
+
+[node name="GoalRow" type="HBoxContainer" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="GoalSpin" type="SpinBox" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/GoalRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 50.0
+max_value = 2000.0
+step = 5.0
+value = 200.0
+suffix = " kcal"
+
+[node name="BtnApplyRec" type="Button" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/GoalRow"]
+layout_mode = 2
+text = "권장 적용"
+
+[node name="GoalProgressLabel" type="Label" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = false
+theme_override_font_sizes/font_size = 12
+text = "오늘 0 / 목표 0 kcal"
+
+[node name="GoalProgressBar" type="ProgressBar" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="GoalHints" type="Label" parent="LeftPanel/Scroll/MarginContainer/DailyVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = false
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.82, 0.8, 0.88, 1)
+text = ""
+autowrap_mode = 3
+
 [node name="BGM" type="AudioStreamPlayer" parent="."]
 volume_db = 0.0
 autoplay = true
@@ -76,7 +266,7 @@ theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
-text = "게임 설명"
+text = "튜토리얼"
 
 [node name="BtnSettings" type="Button" parent="RightPanel/ButtonBox"]
 custom_minimum_size = Vector2(0, 56)
@@ -86,6 +276,15 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
 text = "설정"
+
+[node name="BtnStats" type="Button" parent="RightPanel/ButtonBox"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
+text = "통계"
 
 [node name="BtnQuit" type="Button" parent="RightPanel/ButtonBox"]
 custom_minimum_size = Vector2(0, 56)

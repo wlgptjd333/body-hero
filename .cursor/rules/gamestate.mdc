@@ -1,5 +1,5 @@
 ---
-description: Body Hero에서 GameState AutoLoad 싱글톤을 통해 HP, 스태미너, 제자리걸음 등 전역 상태를 관리하는 규칙.
+description: Body Hero에서 GameState AutoLoad 싱글톤을 통해 HP, 스태미너 등 전역 상태를 관리하는 규칙.
 alwaysApply: false
 globs:
   - "scripts/game_state.gd"
@@ -13,7 +13,7 @@ globs:
 ## 기본 원칙
 
 - `scripts/game_state.gd`는 AutoLoad 싱글톤 `GameState`로 등록되어 있다.
-- HP/스태미너/제자리걸음/플레이어 체력 비율 등 **게임 전역 수치**는 모두 `GameState`를 통해서만 읽고 쓴다.
+- HP/스태미너/플레이어 체력 비율 등 **게임 전역 수치**는 모두 `GameState`를 통해서만 읽고 쓴다.
 
 ## 제공 함수/상수 활용
 
@@ -24,9 +24,7 @@ globs:
 - HP:
   - `GameState.player_hp`, `GameState.player_max_hp`
   - `GameState.get_player_hp_ratio() -> float`
-- 제자리걸음/회복:
-  - `GameState.is_jogging`, `GameState.tick_jog()`, `GameState.set_jogging(on: bool)`
-  - `_process`에서 `STAMINA_RECOVER_PER_SEC`를 기준으로 회복
+- 스태미너 회복: `_process`에서 가드 중이 아닐 때 `STAMINA_PASSIVE_RECOVER_PER_SEC`로 회복.
 
 ## 확장 시 규칙
 

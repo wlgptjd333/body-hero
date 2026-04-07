@@ -59,7 +59,7 @@ description: Godot 4.6.1 기반 Body Hero 복싱 게임에서 GDScript, 씬, UDP
   - `scripts/main.gd` — UDP 수신 + 글러브 위치 보정
   - `scripts/player.gd` — 펀치/가드/회피 Tween + 키보드 폴백
   - `scripts/enemy.gd` — 히트 판정, HP, 피격 연출
-  - `scripts/game_state.gd` — 전역 HP/스태미너/제자리걸음 상태 (AutoLoad `GameState`)
+  - `scripts/game_state.gd` — 전역 HP/스태미너 상태 (AutoLoad `GameState`)
 - Python/ML/테스트 도구: `tools/*.py`, `tools/README_ML.md`, `README.md`
 
 ---
@@ -105,9 +105,6 @@ description: Godot 4.6.1 기반 Body Hero 복싱 게임에서 GDScript, 씬, UDP
 - 비율 계산:
   - `GameState.get_stamina_ratio()`
   - `GameState.get_player_hp_ratio()`
-- 제자리걸음/회복:
-  - `GameState.is_jogging` / `GameState.tick_jog()` / `GameState.set_jogging(true/false)`
-
 **규칙**:
 
 - HP/스태미너/피로도와 비슷한 개념을 추가할 때는, 가능하면 `GameState`에 새 필드를 추가하고 이를 통해 관리한다.

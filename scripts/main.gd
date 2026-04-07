@@ -1,8 +1,12 @@
 extends Node2D
 ## 메인 게임 로직 + UDP로 웹캠(파이썬) 액션 수신
 ## 데이터 형식: "jab_l" | "jab_r" | "upper_l" | "upper_r" | "hook_l" | "hook_r" | "guard" (행동 발생 시만 전송)
+## 쿨타임·중복 방지: 프레임당 1회 적용 + 펀치류 액션 최소 간격(ACTION_COOLDOWN_SEC)
 
-const VALID_ACTIONS := ["jab_l", "jab_r", "upper_l", "upper_r", "hook_l", "hook_r", "guard", "guard_end", "dodge_l", "dodge_r", "jog"]
+const VALID_ACTIONS := ["jab_l", "jab_r", "upper_l", "upper_r", "hook_l", "hook_r", "guard", "guard_end", "dodge_l", "dodge_r"]
+# 펀치/어퍼/훅 최소 수락 간격(초). ML 중복 전송·연타 방지 (udp_send_webcam_ml.py COOLDOWN_SEC와 맞추면 좋음)
+const ACTION_COOLDOWN_SEC := 0.48
+const PUNCH_ACTIONS := ["jab_l", "jab_r", "upper_l", "upper_r", "hook_l", "hook_r"]
 
 var _server: UDPServer
 var _port := 4242
@@ -10,51 +14,99 @@ var _port := 4242
 var _use_position_mode := false
 var _debug_received := true
 var _received_count := 0
+# 마지막으로 펀치류 액션을 수락한 시각 (쿨타임 검사용)
+var _last_punch_accepted_time: float = -999.0
+# 웹캠(UDP): 직전에 수락한 펀치 종류. 같은 펀치가 연속으로 오면 무시 (none/가드/다른펀치 전까지)
+var _last_udp_punch_kind: String = ""
 
 @onready var _player: Node2D = $Player
 @onready var _enemy: Node2D = $Enemy
 @onready var _enemy_hp_label: Label = $HUD/TopBar/EnemyHPLabel
 @onready var _background: Sprite2D = $Background
-# Leftovers KO 스타일 바 (상단 적, 하단 플레이어 HP/스태미너)
-@onready var _enemy_hp_fill: ColorRect = $HUD/TopBar/EnemyHPBarFill
-@onready var _enemy_hp_bg: ColorRect = $HUD/TopBar/EnemyHPBarBg
-@onready var _player_hp_fill: ColorRect = $HUD/BottomBars/PlayerHPBarFill
-@onready var _player_stamina_fill: ColorRect = $HUD/BottomBars/PlayerStaminaBarFill
+# 상단 적 HP 바, 하단 플레이어 HP/스태미너 바 (ProgressBar)
+@onready var _enemy_hp_bar: ProgressBar = $HUD/TopBar/EnemyHPBar
+@onready var _player_hp_bar: ProgressBar = $HUD/BottomBars/PlayerHPBar
+@onready var _player_stamina_bar: ProgressBar = $HUD/BottomBars/PlayerStaminaBar
 @onready var _bgm: AudioStreamPlayer = $BGM
 @onready var _pause_layer: CanvasLayer = $PauseLayer
+@onready var _btn_pause_icon: Button = $HUD/BtnPauseIcon
+@onready var _btn_pause_resume: Button = $PauseLayer/PauseVBox/BtnPauseResume
 @onready var _btn_pause_settings: Button = $PauseLayer/PauseVBox/BtnPauseSettings
 @onready var _btn_pause_quit: Button = $PauseLayer/PauseVBox/BtnPauseQuit
 
+const SCENE_MAIN := "res://scenes/main.tscn"
 const SCENE_MAIN_MENU := "res://scenes/main_menu.tscn"
 const SCENE_SETTINGS := "res://scenes/ui/settings_panel.tscn"
 
 var _paused := false
 var _settings_in_pause: Control
+var _game_over_shown := false
+var _win_shown := false
+
+@onready var _game_over_layer: CanvasLayer = $GameOverLayer
+@onready var _win_layer: CanvasLayer = $WinLayer
+@onready var _game_over_calories_label: Label = $GameOverLayer/GameOverVBox/GameOverCaloriesLabel
+@onready var _win_calories_label: Label = $WinLayer/WinVBox/WinCaloriesLabel
+@onready var _game_over_daily_calories_label: Label = $GameOverLayer/GameOverVBox/GameOverDailyCaloriesLabel
+@onready var _win_daily_calories_label: Label = $WinLayer/WinVBox/WinDailyCaloriesLabel
 
 
 func _ready() -> void:
+	# 일시정지 시에도 일시정지 레이어·게임오버·승리 레이어만 입력/표시되도록 ALWAYS.
+	# Main 자체는 ALWAYS가 아니어야 함 → get_tree().paused 시 Enemy, Player, GameState 등이 멈춤.
+	if _pause_layer:
+		_pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	if _game_over_layer:
+		_game_over_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	if _win_layer:
+		_win_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	# 일시정지 중 ESC 해제는 PauseLayer 스크립트(pause_layer.gd)에서 처리
+	# 저장된 키 설정 적용 (user://input.cfg) — 게임 씬 진입 시 로드
+	_load_input_config_safe()
+	GameState.reset_punch_counts()
+	GameState.player_hp = GameState.player_max_hp
+	GameState.stamina = GameState.stamina_max
+	GameState.start_workout_session()
+	if _btn_pause_icon:
+		_btn_pause_icon.pressed.connect(_toggle_pause)
+	if _btn_pause_resume:
+		_btn_pause_resume.pressed.connect(_toggle_pause)
 	if _btn_pause_settings:
 		_btn_pause_settings.pressed.connect(_on_pause_settings)
 	if _btn_pause_quit:
 		_btn_pause_quit.pressed.connect(_on_pause_quit)
+	var btn_go_restart: Button = get_node_or_null("GameOverLayer/GameOverVBox/GameOverButtons/BtnGameOverRestart")
+	var btn_go_back: Button = get_node_or_null("GameOverLayer/GameOverVBox/GameOverButtons/BtnGameOverBack")
+	if btn_go_restart:
+		btn_go_restart.pressed.connect(_on_game_over_restart)
+	if btn_go_back:
+		btn_go_back.pressed.connect(_on_game_over_back)
+	var btn_win_restart: Button = get_node_or_null("WinLayer/WinVBox/WinButtons/BtnWinRestart")
+	var btn_win_back: Button = get_node_or_null("WinLayer/WinVBox/WinButtons/BtnWinBack")
+	if btn_win_restart:
+		btn_win_restart.pressed.connect(_on_win_restart)
+	if btn_win_back:
+		btn_win_back.pressed.connect(_on_win_back)
 	_fit_background_to_viewport()
 	var vp := get_viewport()
 	if vp.size_changed.is_connected(_fit_background_to_viewport) == false:
 		vp.size_changed.connect(_fit_background_to_viewport)
+	if _player and _player.has_signal("punch_impact"):
+		_player.punch_impact.connect(_on_player_punch_impact)
 	if _enemy and _enemy.has_signal("hit_received"):
 		_enemy.hit_received.connect(_on_enemy_hit)
 	if _enemy and _enemy.has_signal("died"):
 		_enemy.died.connect(_on_enemy_died)
+	if _enemy and _enemy.has_signal("enemy_attack"):
+		_enemy.enemy_attack.connect(_on_enemy_attack)
 	_update_enemy_hp_label()
 	if _bgm:
 		if AudioServer.get_bus_index("Music") >= 0:
 			_bgm.bus = "Music"
 		if _bgm.stream == null:
 			_try_load_stream(_bgm, [
+				"res://assets/audio/bgm/Retro_Ring_Rush.ogg",
 				"res://assets/audio/bgm/mainbgm.ogg",
-				"res://assets/audio/bgm/bgm_main.ogg",
-				"res://assets/audio/mainbgm.ogg",
-				"res://assets/audio/bgm_main.ogg",
 			])
 		if _bgm.stream and _bgm.playing == false:
 			_bgm.play()
@@ -72,7 +124,29 @@ func _ready() -> void:
 	if _server.listen(_port) != OK:
 		push_error("UDP 서버 포트 %d 열기 실패" % _port)
 	else:
-		print("UDP 서버 시작... 포트: ", _port, " (액션: jab, upper, hook, guard, dodge_l/r, jog)")
+		print("UDP 서버 시작... 포트: ", _port, " (액션: jab, upper, hook, guard, dodge_l/r)")
+
+
+const INPUT_CONFIG_PATH := "user://input.cfg"
+const INPUT_CONFIG_ACTIONS := ["punch_left", "punch_right", "upper_left", "upper_right", "hook_left", "hook_right", "guard"]
+
+
+func _load_input_config_safe() -> void:
+	if not FileAccess.file_exists(INPUT_CONFIG_PATH):
+		return
+	var cfg := ConfigFile.new()
+	if cfg.load(INPUT_CONFIG_PATH) != OK:
+		return
+	for action in INPUT_CONFIG_ACTIONS:
+		if not cfg.has_section_key("input", action) or not InputMap.has_action(action):
+			continue
+		var phys: int = cfg.get_value("input", action, 0)
+		if phys <= 0:
+			continue
+		InputMap.action_erase_events(action)
+		var ev := InputEventKey.new()
+		ev.physical_keycode = phys
+		InputMap.action_add_event(action, ev)
 
 
 func _try_load_stream(player: AudioStreamPlayer, paths: Array[String]) -> void:
@@ -85,6 +159,12 @@ func _try_load_stream(player: AudioStreamPlayer, paths: Array[String]) -> void:
 
 
 func _process(_delta: float) -> void:
+	if not _game_over_shown and GameState.player_hp <= 0.0:
+		_show_game_over()
+		return
+	# 게임오버/승리 후에는 게임 로직·UDP 처리 중단 (씬 전환 버튼만 동작)
+	if _game_over_shown or _win_shown:
+		return
 	if Input.is_action_just_pressed("ui_cancel"):
 		if _settings_in_pause:
 			_close_pause_settings()
@@ -104,8 +184,8 @@ func _process(_delta: float) -> void:
 		_received_count += 1
 		if _debug_received and _received_count == 1:
 			print("UDP 수신됨! (액션 연동 정상) 데이터: ", data)
-		# jog가 아닌 액션은 프레임당 1회만 적용 (UDP 버스트로 같은 동작이 여러 번 들어오는 것 방지)
-		if data != "jog" and action_applied_this_frame:
+		# 프레임당 1회만 적용 (UDP 버스트로 같은 동작이 여러 번 들어오는 것 방지)
+		if action_applied_this_frame:
 			continue
 		if _apply_glove_data(data):
 			action_applied_this_frame = true
@@ -113,11 +193,22 @@ func _process(_delta: float) -> void:
 
 func _apply_glove_data(data: String) -> bool:
 	if data in VALID_ACTIONS:
-		if data == "jog":
-			GameState.tick_jog()
-			return false
-		elif _player.has_method("play_action"):
-			_player.play_action(data)
+		# 펀치류: 쿨타임 + 동일 펀치 연속(자세 유지 스팸) 방지
+		if data in PUNCH_ACTIONS:
+			var now := Time.get_ticks_msec() / 1000.0
+			if now - _last_punch_accepted_time < ACTION_COOLDOWN_SEC:
+				return false
+			if data == _last_udp_punch_kind:
+				return false
+		if _player.has_method("play_action"):
+			var played: bool = _player.play_action(data, true)
+			if not played:
+				return false
+			if data in PUNCH_ACTIONS:
+				_last_punch_accepted_time = Time.get_ticks_msec() / 1000.0
+				_last_udp_punch_kind = data
+			elif data == "guard" or data == "guard_end" or data == "dodge_l" or data == "dodge_r":
+				_last_udp_punch_kind = ""
 			return true
 		return false
 	# 레거시: "left_x,left_y,right_x,right_y" (디버그용, _use_position_mode 시에만)
@@ -161,6 +252,28 @@ func _fit_background_to_viewport() -> void:
 	_background.position = view_size / 2
 
 
+func _on_player_punch_impact(damage: float, punch_type: String) -> void:
+	# Leftovers KO! 스타일: 적이 회피 중이면 빗나감, 아니면 무조건 히트 (히트박스 없음)
+	if not _enemy:
+		return
+	if _enemy.has_method("is_evading") and _enemy.is_evading():
+		if _enemy.has_signal("attack_missed"):
+			_enemy.attack_missed.emit()
+		return
+	if _enemy.has_method("take_damage"):
+		_enemy.take_damage(damage)
+		GameState.add_punch_count(punch_type)
+
+
+func _on_enemy_attack(damage: float) -> void:
+	if GameState.is_guarding:
+		GameState.apply_guard_block_success()
+	else:
+		GameState.player_hp -= damage
+		if GameState.player_hp < 0.0:
+			GameState.player_hp = 0.0
+
+
 func _on_enemy_hit(_damage: float) -> void:
 	_update_enemy_hp_label()
 
@@ -169,6 +282,8 @@ func _on_enemy_died() -> void:
 	_update_enemy_hp_label()
 	if _enemy_hp_label:
 		_enemy_hp_label.text = "KO!"
+	if not _win_shown:
+		_show_win()
 
 
 func _update_enemy_hp_label() -> void:
@@ -178,6 +293,7 @@ func _update_enemy_hp_label() -> void:
 
 func _toggle_pause() -> void:
 	_paused = not _paused
+	get_tree().paused = _paused
 	if _pause_layer:
 		_pause_layer.visible = _paused
 
@@ -203,28 +319,68 @@ func _close_pause_settings() -> void:
 
 
 func _on_pause_quit() -> void:
+	GameState.end_workout_session()
 	get_tree().paused = false
-	get_tree().change_scene_to_file(SCENE_MAIN_MENU)
+	get_tree().call_deferred("change_scene_to_file", SCENE_MAIN_MENU)
+
+
+func _show_game_over() -> void:
+	_game_over_shown = true
+	var kcal := GameState.end_workout_session()
+	var today_kcal := GameState.get_today_calories()
+	get_tree().paused = true
+	if _game_over_calories_label:
+		_game_over_calories_label.text = "소모 칼로리: %.1f kcal" % kcal
+	if _game_over_daily_calories_label:
+		_game_over_daily_calories_label.text = "오늘 누적: %.1f kcal" % today_kcal
+	if _game_over_layer:
+		_game_over_layer.visible = true
+
+
+func _show_win() -> void:
+	_win_shown = true
+	var kcal := GameState.end_workout_session()
+	var today_kcal := GameState.get_today_calories()
+	get_tree().paused = true
+	if _win_calories_label:
+		_win_calories_label.text = "소모 칼로리: %.1f kcal" % kcal
+	if _win_daily_calories_label:
+		_win_daily_calories_label.text = "오늘 누적: %.1f kcal" % today_kcal
+	if _win_layer:
+		_win_layer.visible = true
+
+
+func _on_game_over_restart() -> void:
+	GameState.end_workout_session()
+	get_tree().paused = false
+	get_tree().call_deferred("change_scene_to_file", SCENE_MAIN)
+
+
+func _on_game_over_back() -> void:
+	GameState.end_workout_session()
+	get_tree().paused = false
+	get_tree().call_deferred("change_scene_to_file", SCENE_MAIN_MENU)
+
+
+func _on_win_restart() -> void:
+	GameState.end_workout_session()
+	get_tree().paused = false
+	get_tree().call_deferred("change_scene_to_file", SCENE_MAIN)
+
+
+func _on_win_back() -> void:
+	GameState.end_workout_session()
+	get_tree().paused = false
+	get_tree().call_deferred("change_scene_to_file", SCENE_MAIN_MENU)
 
 
 func _update_ui_bars() -> void:
-	# 상단: 적 체력바 (배경과 같은 높이, 왼쪽 정렬 폭만 비율로)
-	if _enemy_hp_bg and _enemy_hp_fill and _enemy and "current_hp" in _enemy and "max_hp" in _enemy:
-		var w := _enemy_hp_bg.size.x
-		if w > 0.0:
-			var ratio: float = _enemy.current_hp / _enemy.max_hp if _enemy.max_hp > 0.0 else 1.0
-			_enemy_hp_fill.position = _enemy_hp_bg.position
-			_enemy_hp_fill.size = Vector2(w * clampf(ratio, 0.0, 1.0), _enemy_hp_bg.size.y)
+	# 상단: 적 체력바 (ProgressBar value 0~100)
+	if _enemy_hp_bar and _enemy and "current_hp" in _enemy and "max_hp" in _enemy and _enemy.max_hp > 0.0:
+		var ratio: float = clampf(_enemy.current_hp / _enemy.max_hp, 0.0, 1.0)
+		_enemy_hp_bar.value = ratio * 100.0
 	# 하단: 플레이어 HP / 스태미너
-	var bottom := $HUD/BottomBars
-	if bottom:
-		var hp_bg := bottom.get_node_or_null("PlayerHPBarBg") as ColorRect
-		if hp_bg and _player_hp_fill:
-			var r: float = GameState.get_player_hp_ratio()
-			_player_hp_fill.position = hp_bg.position
-			_player_hp_fill.size = Vector2(hp_bg.size.x * r, hp_bg.size.y)
-		var st_bg := bottom.get_node_or_null("PlayerStaminaBarBg") as ColorRect
-		if st_bg and _player_stamina_fill:
-			var r: float = GameState.get_stamina_ratio()
-			_player_stamina_fill.position = st_bg.position
-			_player_stamina_fill.size = Vector2(st_bg.size.x * r, st_bg.size.y)
+	if _player_hp_bar:
+		_player_hp_bar.value = GameState.get_player_hp_ratio() * 100.0
+	if _player_stamina_bar:
+		_player_stamina_bar.value = GameState.get_stamina_ratio() * 100.0
