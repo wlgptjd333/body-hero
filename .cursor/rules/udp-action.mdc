@@ -2,8 +2,8 @@
 
 ## 담당 위치
 
-- **수신·검증**: `scripts/main.gd` (`_process` → `_apply_glove_data`)
-- **실행·애니**: `scripts/player.gd` (`play_action` → `_busy` / 스태미나)
+- **수신·검증**: `games/boxing/scripts/main.gd` (`_process` → `_apply_glove_data`)
+- **실행·애니**: `games/boxing/scripts/player.gd` (`play_action` → `_busy` / 스태미나)
 - **전역 수치**: `scripts/game_state.gd` (스태미나, HP 등)
 - **클라이언트**: `tools/udp_send_webcam_ml.py` (ML 판정 후 UDP 전송, 클라이언트 쿨타임 0.35초)
 
@@ -12,25 +12,25 @@
 ### 1. 프레임당 1회만 적용 (이미 적용됨)
 
 - `main.gd`에서 `action_applied_this_frame`으로 **같은 프레임에 여러 패킷**이 와도 **첫 번째 액션만** 적용.
-- UDP 버스트로 "jab_l"이 여러 번 들어와도 한 프레임에 한 번만 `play_action` 호출.
+- UDP 버스트로 "punch_l"이 여러 번 들어와도 한 프레임에 한 번만 `play_action` 호출.
 
 ### 2. 동작 중 추가 입력 차단 (이미 적용됨)
 
-- `player.gd`의 `_busy`: **펀치/어퍼/훅 애니 재생 중**이면 새 펀치/어퍼/훅은 받지 않음 (guard_end, dodge는 예외).
+- `player.gd`의 `_busy`: **펀치/어퍼 애니 재생 중**이면 새 펀치/어퍼는 받지 않음 (guard_end, dodge는 예외).
 - `_guarding`: 가드 들어간 상태면 guard 중복 호출 무시.
 - 애니 길이만큼 자연스럽게 “쿨”이 걸린 것과 같음.
 
 ### 3. 스태미나 부족 시 무시 (이미 적용됨)
 
 - `play_action` 안에서 `GameState.consume_stamina(...)` 실패 시 **즉시 return**.
-- 스태미나가 없으면 아무리 UDP로 jab/upper/hook가 와도 동작하지 않음.
+- 스태미나가 없으면 아무리 UDP로 punch/upper가 와도 동작하지 않음.
 
 ### 4. 게임 쪽 “액션 쿨타임” (권장 추가)
 
 - **목적**: ML이 짧은 시간 안에 같은/다른 펀치를 여러 번 보내도, **게임에서 한 번만** 받고 나머지는 무시.
 - **위치**: `main.gd`에서 `_apply_glove_data` **진입 시** 검사.
 - **방식**:
-  - “펀치류” 액션(jab_l, jab_r, upper_l, upper_r, hook_l, hook_r)에 대해
+  - “펀치류” 액션(punch_l, punch_r, upper_l, upper_r)에 대해
   - **마지막으로 액션을 수락한 시각**을 저장해 두고,
   - `(현재 시각 - 마지막 수락 시각) < ACTION_COOLDOWN_SEC` 이면 **이번 패킷은 무시** (false 반환).
   - guard / guard_end / dodge 등은 이 쿨타임과 **별도**로 두어도 됨 (필요하면 guard 전용 최소 간격 추가 가능).
@@ -42,7 +42,7 @@
 ### 5. 같은 액션 연타만 막고 싶을 때
 
 - “같은 액션”만 최소 간격을 두려면:
-  - **액션별**로 `_last_jab_l_time`, `_last_jab_r_time`, … 처럼 마지막 수락 시각을 두거나,
+  - **액션별**로 `_last_punch_l_time`, `_last_punch_r_time`, … 처럼 마지막 수락 시각을 두거나,
   - **공통**으로 `_last_punch_time` 하나만 두고 “어떤 펀치든” 최소 간격을 적용할 수 있음.
 - 보통은 **공통 쿨타임(4번)**만으로도 충분하고, “같은 손만” 제한하고 싶을 때 액션별로 나누면 됨.
 

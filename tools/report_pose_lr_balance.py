@@ -1,5 +1,5 @@
 """
-pose_data.json / 시퀀스 윈도우 기준으로 jab·upper·hook 의 L:R 녹화·샘플 수를 출력.
+pose_data.json / 시퀀스 윈도우 기준으로 punch·upper 의 L:R 녹화·샘플 수를 출력.
 왼쪽/오른쪽 데이터가 치우치면 train_pose_classifier_seq.py 가 자동으로 소수 쪽을 오버샘플하지만,
 먼저 이 리포트로 얼마나 모았는지 확인하는 것을 권장.
 
@@ -24,10 +24,10 @@ from train_pose_classifier_seq import (  # noqa: E402
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="잽/어퍼/훅 L:R 데이터 균형 리포트")
+    parser = argparse.ArgumentParser(description="펀치/어퍼 L:R 데이터 균형 리포트")
     parser.add_argument("--data", default=DEFAULT_DATA)
     parser.add_argument("--meta", default=DEFAULT_META)
-    parser.add_argument("--seq-len", type=int, default=8)
+    parser.add_argument("--seq-len", type=int, default=4)
     args = parser.parse_args()
 
     if not os.path.isfile(args.data):
@@ -58,7 +58,7 @@ def main() -> None:
     print_class_distribution(
         frame_labels, ALL_CLASS_NAMES, title="프레임 라벨 전체 (pose_data.json, drop 제외)"
     )
-    print_lr_balance_report(frame_labels, ALL_CLASS_NAMES, title="프레임 L/R 쌍만 (잽·어퍼·훅)")
+    print_lr_balance_report(frame_labels, ALL_CLASS_NAMES, title="프레임 L/R 쌍만 (펀치·어퍼)")
 
     X_seqs, y_list = load_sequences_by_recordings(
         args.data, args.meta, ALL_CLASS_NAMES, args.seq_len, skip_labels=["drop"]
@@ -74,13 +74,11 @@ def main() -> None:
 
     fc = Counter(frame_labels)
     print("\n권장:")
-    if fc.get("jab_r", 0) == 0 and fc.get("jab_l", 0) > 0:
-        print("  [중요] jab_r 프레임이 0입니다. collect_pose_data.py 에서 키 3으로 오른손 잽을 반드시 녹화하세요.")
+    if fc.get("punch_r", 0) == 0 and fc.get("punch_l", 0) > 0:
+        print("  [중요] punch_r 프레임이 0입니다. collect_pose_data.py 에서 키 3으로 오른손 펀치를 반드시 녹화하세요.")
         print("    (좌우반전 증강만으로는 실제 오른손 궤적과 항상 같지 않을 수 있습니다.)")
     if fc.get("upper_l", 0) + fc.get("upper_r", 0) == 0:
         print("  어퍼(upper_l / upper_r) 프레임이 없습니다. 키 4·5로 녹화하세요.")
-    if fc.get("hook_l", 0) + fc.get("hook_r", 0) == 0:
-        print("  훅(hook_l / hook_r) 프레임이 없습니다. 키 6·7로 녹화하세요.")
     print("  - 어퍼는 L/R 헷갈리기 쉬우니 upper_l / upper_r 녹화 횟수를 비슷하게.")
     print("  - 학습: python train_pose_classifier_seq.py (기본: 좌우반전 증강 + L/R 오버샘플)")
 

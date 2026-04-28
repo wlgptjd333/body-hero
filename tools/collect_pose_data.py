@@ -2,13 +2,12 @@
 포즈 데이터 수집: 웹캠 + MediaPipe → 어깨 너비 정규화 → 2초 녹화 후 라벨별 저장.
 
 - 번호 키 누름 → 1초 지연(손 치우는 시간) → 2초 녹화. (한 번 녹화 = 한 번의 동작만)
-- 없음(none): 2초 전체를 none으로 저장.
-- 가드(1): 2초 녹화에서 "양손 올리고 가까이"가 처음 나온 프레임부터 끝까지 전부 guard, 그 전은 none. 가드 시작 시점 출력.
-- 잽/어퍼컷/훅: 동작을 뻗은 채 끝까지 유지하며 녹화. 임팩트 이후 ~끝까지 해당 라벨, 윈드업만 drop(학습 제외).
-  → 유지 길이를 사람이 맞출 필요 없어 라벨 일관성이 좋음.
+- 기본: 녹화된 모든 프레임을 **누른 키와 동일한 라벨**로 저장(none/가드/펀치 공통). 학습 타임라인이 단순해짐.
+- 옵션 `--impact-labeling`: 예전 방식 — none/drop 분할, 펀치·어퍼는 임팩트 추정 후 구간 라벨,
+  가드는 21프레임 이후 첫 가드 자세부터 guard(그 전은 none).
 
-실행: cd tools → python collect_pose_data.py [--drop-frames 4]
-키: 0=none, 1=guard, 2=jab_l, 3=jab_r, 4=upper_l, 5=upper_r, 6=hook_l, 7=hook_r, Q=종료 및 저장
+실행: cd tools → python collect_pose_data.py [--impact-labeling] [--drop-frames 4] [--camera-index 1] [--camera-backend dshow]
+키: 0=none, 1=guard, 2=punch_l, 3=punch_r, 4=upper_l, 5=upper_r, 6=squat, Q=종료 및 저장
 (기본) 각 녹화·백스페이스 직후 pose_data.json + pose_recordings_meta.json 자동 저장 — Q 전 크래시에도 디스크와 동기화.
 10개 이상 동작 시: --key-map key_map.json 사용.
 """
@@ -50,16 +49,15 @@ def flush_pose_to_disk(data_path: str, meta_path: str, data: list, recordings_me
                     pass
         return False, str(e)
 
-# 라벨 매핑 (키 → 액션). 0=none, 1=guard, 2=jab_l, 3=jab_r, 4=upper_l, 5=upper_r, 6=hook_l, 7=hook_r
+# 라벨 매핑 (키 → 액션). 0=none, 1=guard, 2=punch_l, 3=punch_r, 4=upper_l, 5=upper_r, 6=squat
 LABELS = {
     ord("0"): "none",
     ord("1"): "guard",
-    ord("2"): "jab_l",
-    ord("3"): "jab_r",
+    ord("2"): "punch_l",
+    ord("3"): "punch_r",
     ord("4"): "upper_l",
     ord("5"): "upper_r",
-    ord("6"): "hook_l",
-    ord("7"): "hook_r",
+    ord("6"): "squat",
 }
 
 RECORD_SEC = 2.0
@@ -76,7 +74,7 @@ LABEL_DROP = "drop"         # 학습 시 제외할 라벨 (모호 구간)
 
 def _recording_counts_from_data(data, recordings_meta=None):
     """
-    동작별 녹화 횟수. recordings_meta가 있으면 펀치류는 '누른 키' 기준으로 셈(늦게 펀치해도 jab_l로 집계).
+    동작별 녹화 횟수. recordings_meta가 있으면 펀치류는 '누른 키' 기준으로 셈(늦게 펀치해도 punch_l로 집계).
     나머지(none/가드) 구간은 60프레임 단위로 다수 라벨로 집계.
     """
     from collections import Counter
@@ -103,7 +101,7 @@ def _recording_counts_from_data(data, recordings_meta=None):
 
 def _format_counts(counts):
     """동작별 녹화 횟수 문자열 (가독성)."""
-    order = ["none", "guard", "jab_l", "jab_r", "upper_l", "upper_r", "hook_l", "hook_r"]
+    order = ["none", "guard", "punch_l", "punch_r", "upper_l", "upper_r", "squat"]
     parts = [f"{l}:{counts[l]}" for l in order if counts.get(l)]
     for k, v in counts.items():
         if k not in order:
@@ -143,14 +141,10 @@ MIN_IMPACT_FRAME = 21
 # 어퍼컷: 손이 얼굴(코) 높이 근처에 도달한 순간을 임팩트로 씀. 이만큼 아래여도 "얼굴 주변"으로 인정.
 UPPER_FACE_LEVEL_MARGIN = 0.06
 
-# 잽: "가장 가까운 프레임" 하나만 쓰면 끝까지 뻗고 있으면 60프레임이 됨. 대신 구간 내 z 최소값에 처음 도달한 프레임 사용.
-JAB_Z_NEAR_MARGIN = 0.02  # z가 이만큼 이상이면 "아직 뻗기 전"으로 봄
+# 펀치 임팩트: 구간 내 손목 z 최소에 처음 도달한 프레임(앞으로 뻗음).
+PUNCH_Z_NEAR_MARGIN = 0.02  # z가 이만큼 이상이면 "아직 뻗기 전"으로 봄
 
-# 훅: 얼굴(코) x 기준. 웹캠은 거울처럼 보이므로 화면 오른쪽=사용자 왼쪽(큰 x), 왼쪽=사용자 오른쪽(작은 x).
-# 왼손 훅 = 왼손(원래 큰 x)이 코를 넘어 사용자 오른쪽(작은 x)으로 지나갈 때. 오른손 훅 = 그 반대.
-HOOK_NOSE_MARGIN = 0.02  # 코 기준 넘어감 여유 (노이즈 방지)
-
-# 가드 판정 (잽/어퍼/훅과 별도 메커니즘)
+# 가드 판정 (펀치·어퍼와 별도)
 GUARD_WRIST_ABOVE_SHOULDER_MARGIN = 0.06
 GUARD_WRIST_X_DIFF_MAX = 0.80
 
@@ -162,8 +156,8 @@ def _valid_impact_indices(n: int):
     return r if r else [n - 1]
 
 
-def _impact_frame_jab_l(frames_flat):
-    """왼손 잽: 21프레임 이후 중 왼손목(l_wr)이 카메라에 가장 가까워진(z 최소) 순간에 처음 도달한 프레임."""
+def _impact_frame_punch_l(frames_flat):
+    """왼손 펀치: 21프레임 이후 중 왼손목(l_wr) z 최소에 처음 도달한 프레임."""
     if not frames_flat:
         return 0
     n = len(frames_flat)
@@ -171,13 +165,13 @@ def _impact_frame_jab_l(frames_flat):
     indices = list(_valid_impact_indices(n))
     min_z = min(zs[i] for i in indices)
     for i in indices:
-        if zs[i] <= min_z + JAB_Z_NEAR_MARGIN:
+        if zs[i] <= min_z + PUNCH_Z_NEAR_MARGIN:
             return i
     return min(indices, key=lambda i: zs[i])
 
 
-def _impact_frame_jab_r(frames_flat):
-    """오른손 잽: 21프레임 이후 중 오른손목(r_wr)이 카메라에 가장 가까워진(z 최소) 순간에 처음 도달한 프레임."""
+def _impact_frame_punch_r(frames_flat):
+    """오른손 펀치: 21프레임 이후 중 오른손목(r_wr) z 최소에 처음 도달한 프레임."""
     if not frames_flat:
         return 0
     n = len(frames_flat)
@@ -185,7 +179,7 @@ def _impact_frame_jab_r(frames_flat):
     indices = list(_valid_impact_indices(n))
     min_z = min(zs[i] for i in indices)
     for i in indices:
-        if zs[i] <= min_z + JAB_Z_NEAR_MARGIN:
+        if zs[i] <= min_z + PUNCH_Z_NEAR_MARGIN:
             return i
     return min(indices, key=lambda i: zs[i])
 
@@ -219,44 +213,6 @@ def _impact_frame_upper_r(frames_flat):
     return min(indices, key=lambda i: frames_flat[i][IDX["r_wr_y"]])
 
 
-def _impact_frame_hook_l(frames_flat):
-    """왼손 훅(hook_l): r_wr 기준, 작은 x→큰 x로 코 넘어가는 crossing (손 바꿨으니 방향도 반대)."""
-    if not frames_flat or len(frames_flat) < 2:
-        return 0
-    n = len(frames_flat)
-    indices = list(_valid_impact_indices(n))
-    wr_key = "r_wr_x"
-    for i in indices:
-        if i < 1:
-            continue
-        nose_prev = frames_flat[i - 1][IDX["nose_x"]]
-        nose_cur = frames_flat[i][IDX["nose_x"]]
-        wr_prev = frames_flat[i - 1][IDX[wr_key]]
-        wr_cur = frames_flat[i][IDX[wr_key]]
-        if wr_prev < nose_prev + HOOK_NOSE_MARGIN and wr_cur >= nose_cur + HOOK_NOSE_MARGIN:
-            return i
-    return max(indices, key=lambda i: frames_flat[i][IDX[wr_key]])
-
-
-def _impact_frame_hook_r(frames_flat):
-    """오른손 훅(hook_r): l_wr 기준, 큰 x→작은 x로 코 넘어가는 crossing (손 바꿨으니 방향도 반대)."""
-    if not frames_flat or len(frames_flat) < 2:
-        return 0
-    n = len(frames_flat)
-    indices = list(_valid_impact_indices(n))
-    wr_key = "l_wr_x"
-    for i in indices:
-        if i < 1:
-            continue
-        nose_prev = frames_flat[i - 1][IDX["nose_x"]]
-        nose_cur = frames_flat[i][IDX["nose_x"]]
-        wr_prev = frames_flat[i - 1][IDX[wr_key]]
-        wr_cur = frames_flat[i][IDX[wr_key]]
-        if wr_prev > nose_prev - HOOK_NOSE_MARGIN and wr_cur <= nose_cur - HOOK_NOSE_MARGIN:
-            return i
-    return min(indices, key=lambda i: frames_flat[i][IDX[wr_key]])
-
-
 def _is_guard_pose(flat):
     """정규화된 랜드마크 1프레임이 '가드 자세'(양손 올리고 가까이)인지 판별.
     얼굴을 가리면 코가 흔들리므로, 높이 기준을 어깨선으로 함."""
@@ -276,9 +232,8 @@ def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_fra
     녹화된 60프레임에 라벨 부여. 임팩트/가드 시작은 21프레임(인덱스 21) 이후에서만 인정.
     - none: 전부 none.
     - guard: 21프레임 이후 첫 _is_guard_pose 프레임부터 끝까지 guard.
-    - 잽: 21프레임 이후 중 손목이 그 구간 내 z 최소에 처음 도달한 프레임 = 임팩트.
+    - 펀치(punch_l/r): 21프레임 이후 손목 z 최소(앞으로 뻗음) = 임팩트.
     - 어퍼: 21프레임 이후 중 해당 손이 얼굴(코) 높이 근처에 처음 도달한 프레임 = 임팩트.
-    - 훅: 21프레임 이후 중 해당 손이 코를 넘어 반대쪽으로 지나가는 첫 프레임(웹캠 좌표: 왼손=큰x→작은x, 오른손=작은x→큰x).
     윈드업=drop, 임팩트 전후 3프레임+끝까지=해당 동작. hold_until_end=True면 끝까지 동작.
     """
     if not frames_flat:
@@ -306,18 +261,14 @@ def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_fra
             out.append({"label": "guard" if i >= guard_start else "none", "landmarks": flat})
         return out, guard_start
 
-    if label == "jab_l":
-        idx = _impact_frame_jab_l(frames_flat)
-    elif label == "jab_r":
-        idx = _impact_frame_jab_r(frames_flat)
+    if label == "punch_l":
+        idx = _impact_frame_punch_l(frames_flat)
+    elif label == "punch_r":
+        idx = _impact_frame_punch_r(frames_flat)
     elif label == "upper_l":
         idx = _impact_frame_upper_l(frames_flat)
     elif label == "upper_r":
         idx = _impact_frame_upper_r(frames_flat)
-    elif label == "hook_l":
-        idx = _impact_frame_hook_l(frames_flat)
-    elif label == "hook_r":
-        idx = _impact_frame_hook_r(frames_flat)
     else:
         return [{"label": "none", "landmarks": flat} for flat in frames_flat], None
 
@@ -343,6 +294,14 @@ def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_fra
     return out, idx
 
 
+def _label_recorded_frames_uniform(label: str, frames_flat: list) -> tuple:
+    """녹화 N프레임 전부를 누른 키(label)로 통일. 메타에는 impact_idx를 넣지 않음(학습이 전 구간 사용)."""
+    if not frames_flat:
+        return [], None
+    out = [{"label": label, "landmarks": flat} for flat in frames_flat]
+    return out, None
+
+
 try:
     import cv2
     from mediapipe.tasks import python as mp_tasks
@@ -353,6 +312,7 @@ except ImportError:
     raise SystemExit(1)
 
 from pose_normalize import normalize_landmarks_flat
+from cv_capture import open_cv_video_capture
 
 MODEL_PATH = os.path.join(SCRIPT_DIR, "pose_landmarker.task")
 MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker/lite/1/pose_landmarker_lite.task"
@@ -382,13 +342,38 @@ def _download_pose_model():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="포즈 데이터 수집 (기존 데이터 이어서 저장). 잽/어퍼/훅은 끝까지 유지로 통일.")
-    parser.add_argument("--drop-frames", type=int, default=4, help="윈드업 drop 구간 프레임 수 (기본 4)")
+    parser = argparse.ArgumentParser(
+        description="포즈 데이터 수집 (기존 데이터 이어서 저장). 기본은 60프레임 전부 누른 키 라벨."
+    )
+    parser.add_argument(
+        "--impact-labeling",
+        action="store_true",
+        help="임팩트/none/drop 분할 라벨(구 방식). 기본은 녹화 전 프레임을 누른 키로 통일.",
+    )
+    parser.add_argument(
+        "--drop-frames",
+        type=int,
+        default=4,
+        help="--impact-labeling 일 때만 사용: 윈드업 drop 프레임 수 (기본 4)",
+    )
     parser.add_argument("--key-map", type=str, default=None, help="키→라벨 JSON (예: {\"0\":\"none\",\"1\":\"guard\",\"8\":\"extra1\",\"a\":\"extra2\"}). 10개 이상 동작 시 사용.")
     parser.add_argument(
         "--no-autosave",
         action="store_true",
         help="녹화/백스페이스 직후 디스크 자동 저장 끔 (기본: 매 녹화·삭제 후 저장)",
+    )
+    parser.add_argument(
+        "--camera-index",
+        type=int,
+        default=0,
+        metavar="N",
+        help="OpenCV 카메라 인덱스 (기본 0). USB가 안 보이면 1·2 또는 목록 새로고침으로 확인.",
+    )
+    parser.add_argument(
+        "--camera-backend",
+        choices=["auto", "default", "dshow", "msmf"],
+        default="auto",
+        help="Windows에서 USB 웹캠 인식 문제 시 dshow 권장 (게임 설정과 동일 옵션).",
     )
     args = parser.parse_args()
 
@@ -419,10 +404,16 @@ def main():
     def make_mp_image(rgb):
         return mp_core_image.Image(image_format=mp_core_image.ImageFormat.SRGB, data=rgb.copy(order="C"))
 
-    cap = cv2.VideoCapture(0)
+    cap, cap_backend_label = open_cv_video_capture(args.camera_index, args.camera_backend)
     if not cap.isOpened():
-        print("웹캠을 열 수 없습니다.")
+        print(
+            "웹캠을 열 수 없습니다. --camera-index 또는 --camera-backend dshow 를 바꿔 보세요. "
+            "(python list_cameras.py)"
+        )
         return
+    print(
+        f"카메라: index={args.camera_index}, backend={args.camera_backend} → 실제: {cap_backend_label}"
+    )
 
     out_path = os.environ.get("POSE_DATA_OUTPUT", DEFAULT_OUTPUT)
     data = []
@@ -468,7 +459,7 @@ def main():
         except Exception:
             recordings_meta = []
 
-    PUNCH_LIKE = ("jab_l", "jab_r", "upper_l", "upper_r", "hook_l", "hook_r")
+    PUNCH_LIKE = ("punch_l", "punch_r", "upper_l", "upper_r")
     process_w, process_h = 640, 480
     cooldown = 0.0
     RECORD_COOLDOWN_SEC = 2.5  # 녹화 끝난 뒤 다음 키 입력까지 여유
@@ -485,25 +476,40 @@ def main():
         print(f"동작별 녹화 횟수(메타·키 누른 회차): {counts_str}")
         print(
             "  ※ 위 숫자는 pose_recordings_meta.json 의 녹화 횟수입니다. "
-            "프레임마다 찍힌 라벨(임팩트·drop)과 다를 수 있습니다. "
-            "데이터 점검: python report_pose_lr_balance.py / 라벨 재생성: python relabel_pose_with_collect.py"
+            + (
+                "프레임마다 찍힌 라벨(임팩트·drop)과 다를 수 있습니다. "
+                if args.impact_labeling
+                else "전체 통일 모드에서는 프레임 라벨이 키와 같아 횟수가 맞습니다. "
+            )
+            + "데이터 점검: python report_pose_lr_balance.py / 라벨 재생성: python relabel_pose_with_collect.py"
         )
-    print(f"현재 설정: 윈드업 drop={args.drop_frames}프레임 (잽/어퍼/훅은 끝까지 유지)")
+    if args.impact_labeling:
+        print(f"현재 설정: 라벨=임팩트 분할 | 윈드업 drop={args.drop_frames}프레임 (펀치/어퍼는 끝까지 유지)")
+    else:
+        print("현재 설정: 라벨=60프레임 전부 누른 키로 통일 (메타에 impact_idx 없음 → 학습이 전 구간 사용)")
     print("=" * 60)
     if not args.no_autosave:
         print(f"자동 저장: 켬 → {save_data_path} + 메타 (녹화·백스페이스마다)")
-    print("포즈 데이터 수집 (2초 녹화 + 임팩트/가드 구간 라벨링)")
+    if args.impact_labeling:
+        print("포즈 데이터 수집 (2초 녹화 + 임팩트/가드 구간 라벨링) — 좌우 펀치 통합")
+    else:
+        print("포즈 데이터 수집 (2초 녹화 + 전 프레임 단일 라벨) — 좌우 펀치 통합")
     key_line = "  " + "  ".join(f"[{chr(c)}]{labels_map[c]}" for c in sorted(labels_map.keys()))
     print(key_line)
     print()
     print("  사용법: 동작을 한 뒤 → 해당 번호 키를 누르세요.")
     print("  → 1초 지연 후 2초 녹화 (키 누르는 순간은 녹화에 안 들어감).")
-    print("  - 잽/어퍼/훅: 동작을 뻗은 채로 끝까지 유지하며 녹화 (회수하지 마세요). 임팩트 이후 끝까지 해당 라벨, 윈드업만 drop.")
-    print("  - none/가드: 해당 구간만 라벨.")
-    print("  한 번 녹화 = 한 번의 동작만 (연속 2번 잽 등 하지 말 것).")
-    print()
-    print("  [팁] 잽/어퍼/훅: 처음 1초는 살짝 움직이다가 늦게 펀치하면(예: 마지막 20프레임만 펀치)")
-    print("       none 다양성↑, 펀치 구간 길이 자연 조절 → 학습에 도움.")
+    if args.impact_labeling:
+        print("  - 펀치/어퍼: 동작을 뻗은 채로 끝까지 유지하며 녹화 (회수하지 마세요). 임팩트 이후 끝까지 해당 라벨, 윈드업만 drop.")
+        print("  - none/가드: 해당 구간만 라벨(가드는 자세 인식 후 guard).")
+        print("  한 번 녹화 = 한 번의 동작만 (연속으로 같은 펀치만 반복하지 말 것).")
+        print()
+        print("  [팁] 펀치/어퍼: 처음 1초는 살짝 움직이다가 늦게 펀치하면(예: 마지막 20프레임만 펀치)")
+        print("       none 다양성↑, 펀치 구간 길이 자연 조절 → 학습에 도움.")
+    else:
+        print("  - 각 녹화의 모든 프레임이 누른 키와 같은 라벨로 저장됩니다 (none/가드/펀치 공통).")
+        print("  - 구 방식(임팩트·drop·가드 시작 탐색): python collect_pose_data.py --impact-labeling")
+        print("  한 번 녹화 = 한 번의 동작만 (연속으로 같은 펀치만 반복하지 말 것).")
     print()
     print("  Q: 종료(저장 확인) | Backspace: 방금 녹화 1회 삭제" + ("" if args.no_autosave else " (자동 저장)"))
     print()
@@ -642,34 +648,42 @@ def main():
                     else:
                         print(f"  [스킵] 프레임 수 부족 ({len(frames_flat)}/{RECORD_FRAMES}). 해당 회차 저장 안 함. 다시 녹화해 주세요.")
                         continue
-                labeled, impact_idx = _label_recorded_frames(
-                    label, frames_flat,
-                    windup_drop_frames=args.drop_frames,
-                    hold_until_end=(label in PUNCH_LIKE),
-                )
+                if args.impact_labeling:
+                    labeled, impact_idx = _label_recorded_frames(
+                        label,
+                        frames_flat,
+                        windup_drop_frames=args.drop_frames,
+                        hold_until_end=(label in PUNCH_LIKE),
+                    )
+                else:
+                    labeled, impact_idx = _label_recorded_frames_uniform(label, frames_flat)
                 # 모든 라벨을 메타에 넣어 '누른 횟수'로 카운트 (가드/none 포함)
                 rec_entry = {"label": label, "start_index": len(data), "frame_count": len(labeled)}
-                if label in PUNCH_LIKE and impact_idx is not None:
-                    rec_entry["impact_idx"] = impact_idx
-                elif label == "guard" and impact_idx is not None:
-                    rec_entry["guard_start_idx"] = impact_idx
+                if args.impact_labeling:
+                    if label in PUNCH_LIKE and impact_idx is not None:
+                        rec_entry["impact_idx"] = impact_idx
+                    elif label == "guard" and impact_idx is not None:
+                        rec_entry["guard_start_idx"] = impact_idx
                 recordings_meta.append(rec_entry)
                 data.extend(labeled)
                 action_count = sum(1 for x in labeled if x["label"] == label)
                 drop_count = sum(1 for x in labeled if x.get("label") == LABEL_DROP)
-                if label in PUNCH_LIKE and impact_idx is not None:
-                    print(f"  → 저장: {len(labeled)}프레임 (그중 '{label}' {action_count}, drop {drop_count}) | 총 {len(data)}개")
-                    print(f"     임팩트 추정: 프레임 {impact_idx + 1}/{len(labeled)}  (동작 구간: {impact_idx + 1}~{len(labeled)} = 임팩트~끝)")
-                elif label == "guard":
-                    if impact_idx is not None:
-                        sec = (impact_idx + 1) / RECORD_FPS
+                if args.impact_labeling:
+                    if label in PUNCH_LIKE and impact_idx is not None:
                         print(f"  → 저장: {len(labeled)}프레임 (그중 '{label}' {action_count}, drop {drop_count}) | 총 {len(data)}개")
-                        print(f"     가드 인식 시작: 프레임 {impact_idx + 1}/{len(labeled)}  ({sec:.2f}초) → 끝까지 guard 유지")
+                        print(f"     임팩트 추정: 프레임 {impact_idx + 1}/{len(labeled)}  (동작 구간: {impact_idx + 1}~{len(labeled)} = 임팩트~끝)")
+                    elif label == "guard":
+                        if impact_idx is not None:
+                            sec = (impact_idx + 1) / RECORD_FPS
+                            print(f"  → 저장: {len(labeled)}프레임 (그중 '{label}' {action_count}, drop {drop_count}) | 총 {len(data)}개")
+                            print(f"     가드 인식 시작: 프레임 {impact_idx + 1}/{len(labeled)}  ({sec:.2f}초) → 끝까지 guard 유지")
+                        else:
+                            print(f"  → 저장: {len(labeled)}프레임 (그중 '{label}' {action_count}, drop {drop_count}) | 총 {len(data)}개")
+                            print(f"     [참고] 이 회차에서 가드 자세가 한 프레임도 없어 전부 none으로 저장됨. 손을 더 올리고 모아서 다시 녹화해 보세요.")
                     else:
                         print(f"  → 저장: {len(labeled)}프레임 (그중 '{label}' {action_count}, drop {drop_count}) | 총 {len(data)}개")
-                        print(f"     [참고] 이 회차에서 가드 자세가 한 프레임도 없어 전부 none으로 저장됨. 손을 더 올리고 모아서 다시 녹화해 보세요.")
                 else:
-                    print(f"  → 저장: {len(labeled)}프레임 (그중 '{label}' {action_count}, drop {drop_count}) | 총 {len(data)}개")
+                    print(f"  → 저장: {len(labeled)}프레임 전체 '{label}' 통일 | 총 {len(data)}개")
                 counts_str = _format_counts(_recording_counts_from_data(data, recordings_meta))
                 last_data_len = len(data)
                 print(f"  동작별 녹화 횟수: {counts_str}")

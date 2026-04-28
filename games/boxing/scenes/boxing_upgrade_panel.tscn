@@ -1,0 +1,148 @@
+[gd_scene format=3 uid="uid://dmvb8xugprx8"]
+
+[ext_resource type="Script" path="res://games/boxing/scripts/ui/boxing_upgrade_panel.gd" id="1_script"]
+
+[node name="BoxingUpgradePanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+process_mode = 3
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0.04, 0.04, 0.06, 0.88)
+
+[node name="Panel" type="Panel" parent="Dim"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -340.0
+offset_top = -260.0
+offset_right = 340.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Dim/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="Dim/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LblTitle" type="Label" parent="Dim/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "업그레이드"
+horizontal_alignment = 1
+
+[node name="LblSweat" type="Label" parent="Dim/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "스웨트: 0"
+horizontal_alignment = 1
+
+[node name="RowHp" type="VBoxContainer" parent="Dim/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Lbl" type="Label" parent="Dim/Panel/Margin/VBox/RowHp"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "체력"
+autowrap_mode = 3
+
+[node name="HBox" type="HBoxContainer" parent="Dim/Panel/Margin/VBox/RowHp"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Bar" type="ProgressBar" parent="Dim/Panel/Margin/VBox/RowHp/HBox"]
+custom_minimum_size = Vector2(180, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 20.0
+show_percentage = false
+
+[node name="Btn" type="Button" parent="Dim/Panel/Margin/VBox/RowHp/HBox"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "업그레이드 (💧1)"
+
+[node name="RowSta" type="VBoxContainer" parent="Dim/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Lbl" type="Label" parent="Dim/Panel/Margin/VBox/RowSta"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "스태미너"
+autowrap_mode = 3
+
+[node name="HBox" type="HBoxContainer" parent="Dim/Panel/Margin/VBox/RowSta"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Bar" type="ProgressBar" parent="Dim/Panel/Margin/VBox/RowSta/HBox"]
+custom_minimum_size = Vector2(180, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 20.0
+show_percentage = false
+
+[node name="Btn" type="Button" parent="Dim/Panel/Margin/VBox/RowSta/HBox"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "업그레이드 (💧1)"
+
+[node name="RowRec" type="VBoxContainer" parent="Dim/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Lbl" type="Label" parent="Dim/Panel/Margin/VBox/RowRec"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "회복"
+autowrap_mode = 3
+
+[node name="HBox" type="HBoxContainer" parent="Dim/Panel/Margin/VBox/RowRec"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Bar" type="ProgressBar" parent="Dim/Panel/Margin/VBox/RowRec/HBox"]
+custom_minimum_size = Vector2(180, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 20.0
+show_percentage = false
+
+[node name="Btn" type="Button" parent="Dim/Panel/Margin/VBox/RowRec/HBox"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "업그레이드 (💧1)"
+
+[node name="BtnClose" type="Button" parent="Dim/Panel/Margin/VBox"]
+layout_mode = 2
+text = "닫기"

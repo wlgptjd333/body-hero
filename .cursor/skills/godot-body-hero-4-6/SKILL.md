@@ -30,7 +30,7 @@ description: Godot 4.6.1 기반 Body Hero 복싱 게임에서 GDScript, 씬, UDP
 
 이 스킬은 다음과 같은 키워드/상황이 나오면 적극적으로 적용한다:
 
-- 파일: `scripts/main.gd`, `scripts/player.gd`, `scripts/enemy.gd`, `scripts/game_state.gd`, `scenes/main.tscn`
+- 파일: `games/boxing/scripts/main.gd`, `games/boxing/scripts/player.gd`, `games/boxing/scripts/enemy.gd`, `scripts/game_state.gd`, `scenes/main.tscn`(허브·메뉴는 `scripts/`·`scenes/` 하위)
 - 키워드: "펀치", "스태미너", "UDP", "웹캠", "ML 판정", "GameState", "Input Map"
 - 요청 유형:
   - 새 펀치/동작/회피/가드 추가
@@ -56,9 +56,9 @@ description: Godot 4.6.1 기반 Body Hero 복싱 게임에서 GDScript, 씬, UDP
 - 장르: 웹캠 1인칭 헬스 복싱 게임
 - 메인 씬: `scenes/main.tscn`
 - 주요 스크립트:
-  - `scripts/main.gd` — UDP 수신 + 글러브 위치 보정
-  - `scripts/player.gd` — 펀치/가드/회피 Tween + 키보드 폴백
-  - `scripts/enemy.gd` — 히트 판정, HP, 피격 연출
+  - `games/boxing/scripts/main.gd` — 복싱 스테이지 UDP 수신 + 글러브 위치 보정
+  - `games/boxing/scripts/player.gd` — 펀치/가드/회피 Tween + 키보드 폴백
+  - `games/boxing/scripts/enemy.gd` — 히트 판정, HP, 피격 연출
   - `scripts/game_state.gd` — 전역 HP/스태미너 상태 (AutoLoad `GameState`)
 - Python/ML/테스트 도구: `tools/*.py`, `tools/README_ML.md`, `README.md`
 
@@ -74,9 +74,9 @@ description: Godot 4.6.1 기반 Body Hero 복싱 게임에서 GDScript, 씬, UDP
    - 주석/설명은 한국어로 작성해도 된다.
 3. **역할 분리**
    - 전역 상태: `GameState` 싱글톤 (`scripts/game_state.gd`)
-   - 입력/애니메이션: `scripts/player.gd`
-   - 적/피격 처리: `scripts/enemy.gd`
-   - 네트워크/UDP: `scripts/main.gd` 및 `tools/*.py`
+  - 입력/애니메이션: `games/boxing/scripts/player.gd`
+  - 적/피격 처리: `games/boxing/scripts/enemy.gd`
+  - 네트워크/UDP: `games/boxing/scripts/main.gd` 및 `tools/*.py`
 
 새 기능을 구현할 때는 **기존 역할에 맞는 파일에 코드를 추가**하는 방식을 우선으로 한다.
 
@@ -100,8 +100,8 @@ description: Godot 4.6.1 기반 Body Hero 복싱 게임에서 GDScript, 씬, UDP
 `scripts/game_state.gd`는 AutoLoad 싱글톤으로 등록되어 있으며, HP/스태미너 등 전역 수치를 담당한다.
 
 - 스태미너 소모:
-  - `GameState.consume_stamina(GameState.STAMINA_JAB)`
-  - `GameState.consume_stamina(GameState.STAMINA_HOOK)`
+  - `GameState.consume_stamina(GameState.STAMINA_PUNCH)`
+  - `GameState.consume_stamina(GameState.STAMINA_UPPERCUT)`
 - 비율 계산:
   - `GameState.get_stamina_ratio()`
   - `GameState.get_player_hp_ratio()`
@@ -115,14 +115,13 @@ description: Godot 4.6.1 기반 Body Hero 복싱 게임에서 GDScript, 씬, UDP
 
 ## 플레이어 액션 및 애니메이션 패턴
 
-`scripts/player.gd`는 Tween으로 펀치/가드/회피를 연출하고, 액션 이름을 기반으로 동작을 실행한다.
+`games/boxing/scripts/player.gd`는 Tween으로 펀치/가드/회피를 연출하고, 액션 이름을 기반으로 동작을 실행한다.
 
 - 액션 엔트리 포인트: `play_action(action: String) -> void`
 - 키보드 폴백: `_process`에서 `Input.is_action_just_pressed`로 테스트
 - 주요 액션:
-  - `"jab_l"`, `"jab_r"`
+  - `"punch_l"`, `"punch_r"`
   - `"upper_l"`, `"upper_r"`
-  - `"hook_l"`, `"hook_r"`
   - `"guard"`, `"guard_end"`
   - `"dodge_l"`, `"dodge_r"`
 
@@ -131,7 +130,7 @@ description: Godot 4.6.1 기반 Body Hero 복싱 게임에서 GDScript, 씬, UDP
 1. 액션 이름에 따라 `GameState.consume_stamina(...)`로 스태미너를 먼저 확인한다.
 2. `_busy` 플래그로 애니메이션 중 중복 입력을 막는다.
 3. 전용 함수에서 Tween 생성:
-   - `_play_jab`, `_play_uppercut`, `_play_hook`, `_play_guard_enter`, `_play_guard_exit`, `_play_dodge`
+   - `_play_punch`, `_play_uppercut`, `_play_guard_enter`, `_play_guard_exit`, `_play_dodge`
 4. 글러브 히트박스 on/off:
    - `_set_glove_hit(glove, true/false)`에서 `collision_layer`를 토글한다.
 
@@ -146,15 +145,15 @@ description: Godot 4.6.1 기반 Body Hero 복싱 게임에서 GDScript, 씬, UDP
 
 README 기준 기본 키보드는 다음과 같다:
 
-- `punch_left` — 기본 예시: `A`
-- `punch_right` — 기본 예시: `D`
+- `punch_left` — 기본 예시: `A`(보통 `Z`도 같은 액션에 묶임)
+- `punch_right` — 기본 예시: `D`(보통 `C`도 같은 액션에 묶임)
 - 나머지 액션(`upper_left`, `upper_right`, `guard`, 회피 등)은 필요에 따라 InputMap에서 추가 가능.
 
 코드를 수정하거나 예시를 제시할 때:
 
 - InputMap 수정 경로를 명시한다:  
   `프로젝트 → 프로젝트 설정(Project Settings) → Input Map`
-- 키보드 기반 테스트 로직은 가능하면 `scripts/player.gd`의 `_process` 안 패턴을 참고한다.
+- 키보드 기반 테스트 로직은 가능하면 `games/boxing/scripts/player.gd`의 `_process` 안 패턴을 참고한다.
 
 ---
 
@@ -167,7 +166,7 @@ README 기준 기본 키보드는 다음과 같다:
 - 좌표 기반 모드:
   - `"left_x,left_y,right_x,right_y"` 형식 문자열
 - 액션 기반 모드 (ML/threshold 공통):
-  - `"jab_l"`, `"jab_r"`, `"upper_l"`, `"upper_r"`, `"hook_l"`, `"hook_r"`, `"guard"`, `"guard_end"`
+  - `"punch_l"`, `"punch_r"`, `"upper_l"`, `"upper_r"`, `"guard"`, `"guard_end"`
 
 **이 스킬은 GDScript 측에서 포맷을 바꾸지 않도록 해야 한다.**
 
@@ -216,7 +215,7 @@ Godot 입장에서는:
 2. `tools/udp_send_mouse.py` 또는 `udp_send_webcam.py`, `udp_send_webcam_ml.py` 실행.
 3. 문제가 생기면:
    - 포트/호스트, 문자열 포맷이 README와 일치하는지 확인.
-   - Godot `scripts/main.gd`의 수신 부분에서 로그를 찍어 디버깅(예: `print(udp_string)`).
+   - Godot `games/boxing/scripts/main.gd`의 수신 부분에서 로그를 찍어 디버깅(예: `print(udp_string)`).
 
 ---
 

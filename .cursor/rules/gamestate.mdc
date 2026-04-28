@@ -18,7 +18,7 @@ globs:
 ## 제공 함수/상수 활용
 
 - 스태미너:
-  - `GameState.STAMINA_JAB`, `GameState.STAMINA_HOOK`, `GameState.STAMINA_UPPERCUT`
+  - `GameState.STAMINA_PUNCH`, `GameState.STAMINA_UPPERCUT`
   - `GameState.consume_stamina(amount: float) -> bool`
   - `GameState.get_stamina_ratio() -> float`
 - HP:

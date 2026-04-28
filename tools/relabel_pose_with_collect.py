@@ -1,7 +1,8 @@
 """
-collect_pose_data.py의 현재 로직(잽/어퍼/훅/가드 임팩트)으로
+collect_pose_data.py와 동일한 라벨 정책으로
 pose_data.json 안의 **프레임 라벨**을 pose_recordings_meta.json의
 **녹화 구간(start_index, frame_count) + 누른 키(label)** 기준으로 다시 만듭니다.
+기본은 60프레임 전부 누른 키로 통일; 구 방식은 --impact-labeling.
 
 왜 필요한가?
 - 콘솔의 "동작별 녹화 횟수"는 **메타(키를 누른 회차)** 를 세는 것이지,
@@ -17,7 +18,7 @@ pose_data.json 안의 **프레임 라벨**을 pose_recordings_meta.json의
 사용 (tools 폴더):
   python relabel_pose_with_collect.py
   python relabel_pose_with_collect.py --dry-run
-  python relabel_pose_with_collect.py --drop-frames 4
+  python relabel_pose_with_collect.py --impact-labeling --drop-frames 4
   python relabel_pose_with_collect.py --in-place   # start_index 유지, 라벨·impact만 갱신
   (기본) 메타 끝 phantom/초과는 자동 보정 후 재라벨. 끄기: --no-repair-meta
 """
@@ -150,12 +151,10 @@ def _warn_frame_labels_vs_meta_recordings(data: list, recs: list) -> None:
     fc = _frame_counter_excluding_drop(data)
     mc = Counter(r.get("label") for r in recs if r.get("label"))
     punch_like = (
-        "jab_l",
-        "jab_r",
+        "punch_l",
+        "punch_r",
         "upper_l",
         "upper_r",
-        "hook_l",
-        "hook_r",
     )
     lines = []
     for pl in punch_like:
@@ -168,14 +167,14 @@ def _warn_frame_labels_vs_meta_recordings(data: list, recs: list) -> None:
     if lines:
         print(
             "\n[경고] 재라벨은 **메타에 적힌 키(녹화 시 누른 번호)** 로 랜드마크를 다시 라벨링합니다."
-            "\n  아래처럼 프레임 라벨과 메타가 어긋나면, 저장 후 잽/훅 등이 메타 동작으로 **덮어써집니다**."
+            "\n  아래처럼 프레임 라벨과 메타가 어긋나면, 저장 후 펀치 등이 메타 동작으로 **덮어써집니다**."
         )
         for ln in lines:
             print(ln)
         print(
             "  → phantom 제거 후 남은 메타가 '앞쪽 34회차'만 담고 있을 수 있습니다. "
-            "잽·훅 녹화는 더 뒤 start_index 에만 있었다면 그 항목은 이미 제거된 상태입니다.\n"
-            "  → 백업 메타·pose_data 짝을 맞추거나, 잽/훅을 다시 녹화하는 편이 안전할 수 있습니다.\n"
+            "펀치 녹화는 더 뒤 start_index 에만 있었다면 그 항목은 이미 제거된 상태입니다.\n"
+            "  → 백업 메타·pose_data 짝을 맞추거나, 펀치를 다시 녹화하는 편이 안전할 수 있습니다.\n"
         )
 
 
@@ -190,15 +189,20 @@ def _print_frame_label_stats(data: list, title: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="메타 기준으로 pose_data.json 프레임 라벨 재생성 (collect 로직)"
+        description="메타 기준으로 pose_data.json 프레임 라벨 재생성 (collect와 동일 정책)"
     )
     parser.add_argument("--data", default=DATA_PATH)
     parser.add_argument("--meta", default=META_PATH)
     parser.add_argument(
+        "--impact-labeling",
+        action="store_true",
+        help="collect의 임팩트/none/drop 분할 라벨. 기본은 전 프레임 누른 키로 통일.",
+    )
+    parser.add_argument(
         "--drop-frames",
         type=int,
         default=None,
-        help="윈드업 drop 프레임 수 (기본: collect_pose_data.WINDUP_DROP_FRAMES)",
+        help="--impact-labeling 일 때만: 윈드업 drop 프레임 수 (기본: collect_pose_data.WINDUP_DROP_FRAMES)",
     )
     parser.add_argument(
         "--dry-run",
@@ -265,7 +269,7 @@ def main() -> None:
         return
 
     wdf = args.drop_frames if args.drop_frames is not None else cpd.WINDUP_DROP_FRAMES
-    PUNCH_LIKE = ("jab_l", "jab_r", "upper_l", "upper_r", "hook_l", "hook_r")
+    PUNCH_LIKE = ("punch_l", "punch_r", "upper_l", "upper_r")
 
     ok_cov, msg = _audit_meta_covers_data(data, recs)
     print(f"메타·데이터 커버리지 검사: {msg}")
@@ -295,12 +299,10 @@ def main() -> None:
     for lab in [
         "none",
         "guard",
-        "jab_l",
-        "jab_r",
+        "punch_l",
+        "punch_r",
         "upper_l",
         "upper_r",
-        "hook_l",
-        "hook_r",
     ]:
         if meta_counts.get(lab):
             print(f"  {lab}: {meta_counts[lab]}")
@@ -323,12 +325,15 @@ def main() -> None:
                 new_recs.append(dict(rec))
                 continue
 
-            labeled, impact_idx = cpd._label_recorded_frames(
-                label,
-                frames_flat,
-                windup_drop_frames=wdf,
-                hold_until_end=(label in PUNCH_LIKE),
-            )
+            if args.impact_labeling:
+                labeled, impact_idx = cpd._label_recorded_frames(
+                    label,
+                    frames_flat,
+                    windup_drop_frames=wdf,
+                    hold_until_end=(label in PUNCH_LIKE),
+                )
+            else:
+                labeled, impact_idx = cpd._label_recorded_frames_uniform(label, frames_flat)
             if len(labeled) != len(segment):
                 print(f"[경고] recordings[{idx_rec}] 라벨 길이 불일치, 건너뜀")
                 new_recs.append(dict(rec))
@@ -339,16 +344,18 @@ def main() -> None:
             new_rec = dict(rec)
             new_rec.pop("impact_idx", None)
             new_rec.pop("guard_start_idx", None)
-            if label in PUNCH_LIKE and impact_idx is not None:
-                new_rec["impact_idx"] = impact_idx
-            elif label == "guard" and impact_idx is not None:
-                new_rec["guard_start_idx"] = impact_idx
+            if args.impact_labeling:
+                if label in PUNCH_LIKE and impact_idx is not None:
+                    new_rec["impact_idx"] = impact_idx
+                elif label == "guard" and impact_idx is not None:
+                    new_rec["guard_start_idx"] = impact_idx
             new_recs.append(new_rec)
 
             action_count = sum(1 for x in labeled if x["label"] == label)
             drop_count = sum(1 for x in labeled if x.get("label") == cpd.LABEL_DROP)
+            mode = "impact" if args.impact_labeling else "uniform"
             print(
-                f"[{idx_rec+1}/{len(recs)}] in-place {label}: "
+                f"[{idx_rec+1}/{len(recs)}] in-place {label} ({mode}): "
                 f"'{label}' 프레임 {action_count}, drop {drop_count}, impact_idx={impact_idx}"
             )
 
@@ -402,12 +409,15 @@ def main() -> None:
             print(f"[경고] landmarks 손상 label={label} start={start}, 건너뜀")
             continue
 
-        labeled, impact_idx = cpd._label_recorded_frames(
-            label,
-            frames_flat,
-            windup_drop_frames=wdf,
-            hold_until_end=(label in PUNCH_LIKE),
-        )
+        if args.impact_labeling:
+            labeled, impact_idx = cpd._label_recorded_frames(
+                label,
+                frames_flat,
+                windup_drop_frames=wdf,
+                hold_until_end=(label in PUNCH_LIKE),
+            )
+        else:
+            labeled, impact_idx = cpd._label_recorded_frames_uniform(label, frames_flat)
 
         start_new = len(new_data)
         new_data.extend(labeled)
@@ -417,17 +427,19 @@ def main() -> None:
             "start_index": start_new,
             "frame_count": len(labeled),
         }
-        if label in PUNCH_LIKE and impact_idx is not None:
-            new_rec["impact_idx"] = impact_idx
-        elif label == "guard" and impact_idx is not None:
-            new_rec["guard_start_idx"] = impact_idx
+        if args.impact_labeling:
+            if label in PUNCH_LIKE and impact_idx is not None:
+                new_rec["impact_idx"] = impact_idx
+            elif label == "guard" and impact_idx is not None:
+                new_rec["guard_start_idx"] = impact_idx
 
         new_recs.append(new_rec)
 
         action_count = sum(1 for x in labeled if x["label"] == label)
         drop_count = sum(1 for x in labeled if x.get("label") == cpd.LABEL_DROP)
+        mode = "impact" if args.impact_labeling else "uniform"
         print(
-            f"[{idx_rec+1}/{len(recs_sorted)}] {label}: "
+            f"[{idx_rec+1}/{len(recs_sorted)}] {label} ({mode}): "
             f"{frame_count}프레임 → {len(labeled)}프레임, "
             f"'{label}' {action_count}, drop {drop_count}, impact_idx={impact_idx}"
         )

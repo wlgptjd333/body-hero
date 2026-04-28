@@ -1,10 +1,10 @@
 """
-포즈 분류 추론 서버: 시퀀스(8프레임) + 가드만 단일 프레임 폴백.
+포즈 분류 추론 서버: 시퀀스(기본 4프레임, 모델 입력에 맞춤) + 가드만 단일 프레임 폴백.
 - 가드는 "유지" 동작이라 시퀀스에서 잘 안 잡힘 → 시퀀스의 마지막 프레임으로 단일 프레임 모델을 돌려
   guard면 guard 반환 (빠른 인식·유지 가능).
 - 나머지 동작은 시퀀스 모델로만 판정.
 
-필요: pose_classifier_seq.keras (필수), pose_classifier.keras (가드 폴백용, 있으면 사용)
+필요: pose_classifier_seq_len4.keras 또는 pose_classifier_seq.keras (필수), pose_classifier.keras (가드 폴백용, 있으면 사용)
 가드 폴백 모델이 없으면 시퀀스만 사용. 단일 프레임 모델은 train_pose_classifier.py 로 생성.
 
 실행: cd tools → python pose_server.py
@@ -16,12 +16,16 @@ import threading
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_MODEL = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
+_MODEL_SEQ_4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
+_MODEL_SEQ_8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
+DEFAULT_MODEL = _MODEL_SEQ_4 if os.path.isfile(_MODEL_SEQ_4) else _MODEL_SEQ_8
 DEFAULT_MODEL_SINGLE = os.path.join(SCRIPT_DIR, "pose_classifier.keras")
-SEQ_LEN = 8
-CLASS_NAMES = ["none", "guard", "jab_l", "jab_r", "upper_l", "upper_r", "hook_l", "hook_r"]
-GUARD_INDEX = 1
-DEFAULT_CONFIDENCE_THRESHOLD = 0.95
+SEQ_LEN = 4 if DEFAULT_MODEL == _MODEL_SEQ_4 else 8
+from pose_class_names import GUARD_INDEX, POSE_CLASS_NAMES
+
+CLASS_NAMES = list(POSE_CLASS_NAMES)
+DEFAULT_CONFIDENCE_THRESHOLD = 0.93
+DEFAULT_UPPER_CONFIDENCE_THRESHOLD = 0.88
 # 가드 폴백: 단일 프레임에서 이 확신 이상이면 guard 반환 (시퀀스 결과 무시)
 DEFAULT_GUARD_FALLBACK_THRESHOLD = 0.50
 
@@ -37,16 +41,27 @@ app = Flask(__name__)
 _model = None
 _model_single = None
 _confidence_threshold = DEFAULT_CONFIDENCE_THRESHOLD
+_upper_confidence_threshold = DEFAULT_UPPER_CONFIDENCE_THRESHOLD
 _guard_fallback_threshold = DEFAULT_GUARD_FALLBACK_THRESHOLD
 _predict_lock = threading.Lock()
 
 
+def _keras_load_model(path: str):
+    try:
+        return tf.keras.models.load_model(path, compile=False)
+    except TypeError:
+        return tf.keras.models.load_model(path)
+
+
 def load_model(path=None):
-    global _model
+    global _model, SEQ_LEN
     path = path or DEFAULT_MODEL
     if not os.path.isfile(path):
         raise FileNotFoundError(f"모델 파일 없음: {path} (먼저 train_pose_classifier_seq.py 실행)")
-    _model = tf.keras.models.load_model(path)
+    _model = _keras_load_model(path)
+    inp = _model.input_shape
+    if isinstance(inp, (list, tuple)) and len(inp) >= 2 and inp[1] is not None:
+        SEQ_LEN = int(inp[1])
     return _model
 
 
@@ -55,7 +70,7 @@ def load_model_single(path=None):
     path = path or DEFAULT_MODEL_SINGLE
     if not os.path.isfile(path):
         return None
-    _model_single = tf.keras.models.load_model(path)
+    _model_single = _keras_load_model(path)
     return _model_single
 
 
@@ -97,7 +112,11 @@ def predict():
     idx = int(np.argmax(pred))
     conf = float(pred[idx])
     label = CLASS_NAMES[idx]
-    if conf < _confidence_threshold:
+    if label in ("upper_l", "upper_r", "punch_l", "punch_r"):
+        need = _upper_confidence_threshold
+    else:
+        need = _confidence_threshold
+    if conf < need:
         label = "none"
     return jsonify({"result": label, "confidence": conf})
 
@@ -108,16 +127,23 @@ def health():
 
 
 def main():
-    global _confidence_threshold, _guard_fallback_threshold
+    global _confidence_threshold, _upper_confidence_threshold, _guard_fallback_threshold
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=5000)
     parser.add_argument("--model", default=DEFAULT_MODEL, help="시퀀스 모델 (필수)")
     parser.add_argument("--model-single", default=DEFAULT_MODEL_SINGLE, help="가드 폴백용 단일 프레임 모델 (있으면 사용)")
-    parser.add_argument("--threshold", type=float, default=DEFAULT_CONFIDENCE_THRESHOLD, help="Min confidence (below → none)")
+    parser.add_argument("--threshold", type=float, default=DEFAULT_CONFIDENCE_THRESHOLD, help="Min confidence (below → none), 어퍼 제외")
+    parser.add_argument(
+        "--upper-threshold",
+        type=float,
+        default=DEFAULT_UPPER_CONFIDENCE_THRESHOLD,
+        help="upper_l/upper_r 만족 최소 확률 (이하이면 none)",
+    )
     parser.add_argument("--guard-threshold", type=float, default=DEFAULT_GUARD_FALLBACK_THRESHOLD, help="가드 폴백 확신 하한")
     args = parser.parse_args()
     _confidence_threshold = args.threshold
+    _upper_confidence_threshold = args.upper_threshold
     _guard_fallback_threshold = args.guard_threshold
     try:
         load_model(args.model)

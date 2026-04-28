@@ -1,15 +1,19 @@
 extends Control
 ## 메인 메뉴: 게임 시작, 게임 설명, 설정, 종료 (오른쪽 세로 버튼)
 
-const SCENE_GAME := "res://scenes/main.tscn"
+const SCENE_GAME := "res://games/boxing/scenes/main.tscn"
+const SCENE_HOME_HUB := "res://scenes/home_hub.tscn"
 const SCENE_SETTINGS := "res://scenes/ui/settings_panel.tscn"
 const SCENE_HOW_TO_PLAY := "res://scenes/ui/how_to_play_panel.tscn"
 const SCENE_STATS := "res://scenes/ui/stats_panel.tscn"
+const SCENE_BOXING_UPGRADE := "res://games/boxing/scenes/boxing_upgrade_panel.tscn"
 
 @onready var _btn_start: Button = $RightPanel/ButtonBox/BtnStart
+@onready var _btn_upgrade: Button = $RightPanel/ButtonBox/BtnUpgrade
 @onready var _btn_how_to_play: Button = $RightPanel/ButtonBox/BtnHowToPlay
 @onready var _btn_settings: Button = $RightPanel/ButtonBox/BtnSettings
 @onready var _btn_stats: Button = $RightPanel/ButtonBox/BtnStats
+@onready var _btn_home: Button = $RightPanel/ButtonBox/BtnHome
 @onready var _btn_quit: Button = $RightPanel/ButtonBox/BtnQuit
 
 var _ch_titles: Array[Label] = []
@@ -28,6 +32,7 @@ var _goal_spin_suppress: bool = false
 var _settings_panel: Control
 var _how_to_play_panel: Control
 var _stats_panel: Control
+var _upgrade_panel: Control
 
 
 func _ready() -> void:
@@ -45,12 +50,16 @@ func _ready() -> void:
 			bgm.play()
 	if _btn_start:
 		_btn_start.pressed.connect(_on_start)
+	if _btn_upgrade:
+		_btn_upgrade.pressed.connect(_on_upgrade)
 	if _btn_how_to_play:
 		_btn_how_to_play.pressed.connect(_on_how_to_play)
 	if _btn_settings:
 		_btn_settings.pressed.connect(_on_settings)
 	if _btn_stats:
 		_btn_stats.pressed.connect(_on_stats)
+	if _btn_home:
+		_btn_home.pressed.connect(_on_home)
 	if _btn_quit:
 		_btn_quit.pressed.connect(_on_quit)
 	_ch_titles = [
@@ -165,17 +174,16 @@ func _refresh_daily_goal_progress_only() -> void:
 	if goal <= 0.0:
 		_goal_hints.text = ""
 		return
-	var j: int = int(h.get("jab_only", 0))
-	var hk: int = int(h.get("hook_only", 0))
+	var p: int = int(h.get("punch_only", 0))
 	var u: int = int(h.get("upper_only", 0))
-	var d: int = int(h.get("dodge_only", 0))
+	var g_sec: int = int(h.get("guard_hold_sec", 0))
 	var m: int = int(h.get("mixed_same", 0))
 	_goal_hints.text = (
 		"남은 약 %.0f kcal을 게임 내 동작 상수만으로 채울 때 대략:\n"
-		+ "• 잽만: 약 %d회 · 훅만: 약 %d회 · 어퍼만: 약 %d회 · 회피만: 약 %d회\n"
-		+ "• 잽/훅/어퍼를 비슷하게 섞으면: 약 %d회 분량\n"
+		+ "• 펀치만: 약 %d회 · 어퍼만: 약 %d회 · 가드 유지만: 약 %d초\n"
+		+ "• 펀치/어퍼를 비슷하게 섞으면: 약 %d회 분량\n"
 		+ "(세션 종료 시 MET 보정으로 실제 누적과 다를 수 있어요.)"
-	) % [rem, j, hk, u, d, m]
+	) % [rem, p, u, g_sec, m]
 
 
 func _try_load_stream(player: AudioStreamPlayer, paths: Array[String]) -> void:
@@ -188,7 +196,31 @@ func _try_load_stream(player: AudioStreamPlayer, paths: Array[String]) -> void:
 
 
 func _on_start() -> void:
+	# 이전 씬에서 paused 상태가 남아 있으면 새 씬이 '멈춘 것처럼' 보일 수 있어 강제로 해제
+	get_tree().paused = false
 	get_tree().change_scene_to_file(SCENE_GAME)
+
+
+func _on_upgrade() -> void:
+	if _upgrade_panel:
+		return
+	var packed := load(SCENE_BOXING_UPGRADE) as PackedScene
+	if not packed:
+		return
+	_upgrade_panel = packed.instantiate() as Control
+	if _upgrade_panel:
+		add_child(_upgrade_panel)
+		_upgrade_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+		if _upgrade_panel.has_signal("upgrade_closed"):
+			_upgrade_panel.upgrade_closed.connect(_close_upgrade)
+		if _upgrade_panel.has_method("refresh_display"):
+			_upgrade_panel.refresh_display()
+
+
+func _close_upgrade() -> void:
+	if _upgrade_panel:
+		_upgrade_panel.queue_free()
+		_upgrade_panel = null
 
 
 func _on_how_to_play() -> void:
@@ -253,5 +285,12 @@ func _close_stats() -> void:
 	_refresh_daily_goal_ui()
 
 
+func _on_home() -> void:
+	# 메인(복싱) 화면에서만 홈 허브로 이동
+	get_tree().paused = false
+	get_tree().change_scene_to_file(SCENE_HOME_HUB)
+
+
 func _on_quit() -> void:
+	GameState.shutdown_webcam_ml_bridge()
 	get_tree().quit()

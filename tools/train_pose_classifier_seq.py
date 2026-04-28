@@ -1,11 +1,11 @@
 """
 연속 프레임(시퀀스) 포즈 분류: pose_data.json + pose_recordings_meta.json 그대로 사용.
-녹화 구간별로 슬라이딩 윈도우해 (seq_len 프레임) → LSTM/Conv1D → 동작 분류.
+녹화 구간별로 슬라이딩 윈도우해 (seq_len 프레임, 기본 4) → LSTM/Conv1D → 동작 분류.
 단일 프레임 학습과 동일한 데이터·라벨 형식, 메타로 구간만 구분해 시퀀스만 생성.
 
 저장: pose_classifier_seq.keras, classification_report_seq.txt
 실행: python train_pose_classifier_seq.py
-기본: 좌우반전 증강 + 잽/어퍼/훅 L:R 소수 오버샘플(lr_pose_utils). 리포트: report_pose_lr_balance.py
+기본: 좌우반전 증강 + 펀치/어퍼 L:R 소수 오버샘플(lr_pose_utils). 리포트: report_pose_lr_balance.py
 """
 import os
 import json
@@ -19,8 +19,11 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_DATA = os.path.join(SCRIPT_DIR, "pose_data.json")
 DEFAULT_META = os.path.join(SCRIPT_DIR, "pose_recordings_meta.json")
 DEFAULT_MODEL = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
+DEFAULT_MODEL_LEN4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
 
-ALL_CLASS_NAMES = ["none", "guard", "jab_l", "jab_r", "upper_l", "upper_r", "hook_l", "hook_r"]
+from pose_class_names import POSE_CLASS_NAMES
+
+ALL_CLASS_NAMES = list(POSE_CLASS_NAMES)
 FEATURE_DIM = 33 * 3
 NUM_LANDMARKS = 33
 
@@ -29,10 +32,11 @@ def load_sequences_by_recordings(data_path, meta_path, class_names, seq_len, ski
     """pose_data.json + pose_recordings_meta.json에서 녹화 구간별로 시퀀스 생성.
 
     라벨: **원본 타임라인**에서 연속 seq_len 프레임의 **가운데 인덱스** 프레임 라벨.
-    impact_idx가 있으면 해당 녹화에서 임팩트 프레임부터 끝까지만 구간으로 사용.
+    impact_idx가 있으면(구 collect 임팩트 모드) 해당 녹화에서 임팩트 프레임부터 끝까지만 구간으로 사용.
+    없거나 생략이면 녹화 전체(frame_count) 구간을 사용(전 프레임 단일 라벨 수집과 맞음).
 
     주의(이전 버전 버그): drop/none 등을 건너뛰며 랜드마크만 압축하면 시간축이 깨져
-    어퍼/훅처럼 짧은 동작 구간이 시퀀스에 거의 안 들어가는 문제가 생길 수 있음.
+    어퍼처럼 짧은 동작 구간이 시퀀스에 거의 안 들어가는 문제가 생길 수 있음.
     지금은 **데이터 배열의 연속 인덱스**로만 윈도우를 잡음.
     """
     skip_labels = skip_labels or []
@@ -146,7 +150,7 @@ def main():
         "--balance-lr-pairs",
         action="store_true",
         default=True,
-        help="잽/어퍼/훅 각 L:R 쌍에서 적은 쪽 시퀀스를 복제해 오버샘플 (기본 켬)",
+        help="펀치/어퍼 각 L:R 쌍에서 적은 쪽 시퀀스를 복제해 오버샘플 (기본 켬)",
     )
     parser.add_argument(
         "--no-balance-lr-pairs",
@@ -161,6 +165,10 @@ def main():
         help="소수 클래스를 원본 대비 최대 몇 배까지 늘릴지(다수 쪽 개수 상한은 min(다수, 소수*이 값))",
     )
     args = parser.parse_args()
+
+    # udp_send_webcam_ml.py 는 seq_len4 모델 파일이 있으면 그걸 우선 로드함 → 기본 저장 경로 맞춤
+    if args.seq_len == 4 and os.path.abspath(args.model) == os.path.abspath(DEFAULT_MODEL):
+        args.model = DEFAULT_MODEL_LEN4
 
     class_names = ALL_CLASS_NAMES.copy()
     num_classes = len(class_names)

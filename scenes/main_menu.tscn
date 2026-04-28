@@ -259,6 +259,15 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
 text = "게임 시작"
 
+[node name="BtnUpgrade" type="Button" parent="RightPanel/ButtonBox"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
+text = "업그레이드 (💧)"
+
 [node name="BtnHowToPlay" type="Button" parent="RightPanel/ButtonBox"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
@@ -285,6 +294,15 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
 text = "통계"
+
+[node name="BtnHome" type="Button" parent="RightPanel/ButtonBox"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
+text = "홈으로"
 
 [node name="BtnQuit" type="Button" parent="RightPanel/ButtonBox"]
 custom_minimum_size = Vector2(0, 56)

@@ -22,7 +22,7 @@ globs:
   - 예: `var stamina: float = 100.0`, `func _process(delta: float) -> void:`
 - **이름 규칙**:
   - 변수, 함수, 상수 이름은 snake_case를 기본으로 한다.
-  - 상수는 대문자 스네이크(`STAMINA_JAB`)를 사용한다.
+  - 상수는 대문자 스네이크(`STAMINA_PUNCH`)를 사용한다.
 - **라이프사이클 함수**:
   - `_ready`, `_process`, `_physics_process`, 신호 콜백 등 Godot 라이프사이클 함수에 맞춰 로직을 배치한다.
   - 별도의 전역 루프(while true 등)를 새로 만들지 않는다.
@@ -30,7 +30,7 @@ globs:
 ## 상태 관리 - GameState 싱글톤
 
 - HP/스태미너/제자리걸음 등 게임 전역 상태는 **반드시 AutoLoad 싱글톤 `GameState`**를 통해 관리한다.
-  - 예: `GameState.consume_stamina(GameState.STAMINA_JAB)`
+  - 예: `GameState.consume_stamina(GameState.STAMINA_PUNCH)`
   - 예: `GameState.get_stamina_ratio()`, `GameState.get_player_hp_ratio()`
 - 씬/노드 안에 전역과 같은 의미의 값을 중복 저장하는 새 필드를 만들지 않는다.
 - 새로운 전역 수치를 추가해야 할 때는:

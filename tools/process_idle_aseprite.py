@@ -106,9 +106,10 @@ def _trim_alpha(im: Image.Image) -> Image.Image:
     return im.crop(bbox)
 
 
-def _uniform_center_frames(
+def _uniform_align_frames(
     frames: list[Image.Image],
     canvas_size: int,
+    align: str,
 ) -> list[Image.Image]:
     """트림 후 최대 너비·높이에 맞춰 중앙 배치, 그다음 정사각 canvas_size에 중앙 패딩."""
     trimmed = [_trim_alpha(f) for f in frames]
@@ -123,7 +124,7 @@ def _uniform_center_frames(
         cw, ch = t.size
         sheet = Image.new("RGBA", (max_w, max_h), (0, 0, 0, 0))
         ox = (max_w - cw) // 2
-        oy = (max_h - ch) // 2
+        oy = (max_h - ch) if align == "bottom" else (max_h - ch) // 2
         sheet.paste(t, (ox, oy), t)
         mid.append(sheet)
     out: list[Image.Image] = []
@@ -154,6 +155,26 @@ def natural_key(s: str) -> list:
     return [int(t) if t.isdigit() else t.lower() for t in re.split(r"(\d+)", s)]
 
 
+def _clear_godot_import_cache_for_prefix(project_root: Path, prefix: str) -> int:
+    imported_dir = project_root / ".godot" / "imported"
+    if not imported_dir.is_dir():
+        return 0
+    removed = 0
+    for fp in imported_dir.iterdir():
+        if not fp.is_file():
+            continue
+        if prefix not in fp.name:
+            continue
+        if fp.suffix not in (".ctex", ".md5"):
+            continue
+        try:
+            fp.unlink()
+            removed += 1
+        except OSError:
+            pass
+    return removed
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Aseprite IDLE → 정규화 PNG 시퀀스")
     p.add_argument(
@@ -161,13 +182,20 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         nargs="?",
         default=None,
-        help=".aseprite 파일 (없으면 --from-dir 필수)",
+        help=".aseprite 파일 (--from-dir / --from-aseprites 없을 때)",
     )
     p.add_argument(
         "--from-dir",
         type=Path,
         default=None,
         help="이미 추출된 PNG들이 있는 폴더 (Aseprite CLI 생략)",
+    )
+    p.add_argument(
+        "--from-aseprites",
+        type=Path,
+        nargs="+",
+        default=None,
+        help="Multiple .aseprite paths in order (all exported PNGs per file)",
     )
     p.add_argument(
         "--out-dir",
@@ -196,6 +224,13 @@ def parse_args() -> argparse.Namespace:
         help="Aseprite.exe 경로 (미지정 시 ASEPRITE 환경변수·기본 경로 탐색)",
     )
     p.add_argument(
+        "--align",
+        type=str,
+        choices=("center", "bottom"),
+        default="center",
+        help="Sprite placement in shared frame box: bottom = feet baseline",
+    )
+    p.add_argument(
         "--model",
         type=str,
         default=_DEFAULT_MODEL,
@@ -222,6 +257,36 @@ def main() -> int:
             if not frame_paths:
                 print(f"PNG 없음: {d}", file=sys.stderr)
                 return 1
+        elif args.from_aseprites:
+            paths = [p.resolve() for p in args.from_aseprites]
+            for path in paths:
+                if not path.is_file():
+                    print(f"파일 없음: {path}", file=sys.stderr)
+                    return 1
+            exe = args.aseprite or _find_aseprite()
+            if not exe or not Path(exe).is_file():
+                print(
+                    "Aseprite.exe not found (--from-aseprites). "
+                    "Set ASEPRITE env var or pass --aseprite.",
+                    file=sys.stderr,
+                )
+                return 1
+            temp_dir = Path(tempfile.mkdtemp(prefix="ase_multi_"))
+            all_frames: list[Path] = []
+            for i, ase in enumerate(paths):
+                sub = temp_dir / f"part_{i:03d}"
+                sub.mkdir(parents=True, exist_ok=True)
+                exported = _export_aseprite_frames(
+                    Path(exe),
+                    ase,
+                    sub,
+                    args.ignore_layer.strip(),
+                )
+                all_frames.extend(exported)
+            frame_paths = all_frames
+            if not frame_paths:
+                print("--from-aseprites produced no PNGs.", file=sys.stderr)
+                return 1
         elif args.aseprite_file:
             ase = args.aseprite_file.resolve()
             if not ase.is_file():
@@ -244,7 +309,7 @@ def main() -> int:
                 args.ignore_layer.strip(),
             )
         else:
-            print(".aseprite 파일 또는 --from-dir 이 필요합니다.", file=sys.stderr)
+            print(".aseprite 파일, --from-dir, 또는 --from-aseprites 가 필요합니다.", file=sys.stderr)
             return 1
 
         images: list[Image.Image] = []
@@ -257,7 +322,7 @@ def main() -> int:
             session = new_session(args.model)
             images = [_remove_bg(im, session) for im in images]
 
-        normalized = _uniform_center_frames(images, args.size)
+        normalized = _uniform_align_frames(images, args.size, args.align)
 
         # 프레임 수가 줄었을 때 이전 burger_idle_06.png 등이 남지 않도록
         for old in sorted(out_dir.glob(f"{args.prefix}_*.png")):
@@ -268,7 +333,17 @@ def main() -> int:
             final.save(out_dir / name, format="PNG")
             print(out_dir / name)
 
-        print(f"완료: {len(normalized)}장 → {out_dir}", file=sys.stderr)
+        print(
+            f"완료: {len(normalized)}장 → {out_dir} (size={args.size}, align={args.align})",
+            file=sys.stderr,
+        )
+        proj_root = out_dir.parent.parent
+        n_cleared = _clear_godot_import_cache_for_prefix(proj_root, args.prefix)
+        if n_cleared:
+            print(
+                f"Godot import cache cleared: {n_cleared} (.godot/imported/{args.prefix}*)",
+                file=sys.stderr,
+            )
         return 0
     except subprocess.CalledProcessError as e:
         print(f"Aseprite 실행 실패: {e}", file=sys.stderr)

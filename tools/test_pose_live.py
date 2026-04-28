@@ -1,10 +1,11 @@
 """
 학습된 시퀀스 포즈 분류 모델로 웹캠 실시간 테스트.
-연속 8프레임 버퍼로 예측. 뼈대 + 현재 동작 표시 (none=하얀색, 그 외=초록색).
+연속 시퀀스 버퍼로 예측. 뼈대 + 현재 동작 표시 (none=하얀색, 그 외=초록색).
 
-실행: cd tools → python test_pose_live.py
+실행: cd tools → python test_pose_live.py [--camera-index 1] [--camera-backend dshow]
 종료: Q
 """
+import argparse
 import os
 import time
 
@@ -12,13 +13,17 @@ os.environ["GLOG_minloglevel"] = "2"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_MODEL = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
-SEQ_LEN = 8
-CLASS_NAMES = ["none", "guard", "jab_l", "jab_r", "upper_l", "upper_r", "hook_l", "hook_r"]
+from pose_class_names import POSE_CLASS_NAMES
+
+_MODEL_SEQ_4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
+_MODEL_SEQ_8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
+DEFAULT_MODEL = _MODEL_SEQ_4 if os.path.isfile(_MODEL_SEQ_4) else _MODEL_SEQ_8
+SEQ_LEN = 4 if DEFAULT_MODEL == _MODEL_SEQ_4 else 8
+CLASS_NAMES = list(POSE_CLASS_NAMES)
 PROCESS_W, PROCESS_H = 640, 480
 FPS_TARGET = 30
-# 확신이 이보다 낮으면 none으로 표시
-CONFIDENCE_THRESHOLD = 0.95
+CONFIDENCE_THRESHOLD = 0.93
+UPPER_AND_PUNCH_CONFIDENCE_THRESHOLD = 0.88
 
 try:
     import cv2
@@ -32,6 +37,7 @@ except ImportError as e:
     raise SystemExit(1) from e
 
 from pose_normalize import normalize_landmarks_flat
+from cv_capture import open_cv_video_capture
 
 MODEL_PATH = os.path.join(SCRIPT_DIR, "pose_landmarker.task")
 MODEL_URL = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker/lite/1/pose_landmarker_lite.task"
@@ -61,12 +67,25 @@ def _download_pose_model():
 
 
 def main():
+    parser = argparse.ArgumentParser(description="학습된 시퀀스 모델로 웹캠 실시간 테스트")
+    parser.add_argument("--camera-index", type=int, default=0, metavar="N", help="OpenCV 카메라 인덱스 (기본 0)")
+    parser.add_argument(
+        "--camera-backend",
+        choices=["auto", "default", "dshow", "msmf"],
+        default="auto",
+        help="Windows USB 인식 문제 시 dshow 권장",
+    )
+    args = parser.parse_args()
+
     _download_pose_model()
 
     if not os.path.isfile(DEFAULT_MODEL):
         print("모델 파일 없음. 먼저 python train_pose_classifier_seq.py 로 학습하세요.")
         raise SystemExit(1)
     model = tf.keras.models.load_model(DEFAULT_MODEL)
+    inp = model.input_shape
+    if isinstance(inp, (list, tuple)) and len(inp) >= 2 and inp[1] is not None:
+        SEQ_LEN = int(inp[1])
     print(f"시퀀스 모델 로드: {DEFAULT_MODEL} (seq_len={SEQ_LEN})")
 
     BaseOptions = mp_tasks.BaseOptions
@@ -83,14 +102,15 @@ def main():
     def make_mp_image(rgb):
         return mp_core_image.Image(image_format=mp_core_image.ImageFormat.SRGB, data=rgb.copy(order="C"))
 
-    cap = cv2.VideoCapture(0)
+    cap, cap_backend_label = open_cv_video_capture(args.camera_index, args.camera_backend)
     if not cap.isOpened():
-        print("웹캠을 열 수 없습니다.")
+        print("웹캠을 열 수 없습니다. --camera-index / --camera-backend 를 조정해 보세요.")
         return
+    print(f"카메라: index={args.camera_index}, backend={args.camera_backend} → {cap_backend_label}")
 
     frame_idx = 0
     sequence_buffer = []
-    print("실시간 포즈 테스트 (시퀀스 8프레임) — 뼈대 + 현재 동작 표시")
+    print(f"실시간 포즈 테스트 (시퀀스 {SEQ_LEN}프레임) — 뼈대 + 현재 동작 표시")
     print("none = 하얀색, 그 외 = 초록색 | 종료: Q\n")
 
     try:
@@ -123,8 +143,14 @@ def main():
                     pred = model.predict(X, verbose=0)[0]
                     idx = int(np.argmax(pred))
                     conf = float(pred[idx])
-                    if conf >= CONFIDENCE_THRESHOLD:
-                        pred_label = CLASS_NAMES[idx]
+                    lbl = CLASS_NAMES[idx]
+                    need = (
+                        UPPER_AND_PUNCH_CONFIDENCE_THRESHOLD
+                        if lbl in ("upper_l", "upper_r", "punch_l", "punch_r")
+                        else CONFIDENCE_THRESHOLD
+                    )
+                    if conf >= need:
+                        pred_label = lbl
                         confidence = conf
                     else:
                         pred_label = "none"

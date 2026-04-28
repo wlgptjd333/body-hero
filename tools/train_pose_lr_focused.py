@@ -1,11 +1,11 @@
 """
-L/R(잽·어퍼·훅) 혼동 완화용 일괄 학습 헬퍼.
+L/R(펀치·어퍼) 혼동 완화용 일괄 학습 헬퍼.
 
 1) report_pose_lr_balance.py  — 데이터 L:R 비율 확인
 2) train_pose_classifier_seq.py — 시퀀스 모델 (기본: 좌우반전 + L/R 오버샘플)
 3) (선택) train_pose_classifier.py — 가드 단일 프레임 폴백
 
-실행: cd tools → python train_pose_lr_focused.py
+실행: cd tools → python train_pose_lr_focused.py  (데이터 녹화: collect_pose_data.py --camera-index N --camera-backend dshow)
 옵션은 각 스크립트에 동일하게 넘기려면 이 파일을 수정하거나 아래 subprocess 인자를 조정.
 """
 from __future__ import annotations

@@ -1,15 +1,15 @@
 """
-포즈 분류 모델 학습: pose_data.json(정규화된 랜드마크) → Dense 네트워크 → none, guard, jab_l, jab_r, upper_l, upper_r, hook_l, hook_r.
+포즈 분류 모델 학습: pose_data.json(정규화된 랜드마크) → Dense 네트워크 → none, guard, punch_l, punch_r, upper_l, upper_r.
 졸업작품용: 클래스 불균형 보정(class_weight), EarlyStopping, 회전/스케일/좌우반전 증강으로 다양한 사람·각도·거리 견고성 확보.
 
 좌우반전(flip-augment): 라벨만 L↔R 바꿔 추가. 반대편 정확도 떨어뜨리지 않음.
-반대편 유지하면서 약한 쪽만 보강: --extra-augment-weak jab_r,upper_l (해당 클래스만 노이즈·회전 추가 증강, 가중치 변경 없음).
-학습 횟수(녹화 횟수) 늘리기: jab_r, upper_l을 더 많이 녹화한 뒤 재학습해도 L/R 균형에 도움.
+반대편 유지하면서 약한 쪽만 보강: --extra-augment-weak punch_r,upper_l (해당 클래스만 노이즈·회전 추가 증강, 가중치 변경 없음).
+학습 횟수(녹화 횟수) 늘리기: punch_r, upper_l을 더 많이 녹화한 뒤 재학습해도 L/R 균형에 도움.
 
 저장: pose_classifier.keras, training_history.json (학습 곡선), classification_report.txt (클래스별 정확도)
 
 실행: cd tools → python train_pose_classifier.py
-옵션: --extra-augment-weak jab_r,upper_l  (약한 쪽만 추가 증강, 반대편 유지)
+옵션: --extra-augment-weak punch_r,upper_l  (약한 쪽만 추가 증강, 반대편 유지)
 """
 import os
 import json
@@ -25,7 +25,9 @@ DEFAULT_DATA = os.path.join(SCRIPT_DIR, "pose_data.json")
 DEFAULT_MODEL = os.path.join(SCRIPT_DIR, "pose_classifier.keras")
 
 # 전체 클래스 (--classes 미지정 시 사용)
-ALL_CLASS_NAMES = ["none", "guard", "jab_l", "jab_r", "upper_l", "upper_r", "hook_l", "hook_r"]
+from pose_class_names import POSE_CLASS_NAMES
+
+ALL_CLASS_NAMES = list(POSE_CLASS_NAMES)
 FEATURE_DIM = 33 * 3  # 99
 NUM_LANDMARKS = 33
 
@@ -58,7 +60,7 @@ def load_data(path, class_names, skip_labels=None):
 def subsample_consecutive_blocks(X_list, y_list, max_per_block, rng):
     """
     같은 라벨이 연속된 구간(블록)마다 최대 max_per_block개만 랜덤 샘플링.
-    한 녹화에서 나온 40프레임 jab_l → 5프레임만 쓰는 식으로 중복·과적합 완화.
+    한 녹화에서 나온 40프레임 punch_l → 5프레임만 쓰는 식으로 중복·과적합 완화.
     max_per_block <= 0 이면 샘플링 안 함.
     """
     if max_per_block <= 0 or len(y_list) == 0:
@@ -131,10 +133,12 @@ def apply_horizontal_flip(X):
 
 
 def build_flip_label_swap(class_names):
-    """좌우 반전 시 라벨 스왑 맵: jab_l↔jab_r, upper_l↔upper_r, hook_l↔hook_r. none/guard 유지."""
+    """좌우 반전 시 라벨 스왑 맵: lr_pose_utils.LR_PAIRS 기준. none/guard 유지."""
+    from lr_pose_utils import LR_PAIRS
+
     label_to_idx = {c: i for i, c in enumerate(class_names)}
     idx_to_new = list(range(len(class_names)))
-    for left, right in [("jab_l", "jab_r"), ("upper_l", "upper_r"), ("hook_l", "hook_r")]:
+    for left, right in LR_PAIRS:
         if left in label_to_idx and right in label_to_idx:
             i, j = label_to_idx[left], label_to_idx[right]
             idx_to_new[i], idx_to_new[j] = j, i
@@ -150,7 +154,7 @@ def main():
     parser.add_argument("--augment", type=float, default=0.03, help="Gaussian noise std for augmentation (0=off)")
     parser.add_argument("--patience", type=int, default=22, help="EarlyStopping patience (epochs)")
     parser.add_argument("--classes", type=str, default=None,
-                        help="Comma-separated classes only (e.g. none,jab_l). Load and train only those (sanity check).")
+                        help="Comma-separated classes only (e.g. none,punch_l). Load and train only those (sanity check).")
     parser.add_argument("--balance-ratio", type=float, default=4.0,
                         help="Downsample majority class so it has at most (smallest_class * this). 0 = no balancing. Default 4.")
     parser.add_argument("--view-augment", action="store_true", default=True,
@@ -162,7 +166,7 @@ def main():
     parser.add_argument("--no-flip-augment", action="store_false", dest="flip_augment",
                         help="Disable flip augmentation.")
     parser.add_argument("--balance-lr-pairs", action="store_true", default=True,
-                        help="After augment, oversample minority side of jab/upper/hook L:R pairs (default on).")
+                        help="After augment, oversample minority side of punch/upper L:R pairs (default on).")
     parser.add_argument("--no-balance-lr-pairs", action="store_false", dest="balance_lr_pairs",
                         help="Disable L/R pair oversampling.")
     parser.add_argument("--lr-oversample-max-ratio", type=float, default=6.0,
@@ -178,7 +182,7 @@ def main():
     parser.add_argument("--boost-weight", type=float, default=1.5,
                         help="--boost-classes 사용 시 해당 클래스 class_weight 배수.")
     parser.add_argument("--extra-augment-weak", type=str, default=None,
-                        help="recall 낮은 클래스만 노이즈·회전 추가 증강 (반대편 유지). 쉼표 구분 (예: jab_r,upper_l).")
+                        help="recall 낮은 클래스만 노이즈·회전 추가 증강 (반대편 유지). 쉼표 구분 (예: punch_r,upper_l).")
     parser.add_argument("--units", type=str, default="128,64",
                         help="Dense 레이어 뉴런 수 쉼표 구분 (예: 256,128). 기본 128,64.")
     args = parser.parse_args()
@@ -225,7 +229,7 @@ def main():
     for i, name in enumerate(class_names):
         print(f"  {name}: {counts.get(i, 0)}")
 
-    # 다수 클래스 다운샘플링: none 5700 vs jab_l 300 같은 경우, none을 (소수클래스*ratio) 이하로 줄임 → jab_l precision 개선
+    # 다수 클래스 다운샘플링: none 5700 vs punch_l 300 같은 경우, none을 (소수클래스*ratio) 이하로 줄임 → punch_l precision 개선
     if args.balance_ratio > 0:
         min_count = min(counts.values())
         max_per_class = int(min_count * args.balance_ratio)

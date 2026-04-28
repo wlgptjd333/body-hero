@@ -7,7 +7,7 @@
   python replay_pose.py --label upper_l --nth 1
 
 옵션:
-  --label LABEL   : 보고 싶은 라벨 (예: jab_l, jab_r, upper_l, hook_r ...)
+  --label LABEL   : 보고 싶은 라벨 (예: punch_l, punch_r, upper_l, upper_r ...)
   --nth N        : 해당 라벨의 N번째 녹화 (1부터 시작, 기본 1)
   --fps F        : 재생 FPS (기본 30, 숫자가 클수록 빨라짐)
 """
@@ -155,7 +155,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="pose_data.json에서 특정 녹화 1회를 뼈대 애니메이션으로 리플레이")
     parser.add_argument("--data", default=DEFAULT_DATA, help="pose_data.json 경로")
     parser.add_argument("--meta", default=DEFAULT_META, help="pose_recordings_meta.json 경로")
-    parser.add_argument("--label", required=True, help="보고 싶은 라벨 (예: jab_l, jab_r, upper_l, upper_r, hook_l, hook_r, guard)")
+    parser.add_argument("--label", required=True, help="보고 싶은 라벨 (예: punch_l, punch_r, upper_l, upper_r, guard, none)")
     parser.add_argument("--nth", type=int, default=1, help="해당 라벨의 N번째 녹화 (1부터 시작, 기본 1)")
     parser.add_argument("--fps", type=int, default=30, help="재생 FPS (기본 30)")
     args = parser.parse_args()

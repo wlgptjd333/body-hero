@@ -2,8 +2,8 @@
 description: Body Hero에서 InputMap, 키 입력, UDP 데이터 포맷, 액션 문자열과 play_action 패턴을 다룰 때 지켜야 할 규칙.
 alwaysApply: false
 globs:
-  - "scripts/main.gd"
-  - "scripts/player.gd"
+  - "games/boxing/scripts/main.gd"
+  - "games/boxing/scripts/player.gd"
   - "tools/**/*.py"
 ---
 
@@ -12,7 +12,7 @@ globs:
 ## InputMap / 키보드 입력
 
 - README에 정의된 InputMap 이름을 그대로 사용한다:
-  - `punch_left`, `punch_right`
+  - `punch_left`, `punch_right` (기본 A·D 외 Z·C 등 여러 키를 같은 액션에 매핑 가능)
   - `upper_left`, `upper_right`
   - `guard` (및 필요 시 `guard_end`)
 - 키보드 예시는 항상 다음 경로 기준으로 설명한다:
@@ -25,7 +25,7 @@ globs:
 
 - **좌표 기반 모드**: `"left_x,left_y,right_x,right_y"`
 - **액션 기반 모드 (threshold/ML 공통)**:
-  - `"jab_l"`, `"jab_r"`, `"upper_l"`, `"upper_r"`, `"hook_l"`, `"hook_r"`, `"guard"`, `"guard_end"`
+  - `"punch_l"`, `"punch_r"`, `"upper_l"`, `"upper_r"`, `"guard"`, `"guard_end"` (구 클라이언트의 `jab_*`/`hook_*`는 사용하지 않음)
 
 **규칙**:
 

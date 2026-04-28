@@ -1,5 +1,5 @@
 """
-잽/어퍼/훅 L↔R 혼동 완화용 공통 유틸.
+펀치/어퍼 L↔R 혼동 완화용 공통 유틸.
 
 - LR_PAIRS: (왼쪽 라벨, 오른쪽 라벨) — 학습 시 소수 클래스 오버샘플링에 사용.
 - oversample_lr_minorities: 훈련 배치에서 각 쌍의 적은 쪽을 복제해 다수 쪽에 가깝게 맞춤.
@@ -14,9 +14,8 @@ import numpy as np
 
 # MediaPipe·게임 라벨: 몸 기준 왼손 / 오른손
 LR_PAIRS: Tuple[Tuple[str, str], ...] = (
-    ("jab_l", "jab_r"),
+    ("punch_l", "punch_r"),
     ("upper_l", "upper_r"),
-    ("hook_l", "hook_r"),
 )
 
 
@@ -25,7 +24,7 @@ def print_lr_balance_report(
     class_names: Sequence[str],
     title: str = "L/R 비율",
 ) -> None:
-    """라벨 문자열 목록에서 jab/upper/hook 쌍별 개수·비율 출력."""
+    """라벨 문자열 목록에서 punch/upper L:R 쌍별 개수·비율 출력."""
     c = Counter(labels)
     print(f"\n=== {title} ===")
     for left, right in LR_PAIRS:

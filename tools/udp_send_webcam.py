@@ -5,13 +5,16 @@ ML 서버 없이 동작하는 테스트/개발용 스크립트입니다.
 
 설치: pip install mediapipe opencv-python
 실행: Godot 실행 후, cd tools → python udp_send_webcam.py
-액션: jab_l, jab_r, upper_l, upper_r, hook_l, hook_r, guard, guard_end, dodge_l, dodge_r
+액션: punch_l, punch_r, upper_l, upper_r, guard, guard_end, dodge
 
-판정(전부 규칙 기반): 가드=양손이 코보다 높고 가까울 때, 잽=팔 뻗음, 어퍼컷=손목이 어깨보다 위,
+판정(전부 규칙 기반): 가드=양손이 코보다 높고 가까울 때, 펀치=팔 뻗음, 어퍼컷=손목이 어깨보다 위,
 회피=고개+어깨가 함께 좌/우로 이동할 때.
 """
 
 import os
+import argparse
+import sys
+
 os.environ["GLOG_minloglevel"] = "2"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
@@ -42,7 +45,7 @@ LEFT_WRIST     = 15
 RIGHT_WRIST    = 16
 
 # ── 가드: 양손이 코보다 높고 가까울 때 (지혜성 제안: 코 기준 + 0.15) ──
-GUARD_X_CLOSE     = 0.15   # 양 손목 x 거리 < 이 값이면 "가드 자세" (조정: 가드가 잽으로 튀면 낮춤)
+GUARD_X_CLOSE     = 0.15   # 양 손목 x 거리 < 이 값이면 "가드 자세" (조정: 가드가 펀치로 튀면 낮춤)
 GUARD_Y_THRESH    = 0.55   # 코 없을 때 폴백: 손목 Y가 이하면 위쪽
 GUARD_USE_NOSE    = True   # True면 손목이 코(nose) 높이보다 위일 때만 가드 구간
 GUARD_ENTER_FRAMES = 3
@@ -54,10 +57,10 @@ UPPER_Y_THRESH    = 0.55    # 손목 Y 상한
 UPPER_Y_MARGIN    = 0.25    # 어퍼컷: 손목이 어깨보다 이만큼 위 (y: shoulder.y - margin)
 UPPER_HISTORY     = 4
 
-# ── 잽: 팔 뻗음 (손목이 어깨보다 앞/밖으로, 지혜성 제안 0.22) ──
-JAB_EXTEND_X      = 0.22   # 손목-어깨 x 차이 (팔 길이에 맞게 0.18~0.25 조정)
-JAB_VELOCITY_MIN  = 0.02   # 최소 속도
-JAB_HISTORY       = 4
+# ── 펀치: 팔 뻗음 (손목이 어깨보다 앞/밖으로, 지혜성 제안 0.22) ──
+PUNCH_EXTEND_X      = 0.22   # 손목-어깨 x 차이 (팔 길이에 맞게 0.18~0.25 조정)
+PUNCH_VELOCITY_MIN  = 0.02   # 최소 속도
+PUNCH_HISTORY       = 4
 
 # ── 회피 (dodge): 고개와 어깨가 함께 확실히 좌/우로 움직일 때만 ─────────────────
 DODGE_DX_THRESH   = 0.135   # 코 x가 이만큼 이상 이동 (작으면 펀치/고개만 살짝 움직여도 오인)
@@ -77,6 +80,9 @@ try:
 except ImportError as e:
     print("pip install mediapipe opencv-python")
     raise SystemExit(1) from e
+
+from cv_capture import open_cv_video_capture
+
 
 # Pose Landmarker .task 모델 (0.10.30+ Tasks API). 없으면 아래 URL에서 자동 다운로드
 MODEL_PATH = os.path.join(SCRIPT_DIR, "pose_landmarker.task")
@@ -160,6 +166,20 @@ def _get_lm_xy(lm):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="웹캠(MediaPipe) → Godot UDP")
+    parser.add_argument(
+        "--camera-index",
+        type=int,
+        default=0,
+        help="OpenCV 카메라 인덱스 (내장=0, USB 외장은 1/2일 수 있음)",
+    )
+    parser.add_argument(
+        "--camera-backend",
+        choices=["auto", "default", "dshow", "msmf"],
+        default="auto",
+        help="Windows: auto 시 DirectShow 우선",
+    )
+    args = parser.parse_args()
     _download_pose_model()
     BaseOptions = mp_tasks.BaseOptions
     PoseLandmarker = vision.PoseLandmarker
@@ -190,14 +210,15 @@ def main():
         return _ImageCls(image_format=_ImageFmt.SRGB, data=rgb.copy(order="C"))
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    cap = cv2.VideoCapture(0)
+    cap, cap_note = open_cv_video_capture(args.camera_index, args.camera_backend)
     if not cap.isOpened():
-        print("웹캠을 열 수 없습니다.")
+        print(f"웹캠을 열 수 없습니다. (--camera-index {args.camera_index} --camera-backend {args.camera_backend})")
         return
 
     print("웹캠 + MediaPipe Pose (Tasks) → Godot 액션 전송")
+    print(f"카메라: index={args.camera_index} backend={args.camera_backend} → {cap_note}")
     print("Godot 실행 후 사용. 종료: Q 키 또는 Ctrl+C\n")
-    print("  잽/어퍼컷/가드: 기존대로")
+    print("  펀치/어퍼컷/가드: 기존대로")
     print("  회피: 고개+어깨를 확실히 좌/우로\n")
 
     hist_l = ArmHistory()
@@ -282,7 +303,7 @@ def main():
                     action = "guard_end"
                     guarding = False
 
-            # ── 2) 어퍼컷 / 잽 (가드 중·양손 동시 올림이 아닐 때만) ──
+            # ── 2) 어퍼컷 / 펀치 (가드 중·양손 동시 올림이 아닐 때만) ──
             if action is None and not guarding and not both_up and (now - last_any_action) >= DEADZONE_SEC:
 
                 # 어퍼컷: 한 손만 위로 빠르게 (손목이 어깨보다 위)
@@ -308,23 +329,23 @@ def main():
                         last_sent[act] = now
                         last_any_action = now
 
-                # 잽: 팔 뻗음 (손목이 어깨보다 앞/밖으로) + 속도
+                # 펀치: 팔 뻗음 (손목이 어깨보다 앞/밖으로) + 속도
                 if action is None:
                     l_sx, l_wx = hist_l.current_shoulder()[0], hist_l.current_wrist()[0]
                     r_sx, r_wx = hist_r.current_shoulder()[0], hist_r.current_wrist()[0]
-                    left_extend  = hist_l.seen and (l_sx - l_wx) >= JAB_EXTEND_X  # 왼손이 왼쪽으로 뻗음
-                    right_extend = hist_r.seen and (r_wx - r_sx) >= JAB_EXTEND_X   # 오른손이 오른쪽으로 뻗음
-                    vl = hist_l.velocity(JAB_HISTORY)
-                    vr = hist_r.velocity(JAB_HISTORY)
+                    left_extend  = hist_l.seen and (l_sx - l_wx) >= PUNCH_EXTEND_X  # 왼손이 왼쪽으로 뻗음
+                    right_extend = hist_r.seen and (r_wx - r_sx) >= PUNCH_EXTEND_X   # 오른손이 오른쪽으로 뻗음
+                    vl = hist_l.velocity(PUNCH_HISTORY)
+                    vr = hist_r.velocity(PUNCH_HISTORY)
 
-                    if left_extend and vl >= JAB_VELOCITY_MIN:
-                        act = game_side("jab_l")
+                    if left_extend and vl >= PUNCH_VELOCITY_MIN:
+                        act = game_side("punch_l")
                         if (now - last_sent.get(act, 0)) >= COOLDOWN_SEC:
                             action = act
                             last_sent[act] = now
                             last_any_action = now
-                    elif right_extend and vr >= JAB_VELOCITY_MIN and action is None:
-                        act = game_side("jab_r")
+                    elif right_extend and vr >= PUNCH_VELOCITY_MIN and action is None:
+                        act = game_side("punch_r")
                         if (now - last_sent.get(act, 0)) >= COOLDOWN_SEC:
                             action = act
                             last_sent[act] = now
@@ -336,13 +357,13 @@ def main():
                     dx_nose = nose_x_hist[-1] - nose_x_hist[-DODGE_HISTORY]
                     dx_shoulder = shoulder_center_x_hist[-1] - shoulder_center_x_hist[-DODGE_HISTORY]
                     if dx_nose < -DODGE_DX_THRESH and dx_shoulder < -DODGE_SHOULDER_MIN:
-                        act = game_side("dodge_l")
+                        act = "dodge"
                         if (now - last_sent.get(act, 0)) >= DODGE_COOLDOWN:
                             action = act
                             last_sent[act] = now
                             last_any_action = now
                     elif dx_nose > DODGE_DX_THRESH and dx_shoulder > DODGE_SHOULDER_MIN:
-                        act = game_side("dodge_r")
+                        act = "dodge"
                         if (now - last_sent.get(act, 0)) >= DODGE_COOLDOWN:
                             action = act
                             last_sent[act] = now

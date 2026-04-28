@@ -2,6 +2,11 @@
 .godot/
 /android/
 
+# Windows export 바이너리(용량 큼, 필요 시 이 줄들 지우고 커밋)
+Body Hero.exe
+Body Hero.console.exe
+Body Hero.pck
+
 # Python
 venv/
 tools/venv_ml/

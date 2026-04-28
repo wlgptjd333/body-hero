@@ -21,7 +21,7 @@ globs:
 
 - Godot 쪽은 다음 인터페이스를 **변경하지 않는 것**을 기본으로 한다:
   - 좌표: `"left_x,left_y,right_x,right_y"`
-  - 액션: `"jab_l"`, `"jab_r"`, `"upper_l"`, `"upper_r"`, `"hook_l"`, `"hook_r"`, `"guard"`, `"guard_end"`
+  - 액션: `"punch_l"`, `"punch_r"`, `"upper_l"`, `"upper_r"`, `"guard"`, `"guard_end"`
 - 새 모델/옵션/threshold 추가 제안은 Python/ML 쪽 코드와 `tools/README_ML.md`에 한정해 설명한다.
 
 ## Python/환경

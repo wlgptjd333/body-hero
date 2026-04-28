@@ -1,6 +1,44 @@
-[gd_scene load_steps=2 format=3 uid="uid://settings_panel"]
+[gd_scene load_steps=4 format=3 uid="uid://settings_panel"]
 
 [ext_resource type="Script" path="res://scripts/ui/settings_panel.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_apply_btn"]
+bg_color = Color(0.14, 0.52, 0.28, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.55, 0.95, 0.65, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 4
+shadow_offset = Vector2(0, 2)
+content_margin_left = 16
+content_margin_top = 10
+content_margin_right = 16
+content_margin_bottom = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_apply_btn_hover"]
+bg_color = Color(0.18, 0.62, 0.34, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.75, 1, 0.82, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 5
+shadow_offset = Vector2(0, 2)
+content_margin_left = 16
+content_margin_top = 10
+content_margin_right = 16
+content_margin_bottom = 10
 
 [node name="SettingsPanel" type="Control"]
 layout_mode = 3
@@ -26,9 +64,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -220.0
-offset_top = -260.0
+offset_top = -290.0
 offset_right = 220.0
-offset_bottom = 260.0
+offset_bottom = 290.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -40,7 +78,7 @@ anchor_bottom = 1.0
 offset_left = 12.0
 offset_top = 12.0
 offset_right = -12.0
-offset_bottom = -12.0
+offset_bottom = -60.0
 
 [node name="VBox" type="VBoxContainer" parent="Panel/Scroll"]
 layout_mode = 2
@@ -74,6 +112,105 @@ layout_mode = 2
 size_flags_horizontal = 3
 item_count = 0
 selected = -1
+
+[node name="WebcamSection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/WebcamSection"]
+layout_mode = 2
+text = "웹캠 (포즈 / ML 연동)"
+
+[node name="CameraHintLabel" type="Label" parent="Panel/Scroll/VBox/WebcamSection"]
+layout_mode = 2
+autowrap_mode = 3
+text = "내장이 아니면 번호를 바꿔 적용하세요. USB는 보통 1·2입니다. Windows는 목록 스캔 시 DirectShow 우선입니다."
+
+[node name="CameraRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/WebcamSection/CameraRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "카메라"
+
+[node name="CameraOption" type="OptionButton" parent="Panel/Scroll/VBox/WebcamSection/CameraRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 0
+selected = -1
+
+[node name="BackendRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/WebcamSection/BackendRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "카메라 API"
+
+[node name="BackendOption" type="OptionButton" parent="Panel/Scroll/VBox/WebcamSection/BackendRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 0
+selected = -1
+
+[node name="MlProfileRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/WebcamSection/MlProfileRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "ML 속도 프로필"
+
+[node name="MlProfileOption" type="OptionButton" parent="Panel/Scroll/VBox/WebcamSection/MlProfileRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 0
+selected = -1
+
+[node name="RefreshRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnRefreshCameras" type="Button" parent="Panel/Scroll/VBox/WebcamSection/RefreshRow"]
+layout_mode = 2
+text = "목록 새로고침 (OpenCV)"
+
+[node name="WebcamMlRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnStartWebcamMl" type="Button" parent="Panel/Scroll/VBox/WebcamSection/WebcamMlRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "웹캠 ML 실행 (Python)"
+
+[node name="BtnStopWebcamMl" type="Button" parent="Panel/Scroll/VBox/WebcamSection/WebcamMlRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "웹캠 ML 종료"
+
+[node name="CollectPoseRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnStartCollectPose" type="Button" parent="Panel/Scroll/VBox/WebcamSection/CollectPoseRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "포즈 녹화 (학습 데이터 수집)"
+
+[node name="LblCollectPoseHint" type="Label" parent="Panel/Scroll/VBox/WebcamSection"]
+layout_mode = 2
+autowrap_mode = 3
+text = "위에서 고른 카메라 번호·백엔드로 collect_pose_data.py 를 실행합니다. Windows에서는 새 콘솔이 열립니다. macOS/Linux에서는 실행 명령이 클립보드로 복사됩니다. 터미널에서 직접 쓸 때도 --camera-index / --camera-backend 를 지정할 수 있습니다."
+
+[node name="LblWebcamMlBridge" type="Label" parent="Panel/Scroll/VBox/WebcamSection"]
+layout_mode = 2
+autowrap_mode = 3
+text = "카메라·API·ML 속도 프로필을 적용한 뒤 udp_send_webcam_ml.py 를 실행합니다. 프로필은 display_settings.cfg 에 저장됩니다."
 
 [node name="SoundSection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
 layout_mode = 2
@@ -270,7 +407,7 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchLeft"]
 layout_mode = 2
 size_flags_vertical = 1
-text = "왼손 잽"
+text = "왼손 펀치 (여러 키)"
 
 [node name="KeyBtnPunchLeft" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchLeft"]
 custom_minimum_size = Vector2(80, 0)
@@ -285,7 +422,7 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchRight"]
 layout_mode = 2
 size_flags_vertical = 1
-text = "오른손 잽"
+text = "오른손 펀치 (여러 키)"
 
 [node name="KeyBtnPunchRight" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchRight"]
 custom_minimum_size = Vector2(80, 0)
@@ -323,36 +460,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "E"
 
-[node name="KeyRowHookLeft" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowHookLeft"]
-layout_mode = 2
-size_flags_vertical = 1
-text = "왼손 훅"
-
-[node name="KeyBtnHookLeft" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowHookLeft"]
-custom_minimum_size = Vector2(80, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Z"
-
-[node name="KeyRowHookRight" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowHookRight"]
-layout_mode = 2
-size_flags_vertical = 1
-text = "오른손 훅"
-
-[node name="KeyBtnHookRight" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowHookRight"]
-custom_minimum_size = Vector2(80, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "C"
-
 [node name="KeyRowGuard" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
 layout_mode = 2
 theme_override_constants/separation = 12
@@ -368,7 +475,21 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Space"
 
-[node name="ApplyButton" type="Button" parent="Panel/Scroll/VBox"]
-layout_mode = 2
-size_flags_horizontal = 4
+[node name="ApplyButton" type="Button" parent="Panel"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = -52.0
+offset_right = -14.0
+offset_bottom = -12.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.98, 1, 0.96, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.95, 0.9, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_apply_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_apply_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_apply_btn_hover")
 text = "적용"

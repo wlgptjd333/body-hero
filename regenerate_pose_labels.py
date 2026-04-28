@@ -2,7 +2,7 @@
 pose_data.json을 drop + 유지 N(또는 끝까지)으로 재라벨링.
 
 방법 1) pose_recordings_meta.json 있음: --hold-frames N 또는 --hold-until-end.
-방법 2) 메타 없음, 녹화 순서·횟수만 알 때: --structure "jab_l:100,none:70,jab_r:5"
+방법 2) 메타 없음, 녹화 순서·횟수만 알 때: --structure "punch_l:100,none:70,punch_r:5" (jab_l/jab_r 등 옛 이름도 동일 처리)
         → 각 펀치 블록(60프레임)에서 임팩트를 계산해 drop+유지 적용.
 
 --hold-until-end: 임팩트 이후 블록 끝까지 전부 동작 라벨 (hold_only로 녹화한 데이터도
@@ -11,7 +11,7 @@ pose_data.json을 drop + 유지 N(또는 끝까지)으로 재라벨링.
 
 사용: python regenerate_pose_labels.py --hold-frames 5 --output pose_data.json
      python regenerate_pose_labels.py --hold-until-end --output pose_data.json
-     python regenerate_pose_labels.py --structure "jab_l:100,none:70" --hold-until-end
+     python regenerate_pose_labels.py --structure "punch_l:100,none:70" --hold-until-end
 """
 import os
 import json
@@ -30,12 +30,12 @@ LABEL_DROP = "drop"
 IDX = {"l_sh_x": 33, "l_sh_y": 34, "r_sh_x": 36, "r_sh_y": 37, "l_wr_x": 45, "r_wr_x": 48, "l_wr_y": 46, "r_wr_y": 49}
 
 
-def _impact_frame_jab_l(frames_flat):
+def _impact_frame_punch_l(frames_flat):
     ext = [f[IDX["l_wr_x"]] - f[IDX["l_sh_x"]] for f in frames_flat]
     return max(range(len(ext)), key=lambda i: ext[i]) if ext else 0
 
 
-def _impact_frame_jab_r(frames_flat):
+def _impact_frame_punch_r(frames_flat):
     ext = [f[IDX["r_wr_x"]] - f[IDX["r_sh_x"]] for f in frames_flat]
     return max(range(len(ext)), key=lambda i: ext[i]) if ext else 0
 
@@ -50,40 +50,20 @@ def _impact_frame_upper_r(frames_flat):
     return min(range(len(ys)), key=lambda i: ys[i]) if ys else 0
 
 
-def _impact_frame_hook_l(frames_flat):
-    """collect_pose_data와 동일: 왼손 훅 임팩트 = 어깨 높이 근처에서 몸 안쪽(오른쪽)으로 가장 들어온 프레임."""
-    if not frames_flat:
-        return 0
-    candidates = [i for i in range(len(frames_flat))
-                  if abs(frames_flat[i][IDX["l_wr_y"]] - frames_flat[i][IDX["l_sh_y"]]) < 0.35]
-    if not candidates:
-        return max(range(len(frames_flat)), key=lambda i: frames_flat[i][IDX["l_wr_x"]])
-    return max(candidates, key=lambda i: frames_flat[i][IDX["l_wr_x"]])
-
-
-def _impact_frame_hook_r(frames_flat):
-    """collect_pose_data와 동일: 오른손 훅 임팩트 = 어깨 높이 근처에서 몸 안쪽(왼쪽)으로 가장 들어온 프레임."""
-    if not frames_flat:
-        return 0
-    candidates = [i for i in range(len(frames_flat))
-                  if abs(frames_flat[i][IDX["r_wr_y"]] - frames_flat[i][IDX["r_sh_y"]]) < 0.35]
-    if not candidates:
-        return min(range(len(frames_flat)), key=lambda i: frames_flat[i][IDX["r_wr_x"]])
-    return min(candidates, key=lambda i: frames_flat[i][IDX["r_wr_x"]])
-
-
 IMPACT_FN = {
-    "jab_l": _impact_frame_jab_l,
-    "jab_r": _impact_frame_jab_r,
+    "punch_l": _impact_frame_punch_l,
+    "punch_r": _impact_frame_punch_r,
+    "jab_l": _impact_frame_punch_l,
+    "jab_r": _impact_frame_punch_r,
+    "hook_l": _impact_frame_punch_l,
+    "hook_r": _impact_frame_punch_r,
     "upper_l": _impact_frame_upper_l,
     "upper_r": _impact_frame_upper_r,
-    "hook_l": _impact_frame_hook_l,
-    "hook_r": _impact_frame_hook_r,
 }
 
 
 def _parse_structure(s):
-    """'jab_l:100,none:70,jab_r:5' → [(jab_l, 100), (none, 70), (jab_r, 5)]"""
+    """'punch_l:100,none:70,punch_r:5' → [(punch_l, 100), (none, 70), (punch_r, 5)]"""
     out = []
     for part in s.strip().split(","):
         part = part.strip()
@@ -125,7 +105,7 @@ def main():
     parser.add_argument("--recovery-frames", type=int, default=4, help="Frames after action as recovery drop (default 4, --hold-until-end 시 무시)")
     parser.add_argument("--output", default=None, help="Output path (default: 입력 파일 덮어쓰기, 즉 pose_data.json 그대로)")
     parser.add_argument("--structure", type=str, default=None,
-                        help='Recording order and counts, e.g. "jab_l:100,none:70,jab_r:5" (each recording = 60 frames)')
+                        help='Recording order and counts, e.g. "punch_l:100,none:70,punch_r:5" (each recording = 60 frames)')
     args = parser.parse_args()
 
     if not os.path.isfile(args.data):
@@ -140,7 +120,7 @@ def main():
         # 메타 없이 구조만으로 재라벨: 각 펀치 블록(60프레임)에서 임팩트 계산
         segments = _parse_structure(args.structure)
         if not segments:
-            print("--structure 형식 예: jab_l:100,none:70,jab_r:5")
+            print("--structure 형식 예: punch_l:100,none:70,punch_r:5")
             raise SystemExit(1)
         total_frames = sum(n * FRAMES_PER_RECORDING for _, n in segments)
         if len(data) < total_frames:
@@ -165,7 +145,7 @@ def main():
     else:
         if not os.path.isfile(args.meta):
             print(f"메타 없음: {args.meta}")
-            print('  메타 없이 재라벨하려면 --structure "jab_l:100,none:70,jab_r:5" 처럼 녹화 순서·횟수를 지정하세요.')
+            print('  메타 없이 재라벨하려면 --structure "punch_l:100,none:70,punch_r:5" 처럼 녹화 순서·횟수를 지정하세요.')
             raise SystemExit(1)
         with open(args.meta, "r", encoding="utf-8") as f:
             meta = json.load(f)
