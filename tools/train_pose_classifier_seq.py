@@ -3,9 +3,20 @@
 녹화 구간별로 슬라이딩 윈도우해 (seq_len 프레임, 기본 4) → LSTM/Conv1D → 동작 분류.
 단일 프레임 학습과 동일한 데이터·라벨 형식, 메타로 구간만 구분해 시퀀스만 생성.
 
-저장: pose_classifier_seq.keras, classification_report_seq.txt
-실행: python train_pose_classifier_seq.py
+저장 경로:
+  --seq-len 4 (기본) → pose_classifier_seq_len4.keras  (게임/추론 측 우선 로드 모델, 콤보 우선·저지연)
+  --seq-len 8        → pose_classifier_seq.keras       (안정성 우선/비교용)
+  그 외 길이는 --model 로 직접 지정.
+
+실행:
+  python train_pose_classifier_seq.py            # 기본 4프레임 학습
+  python train_pose_classifier_seq.py --seq-len 8  # 8프레임 모델 별도 학습
+
 기본: 좌우반전 증강 + 펀치/어퍼 L:R 소수 오버샘플(lr_pose_utils). 리포트: report_pose_lr_balance.py
+
+게임/추론 측(udp_send_webcam_ml.py / pose_server.py / test_pose_live.py)은
+pose_classifier_seq_len4.keras 가 있으면 그것을 우선 로드합니다. 학습 종료 시
+저장 파일이 게임 우선 모델과 다르면 콘솔에 경고를 출력합니다.
 """
 import os
 import json
@@ -18,8 +29,8 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_DATA = os.path.join(SCRIPT_DIR, "pose_data.json")
 DEFAULT_META = os.path.join(SCRIPT_DIR, "pose_recordings_meta.json")
-DEFAULT_MODEL = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
-DEFAULT_MODEL_LEN4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
+DEFAULT_MODEL = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
+DEFAULT_MODEL_LEN8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
 
 from pose_class_names import POSE_CLASS_NAMES
 
@@ -58,6 +69,8 @@ def load_sequences_by_recordings(data_path, meta_path, class_names, seq_len, ski
         count = rec.get("frame_count", 0)
         impact_idx = rec.get("impact_idx")
         if impact_idx is not None and impact_idx >= 0:
+            if impact_idx >= count:
+                continue
             start = start + impact_idx
             count = count - impact_idx
         if count < seq_len:
@@ -128,7 +141,15 @@ def main():
     parser.add_argument("--data", default=DEFAULT_DATA)
     parser.add_argument("--meta", default=DEFAULT_META, help="pose_recordings_meta.json (녹화 구간)")
     parser.add_argument("--model", default=DEFAULT_MODEL)
-    parser.add_argument("--seq-len", type=int, default=8, help="연속 프레임 수 (기본 8)")
+    parser.add_argument(
+        "--seq-len",
+        type=int,
+        default=4,
+        help=(
+            "연속 프레임 수 (기본 4 — 게임/추론 측이 4프레임 모델을 우선 사용, 콤보 우선·저지연). "
+            "8 등 다른 값을 지정하면 그에 맞는 모델 파일이 따로 만들어집니다."
+        ),
+    )
     parser.add_argument("--epochs", type=int, default=120)
     parser.add_argument("--val", type=float, default=0.2)
     parser.add_argument("--balance-ratio", type=float, default=4.0)
@@ -166,9 +187,10 @@ def main():
     )
     args = parser.parse_args()
 
-    # udp_send_webcam_ml.py 는 seq_len4 모델 파일이 있으면 그걸 우선 로드함 → 기본 저장 경로 맞춤
-    if args.seq_len == 4 and os.path.abspath(args.model) == os.path.abspath(DEFAULT_MODEL):
-        args.model = DEFAULT_MODEL_LEN4
+    # seq_len=8 은 별도 파일명(pose_classifier_seq.keras)으로 저장.
+    # 기본 4는 pose_classifier_seq_len4.keras (게임 우선 로드 모델) 유지.
+    if args.seq_len == 8 and os.path.abspath(args.model) == os.path.abspath(DEFAULT_MODEL):
+        args.model = DEFAULT_MODEL_LEN8
 
     class_names = ALL_CLASS_NAMES.copy()
     num_classes = len(class_names)
@@ -271,8 +293,12 @@ def main():
         metrics=["accuracy"],
     )
 
+    # val_accuracy 는 1.0 같은 값에서 동률이 자주 발생해 best 갱신이 막히고
+    # 첫 100% 도달 가중치만 복원되는 문제가 있어서 val_loss 기준으로 모니터링.
+    # ReduceLROnPlateau 도 val_loss 를 보므로 콜백 일관성도 유지된다.
     early = tf.keras.callbacks.EarlyStopping(
-        monitor="val_accuracy", patience=args.patience, restore_best_weights=True, verbose=1
+        monitor="val_loss", mode="min", patience=args.patience,
+        restore_best_weights=True, verbose=1,
     )
     reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
         monitor="val_loss", factor=0.5, patience=7, min_lr=1e-6, verbose=1
@@ -329,6 +355,43 @@ def main():
         out = out + ".keras" if not os.path.splitext(out)[1] else out
     model.save(out)
     print(f"모델 저장: {out}")
+
+    _warn_if_runtime_uses_other_model(out)
+
+
+def _warn_if_runtime_uses_other_model(saved_path: str) -> None:
+    """게임/추론 측이 실제로 로드할 모델과 방금 저장한 모델이 다르면 경고.
+
+    udp_send_webcam_ml.py / pose_server.py / test_pose_live.py 는
+    `pose_classifier_seq_len4.keras`(있으면)을 우선하고, 없을 때만
+    `pose_classifier_seq.keras` 로 폴백한다. 다른 파일을 학습해 저장하면
+    게임에는 이 학습 결과가 반영되지 않아 사용자가 "재학습했는데 체감이 그대로"
+    라고 느낄 수 있어 명시적으로 알려준다.
+    """
+    try:
+        saved_abs = os.path.abspath(saved_path)
+        runtime_pref = (
+            DEFAULT_MODEL
+            if os.path.isfile(DEFAULT_MODEL)
+            else DEFAULT_MODEL_LEN8
+        )
+        runtime_abs = os.path.abspath(runtime_pref)
+        if saved_abs == runtime_abs:
+            return
+        print()
+        print("⚠ 학습한 모델 파일이 게임 실행 시 우선 로드되는 파일과 다릅니다.")
+        print(f"   - 방금 저장: {saved_abs}")
+        print(f"   - 게임 우선 로드: {runtime_abs}")
+        print("   현재 udp_send_webcam_ml.py / pose_server.py / test_pose_live.py 는")
+        print("   pose_classifier_seq_len4.keras 가 있으면 그것을 먼저 사용합니다.")
+        print("   이 학습 결과를 실제 게임에 반영하려면:")
+        if os.path.basename(runtime_abs) == "pose_classifier_seq_len4.keras":
+            print("     1) `python train_pose_classifier_seq.py --seq-len 4` 로 재학습하거나")
+            print(f"     2) 방금 저장한 파일을 {runtime_abs} 로 교체하세요.")
+        else:
+            print(f"     방금 저장한 파일을 {runtime_abs} 로 교체하세요.")
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

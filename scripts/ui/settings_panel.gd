@@ -334,7 +334,7 @@ func _apply_health_profile() -> void:
 	if _gender_option:
 		match _gender_option.selected:
 			0:
-				GameState.set_gender("")
+				GameState.set_gender(GameState.GENDER_MALE)
 			2:
 				GameState.set_gender(GameState.GENDER_FEMALE)
 			3:

@@ -27,6 +27,8 @@ var _last_punch_accepted_time: float = -999.0
 @onready var _background: Sprite2D = $Background
 # 상단 적 HP 바, 하단 플레이어 HP/스태미너 바 (ProgressBar)
 @onready var _play_time_label: Label = $HUD/PlayTimeCorner
+@onready var _training_kill_label: Label = get_node_or_null("HUD/TrainingKillLabel")
+@onready var _training_attack_label: Label = get_node_or_null("HUD/TrainingAttackLabel")
 @onready var _combo_label: Label = $Enemy/ComboLabel
 @onready var _enemy_hp_bar: ProgressBar = $HUD/TopBar/EnemyHPBar
 @onready var _player_hp_bar: ProgressBar = $HUD/BottomBars/PlayerHPBar
@@ -51,6 +53,16 @@ var _stage_timer_active: bool = true
 var _stage_elapsed_sec: float = 0.0
 ## 연속 타격 콤보 (적에게 플레이어가 맞으면 초기화)
 var _combo_count: int = 0
+var _training_mode: bool = false
+var _training_kill_count: int = 0
+var _training_action_counts: Dictionary = {
+	"punch_l": 0,
+	"punch_r": 0,
+	"upper_l": 0,
+	"upper_r": 0,
+	"guard": 0,
+	"squat": 0,
+}
 
 @onready var _game_over_layer: CanvasLayer = $GameOverLayer
 @onready var _ko_intro_layer: CanvasLayer = $KoIntroLayer
@@ -80,9 +92,14 @@ func _ready() -> void:
 	# 저장된 키 설정 적용 (user://input.cfg) — 게임 씬 진입 시 로드
 	_load_input_config_safe()
 	GameState.reset_punch_counts()
+	_training_mode = GameState.is_training_mode()
 	GameState.player_hp = GameState.player_max_hp
 	GameState.stamina = GameState.stamina_max
 	GameState.start_workout_session()
+	if _training_mode and _enemy:
+		_enemy.ai_enabled = false
+		_enemy_hp_label.text = "TRAINING DUMMY"
+	_update_training_hud()
 	if _btn_pause_icon:
 		_btn_pause_icon.pressed.connect(_toggle_pause)
 	if _btn_pause_resume:
@@ -109,6 +126,8 @@ func _ready() -> void:
 		vp.size_changed.connect(_fit_background_to_viewport)
 	if _player and _player.has_signal("punch_impact"):
 		_player.punch_impact.connect(_on_player_punch_impact)
+	if _player and _player.has_signal("action_performed"):
+		_player.action_performed.connect(_on_player_action_performed)
 	if _enemy and _enemy.has_signal("hit_received"):
 		_enemy.hit_received.connect(_on_enemy_hit)
 	if _enemy and _enemy.has_signal("died"):
@@ -275,12 +294,23 @@ func _on_player_punch_impact(damage: float, punch_type: String) -> void:
 			_enemy.attack_missed.emit()
 		return
 	if _enemy.has_method("take_damage"):
-		_enemy.take_damage(damage)
+		_enemy.take_damage(damage, punch_type)
 		GameState.add_punch_count(punch_type)
 		_register_combo_hit()
 
 
+func _on_player_action_performed(action: String) -> void:
+	if not _training_mode:
+		return
+	if not _training_action_counts.has(action):
+		return
+	_training_action_counts[action] = int(_training_action_counts[action]) + 1
+	_update_training_hud()
+
+
 func _on_enemy_attack(damage: float) -> void:
+	if _training_mode:
+		return
 	if GameState.is_guarding:
 		GameState.apply_guard_block_success()
 		if _player and _player.has_method("play_guard_block_fx"):
@@ -300,6 +330,12 @@ func _on_enemy_hit(_damage: float) -> void:
 
 func _on_enemy_died() -> void:
 	_update_enemy_hp_label()
+	if _training_mode:
+		_training_kill_count += 1
+		_reset_combo()
+		_update_training_hud()
+		_respawn_training_dummy()
+		return
 	if _win_shown:
 		return
 	GameState.add_sweat(1)
@@ -451,6 +487,35 @@ func _update_combo_label() -> void:
 	else:
 		_combo_label.visible = true
 		_combo_label.text = "%d COMBO" % _combo_count
+
+
+func _respawn_training_dummy() -> void:
+	await get_tree().create_timer(0.6).timeout
+	if not _enemy or not _enemy.has_method("reset_for_respawn"):
+		return
+	_enemy.reset_for_respawn()
+	_update_ui_bars()
+
+
+func _update_training_hud() -> void:
+	if _training_kill_label:
+		_training_kill_label.visible = _training_mode
+		if _training_mode:
+			_training_kill_label.text = "처치 횟수: %d" % _training_kill_count
+	if _training_attack_label:
+		_training_attack_label.visible = _training_mode
+		if _training_mode:
+			_training_attack_label.text = (
+				"펀치L: %d\n펀치R: %d\n어퍼L: %d\n어퍼R: %d\n가드: %d\n스쿼트: %d"
+				% [
+					int(_training_action_counts["punch_l"]),
+					int(_training_action_counts["punch_r"]),
+					int(_training_action_counts["upper_l"]),
+					int(_training_action_counts["upper_r"]),
+					int(_training_action_counts["guard"]),
+					int(_training_action_counts["squat"]),
+				]
+			)
 
 
 func _update_ui_bars() -> void:

@@ -11,7 +11,7 @@ cd c:\Users\User\Documents\body-hero
 
 **웹캠으로 게임 플레이 (권장: ML 시퀀스 판정):**
 
-※ 연속 8프레임으로 학습·추론하는 시퀀스 모델 사용 (정확도 우수).  
+※ 학습·게임 실행 모두 **연속 4프레임** 시퀀스 모델(`pose_classifier_seq_len4.keras`) 기본입니다(반응 속도 우선). 4프레임 모델이 없을 때만 8프레임 모델(`pose_classifier_seq.keras`)로 폴백합니다.  
 ※ **작업 디렉터리는 항상 `tools` 폴더** (`c:\Users\User\Documents\body-hero\tools`). 가상환경은 이 안의 `venv_ml`에 둡니다.  
 ※ **activate 없이** `venv_ml\Scripts\python.exe`로 실행하면 됩니다 (경로만 맞으면 됨).
 
@@ -28,7 +28,7 @@ venv_ml\Scripts\python.exe -m pip install -r requirements_ml.txt
 ```cmd
 cd c:\Users\User\Documents\body-hero\tools
 venv_ml\Scripts\python.exe collect_pose_data.py --camera-index 0 --camera-backend auto
-venv_ml\Scripts\python.exe train_pose_classifier_seq.py
+venv_ml\Scripts\python.exe train_pose_classifier_seq.py    :: 기본 4프레임 모델(pose_classifier_seq_len4.keras) 학습
 venv_ml\Scripts\python.exe pose_server.py
 ```
 `collect_pose_data.py`는 **기본으로 매 녹화·백스페이스 직후** `pose_data.json`과 `pose_recordings_meta.json`을 디스크에 저장합니다(Q 전 크래시 대비). 끄려면 `--no-autosave`. **웹캠 선택**: `--camera-index`(0~9), `--camera-backend`(auto|default|dshow|msmf). USB가 안 열리면 `dshow`와 인덱스 1·2를 시도하거나, 게임 **설정 → 웹캠**과 동일하게 맞춘 뒤 **「포즈 녹화」** 버튼으로 실행할 수 있습니다.

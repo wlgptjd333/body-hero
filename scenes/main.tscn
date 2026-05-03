@@ -4,7 +4,8 @@
 [ext_resource type="Script" uid="uid://d05ifnr4s4ngl" path="res://games/boxing/scripts/player.gd" id="2_player"]
 [ext_resource type="Script" uid="uid://clkrypd4h0gr4" path="res://games/boxing/scripts/enemy.gd" id="3_enemy"]
 [ext_resource type="Texture2D" uid="uid://invho4x6btls" path="res://work_images/reference/bg_stage1_burger.png.jpg" id="4_bg"]
-[ext_resource type="Texture2D" uid="uid://wdgjqx3sn4qn" path="res://assets/textures/characters/placeholder_glove.svg" id="5_glove"]
+[ext_resource type="Texture2D" uid="uid://o40n87m6c3r3" path="res://assets/textures/characters/left_glove.png" id="5_left_glove"]
+[ext_resource type="Texture2D" uid="uid://brkuhdqyv2yk5" path="res://assets/textures/characters/right_glove.png" id="6_right_glove"]
 [ext_resource type="AudioStream" uid="uid://bdde7gq6tn0t5" path="res://assets/audio/sfx/sfx_punch_hit.wav" id="7_hit"]
 [ext_resource type="Script" uid="uid://yiphslwybtui" path="res://games/boxing/scripts/ui/pause_layer.gd" id="8_pause_layer"]
 
@@ -179,8 +180,8 @@ collision_layer = 2
 collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="Player/LeftGlove" unique_id=1638369496]
-scale = Vector2(2, 2)
-texture = ExtResource("5_glove")
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("5_left_glove")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player/LeftGlove" unique_id=1134440812]
 shape = SubResource("RectangleShape2D_glove")
@@ -191,8 +192,8 @@ collision_layer = 2
 collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="Player/RightGlove" unique_id=474359649]
-scale = Vector2(2, 2)
-texture = ExtResource("5_glove")
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("6_right_glove")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player/RightGlove" unique_id=966375476]
 shape = SubResource("RectangleShape2D_glove")

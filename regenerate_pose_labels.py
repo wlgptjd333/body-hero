@@ -1,6 +1,9 @@
 """
 pose_data.json을 drop + 유지 N(또는 끝까지)으로 재라벨링.
 
+주의: 현재 주 파이프라인은 tools/collect_pose_data.py → tools/train_pose_classifier_seq.py 입니다.
+이 스크립트는 기존 pose_data.json을 사후 재라벨링할 때만 쓰는 레거시 보조 도구입니다.
+
 방법 1) pose_recordings_meta.json 있음: --hold-frames N 또는 --hold-until-end.
 방법 2) 메타 없음, 녹화 순서·횟수만 알 때: --structure "punch_l:100,none:70,punch_r:5" (jab_l/jab_r 등 옛 이름도 동일 처리)
         → 각 펀치 블록(60프레임)에서 임팩트를 계산해 drop+유지 적용.
@@ -37,7 +40,7 @@ def _impact_frame_punch_l(frames_flat):
 
 def _impact_frame_punch_r(frames_flat):
     ext = [f[IDX["r_wr_x"]] - f[IDX["r_sh_x"]] for f in frames_flat]
-    return max(range(len(ext)), key=lambda i: ext[i]) if ext else 0
+    return min(range(len(ext)), key=lambda i: ext[i]) if ext else 0
 
 
 def _impact_frame_upper_l(frames_flat):

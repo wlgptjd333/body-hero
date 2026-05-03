@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bfl7fbgem32n5"
-path="res://.godot/imported/gemini_generated_f83x3a_nobg.png-9675876a138cddbc97e0088f37d8d68c.ctex"
+path="res://.godot/imported/gemini_generated_f83x3a_nobg.png-58c4d2379f18e10b66dc0d0e68def62b.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://work_images/output/sprite_sheets_nobg/gemini_generated_f83x3a_nobg.png"
-dest_files=["res://.godot/imported/gemini_generated_f83x3a_nobg.png-9675876a138cddbc97e0088f37d8d68c.ctex"]
+dest_files=["res://.godot/imported/gemini_generated_f83x3a_nobg.png-58c4d2379f18e10b66dc0d0e68def62b.ctex"]
 
 [params]
 

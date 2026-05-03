@@ -3,6 +3,7 @@ extends Node2D
 ## 피격 판정: 히트박스 없음. 임팩트 시점에 punch_impact 시그널만 발생 → Main에서 적 회피 여부로 hit/miss 처리
 
 signal punch_impact(damage: float, punch_type: String)  # punch_type: "punch_l" | "punch_r" | "upper_l" | "upper_r"
+signal action_performed(action: String)
 
 # 기본 배율 1.0일 때 잽/어퍼 — 적 max_hp·공격 간격은 main.tscn·enemy.gd에서 조정
 const DAMAGE_PUNCH := 3.0
@@ -13,20 +14,20 @@ const PUNCH_WINDUP_OFFSET_L := Vector2(-16, 12)
 const PUNCH_WINDUP_OFFSET_R := Vector2(16, 12)
 const PUNCH_STRIKE_OFFSET_L := Vector2(58, -64)
 const PUNCH_STRIKE_OFFSET_R := Vector2(-58, -64)
-const PUNCH_SCALE := Vector2(2.85, 2.1)
-const PUNCH_WINDUP_DURATION := 0.026
-const PUNCH_STRIKE_DURATION := 0.044
-const PUNCH_RETURN_DURATION := 0.062
+const PUNCH_STRIKE_SCALE_MUL := Vector2(1.28, 1.18)
+const PUNCH_WINDUP_DURATION := 0.035
+const PUNCH_STRIKE_DURATION := 0.058
+const PUNCH_RETURN_DURATION := 0.082
 const PUNCH_WINDUP_SCALE := 0.86
 
 ## 어퍼: 몸·주먹을 살짝 내려 받은 뒤 크게 위로 아크 (잽보다 세로·스케일 과장)
 const UPPERCUT_DIP_OFFSET := Vector2(0, 26)
 const UPPERCUT_ARC_OFFSET_L := Vector2(34, -128)
 const UPPERCUT_ARC_OFFSET_R := Vector2(-34, -128)
-const UPPERCUT_SCALE := Vector2(2.45, 3.2)
-const UPPERCUT_DIP_DURATION := 0.042
-const UPPERCUT_RISE_DURATION := 0.078
-const UPPERCUT_RETURN_DURATION := 0.078
+const UPPERCUT_STRIKE_SCALE_MUL := Vector2(1.38, 1.52)
+const UPPERCUT_DIP_DURATION := 0.052
+const UPPERCUT_RISE_DURATION := 0.095
+const UPPERCUT_RETURN_DURATION := 0.098
 const GUARD_SCALE := Vector2(1.4, 1.4)
 const GUARD_DURATION_IN := 0.05
 const GUARD_DURATION_OUT := 0.06
@@ -242,7 +243,7 @@ func _setup_combat_feedback() -> void:
 
 
 func _try_load_hit_stream(player: AudioStreamPlayer) -> void:
-	for path: String in ["res://assets/audio/sfx/sfx_punch_hit.wav", "res://assets/audio/sfx_punch_hit.wav"]:
+	for path: String in ["res://assets/audio/sfx/sfx_punch_hit.wav"]:
 		if ResourceLoader.exists(path):
 			var res := load(path)
 			if res is AudioStream:
@@ -344,6 +345,8 @@ func _flash_gloves_damage() -> void:
 func _process(_delta: float) -> void:
 	# 키보드 가드만: 키를 뗐으면 즉시 해제. 웹캠(UDP) 가드는 guard_end 패킷으로만 해제
 	if _guarding and not _guard_via_udp and not Input.is_action_pressed("guard"):
+		if _busy_global:
+			return
 		_guarding = false
 		GameState.set_guarding(false)
 		_busy_global = true
@@ -379,6 +382,7 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 				return false
 			_busy_left = true
 			GameState.record_action_for_calorie("punch_l")
+			action_performed.emit("punch_l")
 			_play_punch_l_body_motion(punch_scale)
 			_play_punch(left_glove, _left_default_pos, _left_default_scale, "punch_l", _noop_busy, punch_scale)
 			return true
@@ -387,6 +391,7 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 				return false
 			_busy_right = true
 			GameState.record_action_for_calorie("punch_r")
+			action_performed.emit("punch_r")
 			_play_punch(
 				right_glove, _right_default_pos, _right_default_scale, "punch_r", _noop_busy, punch_scale
 			)
@@ -396,6 +401,7 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 				return false
 			_busy_left = true
 			GameState.record_action_for_calorie("upper_l")
+			action_performed.emit("upper_l")
 			_play_uppercut(
 				left_glove, _left_default_pos, _left_default_scale, "upper_l", _noop_busy, punch_scale
 			)
@@ -405,6 +411,7 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 				return false
 			_busy_right = true
 			GameState.record_action_for_calorie("upper_r")
+			action_performed.emit("upper_r")
 			_play_uppercut(
 				right_glove, _right_default_pos, _right_default_scale, "upper_r", _noop_busy, punch_scale
 			)
@@ -412,6 +419,9 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 		"dodge":
 			_busy_global = true
 			GameState.record_action_for_calorie("dodge")
+			# 회피 판정 대신: 스쿼트 시 플레이어 HP 10% 회복
+			GameState.apply_squat_heal(0.10)
+			action_performed.emit("squat")
 			_play_dodge(_next_dodge_left, func(): _busy_global = false)
 			_next_dodge_left = not _next_dodge_left
 			return true
@@ -421,6 +431,7 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 			_guard_via_udp = via_udp
 			_guarding = true
 			GameState.record_action_for_calorie("guard")
+			action_performed.emit("guard")
 			GameState.set_guarding(true)
 			_guard_enter_time = Time.get_ticks_msec() / 1000.0
 			GameState.record_guard()
@@ -485,7 +496,12 @@ func _play_punch(
 	tween.tween_property(glove, "position", default_pos + strike, PUNCH_STRIKE_DURATION * ts).set_trans(
 		Tween.TRANS_EXPO
 	)
-	tween.tween_property(glove, "scale", PUNCH_SCALE, PUNCH_STRIKE_DURATION * ts).set_trans(PUNCH_TRANS)
+	tween.tween_property(
+		glove,
+		"scale",
+		Vector2(default_scale.x * PUNCH_STRIKE_SCALE_MUL.x, default_scale.y * PUNCH_STRIKE_SCALE_MUL.y),
+		PUNCH_STRIKE_DURATION * ts
+	).set_trans(PUNCH_TRANS)
 	tween.set_parallel(false)
 	tween.tween_callback(func(): punch_impact.emit(DAMAGE_PUNCH, action))
 	tween.tween_callback(func(): _release_hand_busy_after_impact(action))
@@ -525,7 +541,12 @@ func _play_uppercut(
 	tween.tween_property(glove, "position", default_pos + arc, UPPERCUT_RISE_DURATION * ts).set_trans(
 		Tween.TRANS_EXPO
 	)
-	tween.tween_property(glove, "scale", UPPERCUT_SCALE, UPPERCUT_RISE_DURATION * ts).set_trans(Tween.TRANS_BACK)
+	tween.tween_property(
+		glove,
+		"scale",
+		Vector2(default_scale.x * UPPERCUT_STRIKE_SCALE_MUL.x, default_scale.y * UPPERCUT_STRIKE_SCALE_MUL.y),
+		UPPERCUT_RISE_DURATION * ts
+	).set_trans(Tween.TRANS_BACK)
 	tween.set_parallel(false)
 	tween.tween_callback(func(): punch_impact.emit(DAMAGE_UPPERCUT, action))
 	tween.tween_callback(func(): _release_hand_busy_after_impact(action))

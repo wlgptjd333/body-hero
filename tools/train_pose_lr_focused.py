@@ -33,7 +33,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="L/R 중심 포즈 학습 일괄 실행")
     parser.add_argument("--skip-report", action="store_true", help="1단계 리포트 생략")
     parser.add_argument("--skip-single", action="store_true", help="가드 단일 모델 학습 생략")
-    parser.add_argument("--seq-len", type=int, default=8)
+    parser.add_argument(
+        "--seq-len",
+        type=int,
+        default=4,
+        help="시퀀스 길이 (기본 4 — 게임 우선 모델과 동일, 콤보 우선·저지연).",
+    )
     args, _rest = parser.parse_known_args()
 
     if not os.path.isfile(os.path.join(SCRIPT_DIR, "pose_data.json")):
@@ -62,7 +67,13 @@ def main() -> None:
             [PY, os.path.join(SCRIPT_DIR, "train_pose_classifier.py")],
         )
 
-    print("\n완료. pose_classifier_seq.keras 및 (실행 시) pose_classifier.keras 를 확인하세요.")
+    if args.seq_len == 4:
+        out_seq = "pose_classifier_seq_len4.keras"
+    elif args.seq_len == 8:
+        out_seq = "pose_classifier_seq.keras"
+    else:
+        out_seq = f"pose_classifier_seq_len{args.seq_len}.keras"
+    print(f"\n완료. {out_seq} 및 (실행 시) pose_classifier.keras 를 확인하세요.")
 
 
 if __name__ == "__main__":

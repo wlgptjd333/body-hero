@@ -146,3 +146,7 @@ text = "업그레이드 (💧1)"
 [node name="BtnClose" type="Button" parent="Dim/Panel/Margin/VBox"]
 layout_mode = 2
 text = "닫기"
+
+[node name="BtnReset" type="Button" parent="Dim/Panel/Margin/VBox"]
+layout_mode = 2
+text = "업그레이드 초기화 (환불)"

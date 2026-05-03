@@ -118,6 +118,8 @@ var _webcam_ml_bridge_pid: int = -1
 var _webcam_ml_launched_camera: int = -999
 var _webcam_ml_launched_backend: String = ""
 var _webcam_ml_launched_profile: String = ""
+## true면 복싱 씬을 훈련장 규칙(더미 적, 처치 카운트)으로 실행.
+var _training_mode: bool = false
 
 const CAMERA_BACKEND_VALUES := ["auto", "dshow", "msmf", "default"]
 ## tools/udp_send_webcam_ml.py 의 --profile 과 동일한 값만 허용.
@@ -237,6 +239,13 @@ func apply_guard_block_success() -> void:
 	stamina = minf(stamina_max, stamina + stamina_passive_recover_per_sec)
 	player_hp = maxf(0.0, player_hp - HP_CHIP_ON_GUARD_BLOCK)
 
+
+## 스쿼트(기존 회피 입력) 시 즉시 HP를 최대치의 일정 비율만큼 회복.
+func apply_squat_heal(heal_ratio: float = 0.10) -> void:
+	var r: float = clampf(heal_ratio, 0.0, 1.0)
+	var amount: float = player_max_hp * r
+	player_hp = minf(player_max_hp, player_hp + amount)
+
 func get_stamina_ratio() -> float:
 	if stamina_max <= 0.0:
 		return 1.0
@@ -308,6 +317,22 @@ func try_purchase_upgrade(kind: String) -> bool:
 			refresh_combat_derived_from_upgrades()
 		_:
 			return false
+	save_stats()
+	return true
+
+
+## 업그레이드 레벨을 기본값으로 초기화.
+## refund_sweat=true면 이미 사용한 스웨트를 전부 돌려줌.
+func reset_all_upgrades(refund_sweat: bool = true) -> bool:
+	var spent_steps: int = _upgrade_hp + _upgrade_stamina + _upgrade_recover
+	if spent_steps <= 0:
+		return false
+	_upgrade_hp = 0
+	_upgrade_stamina = 0
+	_upgrade_recover = 0
+	if refund_sweat:
+		_sweat += spent_steps
+	refresh_combat_derived_from_upgrades()
 	save_stats()
 	return true
 
@@ -800,8 +825,6 @@ func _load_display_settings_from_disk() -> void:
 		return
 	var cfg := ConfigFile.new()
 	if cfg.load(DISPLAY_SETTINGS_PATH) != OK:
-		if OS.get_name() == "Windows":
-			_camera_backend = "dshow"
 		return
 	if cfg.has_section_key("display", "width") and cfg.has_section_key("display", "height"):
 		var w := int(cfg.get_value("display", "width", 0))
@@ -1029,3 +1052,11 @@ func get_udp_send_webcam_ml_script_path() -> String:
 
 func get_list_cameras_script_path() -> String:
 	return get_tools_absolute_dir().path_join("list_cameras.py")
+
+
+func set_training_mode(on: bool) -> void:
+	_training_mode = on
+
+
+func is_training_mode() -> bool:
+	return _training_mode

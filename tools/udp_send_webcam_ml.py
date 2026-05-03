@@ -1,7 +1,7 @@
 """
 웹캠 → Pose 랜드마크 → ML 추론(로컬 또는 pose_server) → Godot에 UDP로 액션 전송.
 
-- 기본: pose_classifier_seq_len4.keras(있으면) → 없으면 pose_classifier_seq.keras + pose_classifier.keras(가드 폴백). pose_server 불필요.
+- 기본: pose_classifier_seq_len4.keras(4프레임, 콤보 우선) → 없으면 pose_classifier_seq.keras(8프레임 폴백) + pose_classifier.keras(가드 폴백). pose_server 불필요.
 - 시퀀스 모델이 없으면 HTTP로 pose_server에 요청. 서버가 없으면 pose_server.py를 자동으로 띄움 (--no-auto-server 로 끌 수 있음).
 
 사용 순서:
@@ -30,10 +30,11 @@ from collections import deque
 from typing import Any, List, Optional, Tuple
 
 # 로그: MediaPipe·TensorFlow가 각각 C++ 쪽 absl/oneDNN을 켜서 비슷한 영어 문구가 2번 나올 수 있음(정상).
-# TF 쪽 INFO/WARN 줄이기(3=ERROR만). oneDNN 안내 1회 분량도 끔.
+# TF 쪽 INFO/WARN 줄이기(3=ERROR만). oneDNN은 기본 성능을 유지하고, 필요할 때만 환경변수로 끈다.
 os.environ.setdefault("GLOG_minloglevel", "2")
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
-os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
+if os.environ.get("BODY_HERO_DISABLE_ONEDNN", "").strip().lower() in ("1", "true", "yes", "on"):
+    os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 GODOT_HOST = "127.0.0.1"
@@ -47,12 +48,12 @@ from pose_class_names import GUARD_INDEX, POSE_CLASS_NAMES
 from cv_capture import open_cv_video_capture
 
 # 로컬 추론용 (pose_server와 동일). 시퀀스 길이는 로드한 모델 입력(time)에서 자동 설정.
-# 기본은 seq_len=8 모델을 우선 사용(없을 때만 len4 폴백).
+# 기본은 seq_len=4 모델을 우선 사용(콤보 우선; 없을 때만 len8 폴백).
 _MODEL_SEQ_4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
 _MODEL_SEQ_8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
-MODEL_SEQ_PATH = _MODEL_SEQ_8 if os.path.isfile(_MODEL_SEQ_8) else _MODEL_SEQ_4
+MODEL_SEQ_PATH = _MODEL_SEQ_4 if os.path.isfile(_MODEL_SEQ_4) else _MODEL_SEQ_8
 MODEL_SINGLE_PATH = os.path.join(SCRIPT_DIR, "pose_classifier.keras")
-SEQ_LEN = 8 if MODEL_SEQ_PATH == _MODEL_SEQ_8 else 4
+SEQ_LEN = 4 if MODEL_SEQ_PATH == _MODEL_SEQ_4 else 8
 CLASS_NAMES = list(POSE_CLASS_NAMES)
 # ML·UDP 라벨 = POSE_CLASS_NAMES (punch_l/r …)
 # 시퀀스 모델: 1등 클래스 확률이 이 값 미만이면 none. (기본은 balanced에 맞춤; --profile 로 덮어씀)
@@ -194,7 +195,7 @@ def _tf_load_worker_phased(seq_model_ready: threading.Event, load_errors: list) 
         if isinstance(inp, (list, tuple)) and len(inp) >= 2 and inp[1] is not None:
             SEQ_LEN = int(inp[1])
         _use_local_inference = True
-    except BaseException as e:
+    except Exception as e:
         _model_seq = None
         _model_single = None
         _use_local_inference = False
@@ -210,7 +211,7 @@ def _tf_load_worker_phased(seq_model_ready: threading.Event, load_errors: list) 
         print("가드 보조 모델(Keras) 추가 로드 중…", flush=True)
         _model_single = _keras_load_model_safe(MODEL_SINGLE_PATH)
         print("가드 보조 모델 로드 완료.", flush=True)
-    except BaseException as e:
+    except Exception as e:
         print("가드 보조 모델 로드 실패(시퀀스만 사용):", e, flush=True)
 
 

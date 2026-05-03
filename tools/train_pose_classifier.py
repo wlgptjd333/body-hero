@@ -373,8 +373,12 @@ def main():
         metrics=["accuracy"],
     )
 
+    # val_accuracy 는 1.0 같은 값에서 동률이 자주 발생해 best 갱신이 막히고
+    # 첫 100% 도달 가중치만 복원되는 문제가 있어서 val_loss 기준으로 모니터링.
+    # ReduceLROnPlateau 도 val_loss 를 보므로 콜백 일관성도 유지된다.
     early = tf.keras.callbacks.EarlyStopping(
-        monitor="val_accuracy",
+        monitor="val_loss",
+        mode="min",
         patience=args.patience,
         restore_best_weights=True,
         verbose=1,

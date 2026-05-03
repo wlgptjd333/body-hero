@@ -1,6 +1,6 @@
 extends Node2D
 ## 적 캐릭터 (main.tscn Enemy/AnimatedSprite2D — IDLE burger_idle_*, ATTACK burger_punch_l_01~04, KO burger_ko_*)
-## 피격 시: CPUParticles2D 스파크(골드) + 스플랫(레드), 모듈레이트 플래시·SFX (스케일은 건드리지 않음).
+## 피격 시: 펀치 종류별 위치·규모 다른 CPUParticles2D 다층 연출 + 모듈레이트 플래시·SFX.
 ## 히트박스 없음: 피격은 "플레이어 공격 임팩트 시점에 적이 회피 중인가"로만 판정.
 ## 회피 중이면 빗나감, 아니면 무조건 히트.
 
@@ -10,6 +10,7 @@ signal enemy_attack(damage: float)  # 적이 플레이어를 공격할 때 (Main
 signal died
 
 @export var max_hp := 100.0
+@export var ai_enabled: bool = true
 var current_hp: float
 
 ## 회피: 대기(랜덤) 후 evade_duration 동안 회피. 공격 텔레그래프 중엔 '시작'만 막고 대기 타이머는 쌓임.
@@ -25,8 +26,14 @@ var current_hp: float
 ## 플레이어 피격 판정: 몇 번째 프레임 **시점**(0부터). 2 = 세 번째(03 임팩트)
 @export var enemy_attack_impact_frame_index := 2
 @export var attack_damage := 24.0
-## 타격 파티클·스파크가 터지는 위치 (적 로컬 좌표, 스프라이트 중심 기준)
+## 타격 파티클 기본 위치 (미분류 시)
 @export var hit_effect_offset: Vector2 = Vector2(0, -48)
+## 어퍼컷: 상단(머리/번) 쪽 — 왼손은 좌상단, 오른손은 우상단
+@export var hit_upper_l_offset: Vector2 = Vector2(-56, -96)
+@export var hit_upper_r_offset: Vector2 = Vector2(56, -96)
+## 잽·훅: 몸통 중앙 높이 — 왼쪽/오른쪽
+@export var hit_jab_l_offset: Vector2 = Vector2(-44, -10)
+@export var hit_jab_r_offset: Vector2 = Vector2(44, -10)
 ## 회피 시 스프라이트를 좌/우로 이동하는 픽셀 거리(랜덤 방향)
 @export var evade_dodge_offset_pixels: float = 72.0
 
@@ -53,6 +60,10 @@ const FALLBACK_ENEMY_TEXTURE := "res://assets/textures/characters/placeholder_en
 const ATTACK_TEXTURE_BASE := "res://work_images/output/burger_punch_l_"
 const ATTACK_FRAME_PATH_MAX := 4
 
+const HIT_TEXTURE_BASE := "res://work_images/output/burger_hit_"
+const HIT_FRAME_PATH_MAX := 4
+const HIT_FRAME_DURATION_SEC := 0.2
+
 const KO_TEXTURE_BASE := "res://work_images/output/burger_ko_"
 ## KO만 idle보다 크게(캔버스·누끼 후 실제 그림 크기 차이 보정)
 const KO_DISPLAY_SCALE := 2.0
@@ -68,11 +79,14 @@ const KO_FRAME_PATH_MAX := 3
 
 var _hit_particles: CPUParticles2D
 var _hit_particles_splat: CPUParticles2D
+var _hit_star_pop: CPUParticles2D
+var _hit_accent_burst: CPUParticles2D
 
 ## HP 0 이후 KO 연출 중이면 true. Main에서 UDP 차단·펀치 무시용
 var _is_dead := false
 ## 씬(AnimatedSprite2D scale) 기준 — KO 시 이 값에 KO_DISPLAY_SCALE 곱함
 var _sprite_scale_base: Vector2 = Vector2.ONE
+var _hit_anim_ticket: int = 0
 
 
 func _ready() -> void:
@@ -152,6 +166,23 @@ func _setup_idle_sprite_frames() -> void:
 			sf.add_frame("attack", atex, 1.0)
 		var sec_per_frame: float = maxf(attack_frame_duration_sec, 0.001)
 		sf.set_animation_speed("attack", 1.0 / sec_per_frame)
+	# 피격(단일/다중 프레임 지원): burger_hit_01 ... _NN
+	var hit_textures: Array[Texture2D] = []
+	for hidx: int in range(1, HIT_FRAME_PATH_MAX + 1):
+		var hp: String = "%s%02d.png" % [HIT_TEXTURE_BASE, hidx]
+		if not ResourceLoader.exists(hp):
+			continue
+		var htex: Texture2D = ResourceLoader.load(hp, "", ResourceLoader.CACHE_MODE_REPLACE) as Texture2D
+		if htex == null:
+			push_warning("Enemy: HIT 텍스처 로드 실패: %s" % hp)
+			continue
+		hit_textures.append(htex)
+	if hit_textures.size() >= 1:
+		sf.add_animation("hit")
+		sf.set_animation_loop("hit", false)
+		for htex in hit_textures:
+			sf.add_frame("hit", htex, 1.0)
+		sf.set_animation_speed("hit", 1.0 / maxf(HIT_FRAME_DURATION_SEC, 0.001))
 	sprite.sprite_frames = sf
 	sprite.play("idle")
 
@@ -209,20 +240,151 @@ func _setup_hit_particles() -> void:
 	_hit_particles_splat.scale_amount_min = 5.0
 	_hit_particles_splat.scale_amount_max = 11.0
 	_hit_particles_splat.color = Color(0.95, 0.25, 0.2)
-	add_child(_hit_particles_splat)
+	if sprite is Node2D:
+		(sprite as Node2D).add_child(_hit_particles_splat)
+	else:
+		add_child(_hit_particles_splat)
+
+	_hit_star_pop = _make_hit_star_pop()
+	_hit_accent_burst = _make_hit_accent_burst()
+	if sprite is Node2D:
+		(sprite as Node2D).add_child(_hit_star_pop)
+		(sprite as Node2D).add_child(_hit_accent_burst)
+	else:
+		add_child(_hit_star_pop)
+		add_child(_hit_accent_burst)
 
 
-func _burst_hit_particles() -> void:
+func _make_hit_star_pop() -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	p.name = "HitStarPop"
+	p.z_index = 9
+	p.z_as_relative = false
+	p.emitting = false
+	p.one_shot = true
+	p.explosiveness = 0.96
+	p.amount = 72
+	p.lifetime = 0.42
+	p.lifetime_randomness = 0.35
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	p.emission_sphere_radius = 18.0
+	p.direction = Vector2(0, -1)
+	p.spread = 180.0
+	p.gravity = Vector2(0, 180)
+	p.initial_velocity_min = 140.0
+	p.initial_velocity_max = 420.0
+	p.angular_velocity_min = -14.0
+	p.angular_velocity_max = 14.0
+	p.scale_amount_min = 5.0
+	p.scale_amount_max = 14.0
+	p.color = Color(1.0, 1.0, 0.95)
+	p.hue_variation_min = -0.08
+	p.hue_variation_max = 0.08
+	return p
+
+
+func _make_hit_accent_burst() -> CPUParticles2D:
+	var p := CPUParticles2D.new()
+	p.name = "HitAccentBurst"
+	p.z_index = 7
+	p.z_as_relative = false
+	p.emitting = false
+	p.one_shot = true
+	p.explosiveness = 0.82
+	p.amount = 48
+	p.lifetime = 0.38
+	p.lifetime_randomness = 0.45
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	p.emission_sphere_radius = 16.0
+	p.direction = Vector2(0, -0.3)
+	p.spread = 120.0
+	p.gravity = Vector2(0, 420)
+	p.initial_velocity_min = 90.0
+	p.initial_velocity_max = 260.0
+	p.scale_amount_min = 3.0
+	p.scale_amount_max = 9.0
+	p.color = Color(1.0, 0.55, 0.15)
+	return p
+
+
+func _hit_vfx_profile(punch_type: String) -> Dictionary:
+	var t := punch_type
+	if t.is_empty():
+		t = "punch_l"
+	var is_upper: bool = t.begins_with("upper")
+	var is_left: bool = t.ends_with("_l")
+	if is_upper:
+		return {
+			"offset": (hit_upper_l_offset if is_left else hit_upper_r_offset),
+			"scale": 1.88,
+			"upper": true,
+		}
+	if t.begins_with("punch"):
+		return {
+			"offset": (hit_jab_l_offset if is_left else hit_jab_r_offset),
+			"scale": 1.38,
+			"upper": false,
+		}
+	return {"offset": hit_effect_offset, "scale": 1.12, "upper": false}
+
+
+func _burst_hit_particles(punch_type: String) -> void:
+	var prof: Dictionary = _hit_vfx_profile(punch_type)
+	var off: Vector2 = prof["offset"]
+	var sm: float = prof["scale"]
+	var up: bool = prof["upper"]
+	var left_side: bool = punch_type.ends_with("_l")
+
 	if _hit_particles:
+		_hit_particles.position = off
+		_hit_particles.emission_sphere_radius = 22.0 * sm
+		_hit_particles.amount = mini(140, int(52 * sm))
+		_hit_particles.initial_velocity_max = 260.0 + 120.0 * sm
+		_hit_particles.scale_amount_min = 3.2 + 2.0 * sm
+		_hit_particles.scale_amount_max = 8.0 + 5.0 * sm
+		_hit_particles.color = Color(1.0, 0.95, 0.42) if up else Color(1.0, 0.88, 0.35)
 		_hit_particles.restart()
 		_hit_particles.emitting = true
+
 	if _hit_particles_splat:
+		var splat_off := off + Vector2(-12.0 if left_side else 12.0, 22.0)
+		_hit_particles_splat.position = splat_off
+		_hit_particles_splat.emission_sphere_radius = (13.0 + 10.0 * sm)
+		_hit_particles_splat.amount = mini(110, int(28 * sm))
+		_hit_particles_splat.initial_velocity_max = 140.0 + 90.0 * sm
+		_hit_particles_splat.color = Color(0.98, 0.22, 0.18) if up else Color(0.92, 0.28, 0.45)
 		_hit_particles_splat.restart()
 		_hit_particles_splat.emitting = true
+
+	if _hit_star_pop:
+		_hit_star_pop.position = off + (Vector2(-14, -18) if left_side else Vector2(14, -18))
+		_hit_star_pop.amount = int(92 if up else 56)
+		_hit_star_pop.emission_sphere_radius = (26.0 if up else 17.0) * sm
+		_hit_star_pop.scale_amount_max = (16.0 if up else 11.0) * sm
+		_hit_star_pop.initial_velocity_max = 380.0 + (180.0 if up else 80.0)
+		_hit_star_pop.direction = Vector2(-0.55, -0.82).normalized() if left_side else Vector2(0.55, -0.82).normalized()
+		_hit_star_pop.restart()
+		_hit_star_pop.emitting = true
+
+	if _hit_accent_burst:
+		var acc_off := off + (Vector2(-26, 8) if left_side else Vector2(26, 8))
+		if up:
+			acc_off += Vector2(-18 if left_side else 18, -24)
+		_hit_accent_burst.position = acc_off
+		_hit_accent_burst.amount = int(58 if up else 42)
+		_hit_accent_burst.emission_sphere_radius = (22.0 if up else 15.0) * sm
+		_hit_accent_burst.color = Color(1.0, 0.42, 0.08) if up else Color(1.0, 0.72, 0.2)
+		var dir_x := -0.92 if left_side else 0.92
+		_hit_accent_burst.direction = Vector2(dir_x, -0.35).normalized()
+		_hit_accent_burst.spread = 95.0 if up else 140.0
+		_hit_accent_burst.restart()
+		_hit_accent_burst.emitting = true
 
 
 func _process(delta: float) -> void:
 	if _is_dead:
+		return
+	if not ai_enabled:
 		return
 	_update_attack_pattern(delta)
 	_update_evade_pattern(delta)
@@ -367,10 +529,49 @@ func _finish_enemy_attack_sequence() -> void:
 	_is_attacking = false
 
 
-func _flash_hit() -> void:
+func _play_hit_animation_once() -> void:
+	if sprite == null or sprite.sprite_frames == null:
+		return
+	if _is_dead:
+		return
+	if not sprite.sprite_frames.has_animation("hit"):
+		return
+	var canceled_attack: bool = _is_attacking
+	if canceled_attack:
+		var attack_done_cb := Callable(self, "_on_attack_animation_finished")
+		if sprite.animation_finished.is_connected(attack_done_cb):
+			sprite.animation_finished.disconnect(attack_done_cb)
+		# 진행 중이던 공격은 피격으로 즉시 취소(피격 모션 우선)
+		_is_attacking = false
+		_attack_hit_emitted = true
+	_hit_anim_ticket += 1
+	var ticket: int = _hit_anim_ticket
+	sprite.play("hit")
+	var restore_after: float = HIT_FRAME_DURATION_SEC * maxf(float(sprite.sprite_frames.get_frame_count("hit")), 1.0)
+	get_tree().create_timer(restore_after).timeout.connect(func() -> void:
+		if _is_dead:
+			return
+		if ticket != _hit_anim_ticket:
+			return
+		if sprite == null or sprite.sprite_frames == null:
+			return
+		if sprite.sprite_frames.has_animation("idle"):
+			sprite.play("idle")
+		# 공격 중 피격으로 끊겼다면 hit 종료 후 "새 공격"을 다시 시작.
+		if canceled_attack and ai_enabled and not _is_evading and not _is_attacking:
+			_start_attack()
+		elif canceled_attack:
+			# 지금 바로 시작 불가(예: 회피 중)면 다음 업데이트에서 최대한 빨리 재시도.
+			_attack_idle_accum = _next_attack_delay
+	, CONNECT_ONE_SHOT)
+
+
+func _flash_hit(punch_type: String = "") -> void:
 	if hit_sound:
 		hit_sound.play()
-	_burst_hit_particles()
+	var pt := punch_type if not punch_type.is_empty() else "punch_l"
+	_burst_hit_particles(pt)
+	_play_hit_animation_once()
 	if not sprite:
 		return
 	# 스케일 트윈은 제거: 연타·트윈 겹침 시 스케일이 누적되어 커지는 현상 방지. 색 플래시만 사용.
@@ -379,12 +580,12 @@ func _flash_hit() -> void:
 	tween.tween_property(sprite, "modulate", Color.WHITE, 0.11)
 
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, punch_type: String = "punch_l") -> void:
 	if _is_dead:
 		return
 	current_hp -= amount
 	hit_received.emit(amount)
-	_flash_hit()
+	_flash_hit(punch_type)
 	if current_hp <= 0:
 		current_hp = 0
 		_is_dead = true
@@ -414,3 +615,22 @@ func _on_ko_animation_finished() -> void:
 	if sprite:
 		sprite.position += ko_corpse_position_nudge
 	died.emit()
+
+
+## 훈련장에서 KO 후 같은 적을 풀피로 즉시 재사용할 때 호출.
+func reset_for_respawn() -> void:
+	current_hp = max_hp
+	_is_dead = false
+	_is_attacking = false
+	_is_evading = false
+	_evade_window_elapsed = 0.0
+	_evade_idle_accum = 0.0
+	_attack_idle_accum = 0.0
+	_roll_next_attack_delay()
+	_roll_next_evade_idle_delay()
+	if sprite:
+		sprite.modulate = Color.WHITE
+		sprite.scale = _sprite_scale_base
+		sprite.position = Vector2.ZERO
+		if sprite.sprite_frames and sprite.sprite_frames.has_animation("idle"):
+			sprite.play("idle")

@@ -14,20 +14,35 @@ signal upgrade_closed
 @onready var _bar_rec: ProgressBar = $Dim/Panel/Margin/VBox/RowRec/HBox/Bar
 @onready var _btn_rec: Button = $Dim/Panel/Margin/VBox/RowRec/HBox/Btn
 @onready var _btn_close: Button = $Dim/Panel/Margin/VBox/BtnClose
+@onready var _btn_reset: Button = $Dim/Panel/Margin/VBox/BtnReset
 
 
 func _ready() -> void:
 	_btn_hp.pressed.connect(func() -> void: _on_buy("hp"))
 	_btn_sta.pressed.connect(func() -> void: _on_buy("stamina"))
 	_btn_rec.pressed.connect(func() -> void: _on_buy("recover"))
+	_btn_reset.pressed.connect(_on_reset_upgrades)
 	_btn_close.pressed.connect(_close_pressed)
 	refresh_display()
 
 
 func refresh_display() -> void:
 	var mx: int = GameState.UPGRADE_MAX_STEPS
-	_lbl_sweat.text = "스웨트(땀방울): %d  (스테이지 클리어 시 +1)" % GameState.get_sweat()
-	var sweat_ok := GameState.get_sweat() >= 1
+	var remain_sweat: int = GameState.get_sweat()
+	var spent_sweat: int = (
+		GameState.get_upgrade_hp_level()
+		+ GameState.get_upgrade_stamina_level()
+		+ GameState.get_upgrade_recover_level()
+	)
+	var total_sweat: int = remain_sweat + spent_sweat
+	_lbl_sweat.text = "스웨트(남은/총합): %d/%d  (스테이지 클리어 시 +1)" % [remain_sweat, total_sweat]
+	var sweat_ok := remain_sweat >= 1
+	var has_any_upgrade := (
+		GameState.get_upgrade_hp_level() > 0
+		or GameState.get_upgrade_stamina_level() > 0
+		or GameState.get_upgrade_recover_level() > 0
+	)
+	_btn_reset.disabled = not has_any_upgrade
 	_fill_row_hp(mx, sweat_ok)
 	_fill_row_sta(mx, sweat_ok)
 	_fill_row_rec(mx, sweat_ok)
@@ -43,7 +58,7 @@ func _fill_row_hp(mx: int, sweat_ok: bool) -> void:
 	_bar_hp.max_value = float(mx)
 	_bar_hp.value = float(lv)
 	_btn_hp.disabled = (not sweat_ok) or lv >= mx
-	_btn_hp.text = "업그레이드 (💧1)" if lv < mx else "완료"
+	_btn_hp.text = "업그레이드 (땀방울 1)" if lv < mx else "완료"
 
 
 func _fill_row_sta(mx: int, sweat_ok: bool) -> void:
@@ -56,7 +71,7 @@ func _fill_row_sta(mx: int, sweat_ok: bool) -> void:
 	_bar_sta.max_value = float(mx)
 	_bar_sta.value = float(lv)
 	_btn_sta.disabled = (not sweat_ok) or lv >= mx
-	_btn_sta.text = "업그레이드 (💧1)" if lv < mx else "완료"
+	_btn_sta.text = "업그레이드 (땀방울 1)" if lv < mx else "완료"
 
 
 func _fill_row_rec(mx: int, sweat_ok: bool) -> void:
@@ -71,11 +86,17 @@ func _fill_row_rec(mx: int, sweat_ok: bool) -> void:
 	_bar_rec.max_value = float(mx)
 	_bar_rec.value = float(lv)
 	_btn_rec.disabled = (not sweat_ok) or lv >= mx
-	_btn_rec.text = "업그레이드 (💧1)" if lv < mx else "완료"
+	_btn_rec.text = "업그레이드 (땀방울 1)" if lv < mx else "완료"
 
 
 func _on_buy(kind: String) -> void:
 	if not GameState.try_purchase_upgrade(kind):
+		return
+	refresh_display()
+
+
+func _on_reset_upgrades() -> void:
+	if not GameState.reset_all_upgrades(true):
 		return
 	refresh_display()
 
