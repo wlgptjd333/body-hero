@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://games/boxing/scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://games/boxing/scripts/player.gd" id="2_player"]
 [ext_resource type="Script" path="res://games/boxing/scripts/enemy.gd" id="3_enemy"]
-[ext_resource type="Texture2D" uid="uid://invho4x6btls" path="res://work_images/reference/bg_stage1_burger.png.jpg" id="4_bg"]
-[ext_resource type="Texture2D" uid="uid://o40n87m6c3r3" path="res://assets/textures/characters/left_glove.png" id="5_left_glove"]
-[ext_resource type="Texture2D" uid="uid://brkuhdqyv2yk5" path="res://assets/textures/characters/right_glove.png" id="6_right_glove"]
+[ext_resource type="Texture2D" uid="uid://invho4x6btls" path="res://assets/textures/bg/bg_stage1_burger.png" id="4_bg"]
+[ext_resource type="Texture2D" uid="uid://o40n87m6c3r3" path="res://assets/textures/characters/player/left_glove.png" id="5_left_glove"]
+[ext_resource type="Texture2D" uid="uid://brkuhdqyv2yk5" path="res://assets/textures/characters/player/right_glove.png" id="6_right_glove"]
 [ext_resource type="AudioStream" uid="uid://bdde7gq6tn0t5" path="res://assets/audio/sfx/sfx_punch_hit.wav" id="7_hit"]
 [ext_resource type="Script" path="res://games/boxing/scripts/ui/pause_layer.gd" id="8_pause_layer"]
 
@@ -378,7 +378,7 @@ offset_bottom = 58.0
 grow_horizontal = 0
 grow_vertical = 2
 theme_override_font_sizes/font_size = 22
-text = "⏸"
+text = "II"
 flat = true
 
 [node name="BGM" type="AudioStreamPlayer" parent="." unique_id=981556812]

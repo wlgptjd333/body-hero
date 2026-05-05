@@ -37,7 +37,7 @@ const PUNCH_TRANS := Tween.TRANS_QUINT
 ## 웹캠(UDP) 펀치만 트윈 길이에 곱함. 1보다 작을수록 임팩트까지 시간 단축(키보드 타이밍은 유지).
 const UDP_PUNCH_TIME_SCALE := 0.42
 
-const PUNCH_L_BODY_TEX_BASE := "res://work_images/output/burger_punch_l_"
+const PUNCH_L_BODY_TEX_BASE := "res://assets/textures/characters/enemies/burger/burger_punch_l_"
 const PUNCH_L_BODY_FRAME_MAX := 8
 ## SpriteFrames frame duration = relative weight; real seconds = sum_rel / fps.
 const PUNCH_L_BODY_REL1 := 0.026

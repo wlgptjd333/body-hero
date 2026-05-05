@@ -124,6 +124,10 @@ func _ready() -> void:
 	var vp := get_viewport()
 	if vp.size_changed.is_connected(_fit_background_to_viewport) == false:
 		vp.size_changed.connect(_fit_background_to_viewport)
+	# 씬 종료 시 정리를 위해 close_requested 연결(한 번만)
+	var root := get_tree().root
+	if root and not root.close_requested.is_connected(_on_exit_tree_cleanup):
+		root.close_requested.connect(_on_exit_tree_cleanup)
 	if _player and _player.has_signal("punch_impact"):
 		_player.punch_impact.connect(_on_player_punch_impact)
 	if _player and _player.has_signal("action_performed"):
@@ -193,6 +197,15 @@ func _schedule_webcam_ml_after_scene_idle() -> void:
 	for _i in range(3):
 		await get_tree().process_frame
 	GameState.ensure_webcam_ml_bridge(true)
+
+
+func _on_exit_tree_cleanup() -> void:
+	if _server:
+		_server.stop()
+		_server = null
+	var vp := get_viewport()
+	if vp and vp.size_changed.is_connected(_fit_background_to_viewport):
+		vp.size_changed.disconnect(_fit_background_to_viewport)
 
 
 func _process(delta: float) -> void:
@@ -348,13 +361,15 @@ func _on_enemy_died() -> void:
 func _begin_ko_intro_then_win() -> void:
 	# KO 연출(적 스프라이트) 후 2초 뒤에 중앙 KO! + 상단 라벨 표시
 	await get_tree().create_timer(1.5).timeout
-	if _win_shown:
+	if not is_inside_tree() or _win_shown:
 		return
 	if _enemy_hp_label:
 		_enemy_hp_label.text = "KO!"
 	if _ko_intro_layer:
 		_ko_intro_layer.visible = true
 	await get_tree().create_timer(3.0).timeout
+	if not is_inside_tree():
+		return
 	if _ko_intro_layer:
 		_ko_intro_layer.visible = false
 	if not _win_shown:
@@ -491,6 +506,8 @@ func _update_combo_label() -> void:
 
 func _respawn_training_dummy() -> void:
 	await get_tree().create_timer(0.6).timeout
+	if not is_inside_tree():
+		return
 	if not _enemy or not _enemy.has_method("reset_for_respawn"):
 		return
 	_enemy.reset_for_respawn()

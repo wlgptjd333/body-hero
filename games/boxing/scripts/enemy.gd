@@ -50,21 +50,21 @@ var _next_attack_delay: float = 4.0
 var _attack_idle_accum: float = 0.0
 var _attack_hit_emitted: bool = false
 
-const IDLE_TEXTURE_BASE := "res://work_images/output/burger_idle_"
+const IDLE_TEXTURE_BASE := "res://assets/textures/characters/enemies/burger/burger_idle_"
 ## 프레임당 재생 시간(초). (0.3초/프레임에서 한 번 더 2배 느리게)
 const IDLE_FRAME_DURATION_SEC := 0.6
 const IDLE_FRAME_PATH_MAX := 32
 const FALLBACK_ENEMY_TEXTURE := "res://assets/textures/characters/placeholder_enemy.svg"
 
-## 플레이어 펀치 몸통과 동일: work_images/output/burger_punch_l_01.png … _04.png
-const ATTACK_TEXTURE_BASE := "res://work_images/output/burger_punch_l_"
+## 플레이어 펀치 몸통과 동일: burger_punch_l_01.png … _04.png (assets)
+const ATTACK_TEXTURE_BASE := "res://assets/textures/characters/enemies/burger/burger_punch_l_"
 const ATTACK_FRAME_PATH_MAX := 4
 
-const HIT_TEXTURE_BASE := "res://work_images/output/burger_hit_"
+const HIT_TEXTURE_BASE := "res://assets/textures/characters/enemies/burger/burger_hit_"
 const HIT_FRAME_PATH_MAX := 4
 const HIT_FRAME_DURATION_SEC := 0.2
 
-const KO_TEXTURE_BASE := "res://work_images/output/burger_ko_"
+const KO_TEXTURE_BASE := "res://assets/textures/characters/enemies/burger/burger_ko_"
 ## KO만 idle보다 크게(캔버스·누끼 후 실제 그림 크기 차이 보정)
 const KO_DISPLAY_SCALE := 2.0
 ## KO 모션은 프레임을 길게 잡아 천천히 재생 (SpriteFrames 프레임당 초; 값↑ = 느림)
@@ -549,7 +549,7 @@ func _play_hit_animation_once() -> void:
 	sprite.play("hit")
 	var restore_after: float = HIT_FRAME_DURATION_SEC * maxf(float(sprite.sprite_frames.get_frame_count("hit")), 1.0)
 	get_tree().create_timer(restore_after).timeout.connect(func() -> void:
-		if _is_dead:
+		if not is_inside_tree() or _is_dead:
 			return
 		if ticket != _hit_anim_ticket:
 			return

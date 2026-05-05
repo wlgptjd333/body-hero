@@ -208,6 +208,10 @@ func _on_refresh_cameras_pressed() -> void:
 					parts += ", "
 				parts += str(found[j])
 			_lbl_camera_hint.text = "OpenCV 기준 열리는 인덱스: %s" % parts
+	# 임시 스캔 결과 파일 정리
+	var temp_out: String = ProjectSettings.globalize_path("user://camera_list_scan.txt")
+	if FileAccess.file_exists(temp_out):
+		DirAccess.remove_absolute(temp_out)
 
 
 func _get_window_size() -> Vector2i:

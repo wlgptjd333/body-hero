@@ -193,7 +193,7 @@ size_flags_horizontal = 3
 min_value = 50.0
 max_value = 2000.0
 step = 5.0
-value = 200.0
+value = 0.0
 suffix = " kcal"
 
 [node name="BtnApplyRec" type="Button" parent="LeftPanel/Scroll/MarginContainer/DailyVBox/GoalRow"]
@@ -266,7 +266,7 @@ theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
-text = "업그레이드 (💧)"
+text = "업그레이드 (땀방울)"
 
 [node name="BtnHowToPlay" type="Button" parent="RightPanel/ButtonBox"]
 custom_minimum_size = Vector2(0, 56)
