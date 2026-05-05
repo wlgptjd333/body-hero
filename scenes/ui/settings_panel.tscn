@@ -475,6 +475,21 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Space"
 
+[node name="KeyRowSquat" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowSquat"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "스쿼트(회피)"
+
+[node name="KeyBtnSquat" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowSquat"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "S"
+
 [node name="ApplyButton" type="Button" parent="Panel"]
 layout_mode = 1
 anchors_preset = 12

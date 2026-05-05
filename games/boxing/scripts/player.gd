@@ -324,7 +324,7 @@ func play_take_damage_fx() -> void:
 
 func _flash_gloves_damage() -> void:
 	var sprites: Array[CanvasItem] = []
-	for g in [left_glove, right_glove]:
+	for g: Area2D in [left_glove, right_glove]:
 		if g == null:
 			continue
 		var spr: Node = g.get_node_or_null("Sprite2D")
@@ -334,11 +334,11 @@ func _flash_gloves_damage() -> void:
 		return
 	var tw := create_tween()
 	tw.set_parallel(true)
-	for c in sprites:
+	for c: CanvasItem in sprites:
 		tw.tween_property(c, "modulate", Color(1.0, 0.38, 0.38, 1.0), 0.05)
 	tw.set_parallel(false)
 	tw.set_parallel(true)
-	for c in sprites:
+	for c: CanvasItem in sprites:
 		tw.tween_property(c, "modulate", Color.WHITE, 0.16)
 
 
@@ -350,7 +350,7 @@ func _process(_delta: float) -> void:
 		_guarding = false
 		GameState.set_guarding(false)
 		_busy_global = true
-		_play_guard_exit(func(): _busy_global = false)
+		_play_guard_exit(func() -> void: _busy_global = false)
 		return
 	if _busy_global:
 		return
@@ -364,6 +364,8 @@ func _process(_delta: float) -> void:
 		play_action("upper_r")
 	elif Input.is_action_just_pressed("guard"):
 		play_action("guard")
+	elif Input.is_action_just_pressed("squat"):
+		play_action("dodge")
 
 
 func play_action(action: String, via_udp: bool = false) -> bool:
@@ -447,9 +449,9 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 			_guard_via_udp = false
 			_guarding = false
 			GameState.set_guarding(false)
-			_busy_global = true
-			_play_guard_exit(func(): _busy_global = false)
-			return true
+		_busy_global = true
+		_play_guard_exit(func() -> void: _busy_global = false)
+		return true
 		_:
 			return false
 
@@ -503,8 +505,8 @@ func _play_punch(
 		PUNCH_STRIKE_DURATION * ts
 	).set_trans(PUNCH_TRANS)
 	tween.set_parallel(false)
-	tween.tween_callback(func(): punch_impact.emit(DAMAGE_PUNCH, action))
-	tween.tween_callback(func(): _release_hand_busy_after_impact(action))
+	tween.tween_callback(func() -> void: punch_impact.emit(DAMAGE_PUNCH, action))
+	tween.tween_callback(func() -> void: _release_hand_busy_after_impact(action))
 	tween.tween_interval(0.016 * ts)
 	tween.set_parallel(true)
 	tween.tween_property(glove, "position", default_pos, PUNCH_RETURN_DURATION * ts).set_trans(Tween.TRANS_QUAD)
@@ -548,8 +550,8 @@ func _play_uppercut(
 		UPPERCUT_RISE_DURATION * ts
 	).set_trans(Tween.TRANS_BACK)
 	tween.set_parallel(false)
-	tween.tween_callback(func(): punch_impact.emit(DAMAGE_UPPERCUT, action))
-	tween.tween_callback(func(): _release_hand_busy_after_impact(action))
+	tween.tween_callback(func() -> void: punch_impact.emit(DAMAGE_UPPERCUT, action))
+	tween.tween_callback(func() -> void: _release_hand_busy_after_impact(action))
 	tween.tween_interval(0.02 * ts)
 	tween.set_parallel(true)
 	tween.tween_property(glove, "position", default_pos, UPPERCUT_RETURN_DURATION * ts).set_trans(

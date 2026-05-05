@@ -194,7 +194,7 @@ func _schedule_webcam_ml_after_scene_idle() -> void:
 	var delay_sec := maxf(0.0, webcam_ml_scene_load_delay_sec)
 	if delay_sec > 0.0:
 		await get_tree().create_timer(delay_sec).timeout
-	for _i in range(3):
+	for _i: int in range(3):
 		await get_tree().process_frame
 	GameState.ensure_webcam_ml_bridge(true)
 

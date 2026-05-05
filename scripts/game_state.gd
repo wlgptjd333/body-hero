@@ -66,16 +66,6 @@ const DAILY_CHALLENGE_POOL_IDS: Array[String] = [
 ]
 
 
-func _migrate_daily_challenge_id(challenge_id: String) -> String:
-	match challenge_id:
-		"jabs_25":
-			return "punches_25"
-		"hooks_12":
-			return "punches_12"
-		_:
-			return challenge_id
-
-
 var _daily_challenge_date: String = ""
 var _daily_challenge_picks: Array[String] = []
 var _daily_challenge_progress: Dictionary = {}  # 과제 id -> 누적 (액션 기반만)
@@ -131,9 +121,9 @@ const PREWARM_WEBCAM_ML_BRIDGE := true
 const PREWARM_WEBCAM_ML_DELAY_SEC := 8.0
 
 func _init() -> void:
-	for k in STATS_KEYS:
+	for k: String in STATS_KEYS:
 		_punch_counts[k] = 0
-	for k in ["punch_l", "punch_r", "upper_l", "upper_r", "dodge", "guard"]:
+	for k: String in ["punch_l", "punch_r", "upper_l", "upper_r", "dodge", "guard"]:
 		_session_action_counts[k] = 0
 	load_stats()
 	_load_display_settings_from_disk()
@@ -148,7 +138,7 @@ func _ready() -> void:
 
 func _defer_prewarm_webcam_ml_bridge() -> void:
 	await get_tree().create_timer(PREWARM_WEBCAM_ML_DELAY_SEC).timeout
-	for _i in range(2):
+	for _i: int in range(2):
 		await get_tree().process_frame
 	if not has_webcam_ml_runtime_files():
 		return
@@ -341,7 +331,7 @@ func start_workout_session() -> void:
 	_session_active = true
 	_session_elapsed_sec = 0.0
 	_session_calories = 0.0
-	for k in _session_action_counts.keys():
+	for k: String in _session_action_counts.keys():
 		_session_action_counts[k] = 0
 
 func record_action_for_calorie(action: String) -> void:
@@ -366,7 +356,7 @@ func end_workout_session() -> float:
 	_session_active = false
 	var minutes := maxf(_session_elapsed_sec / 60.0, 0.1)
 	var total_actions: int = 0
-	for k in _session_action_counts.keys():
+	for k: String in _session_action_counts.keys():
 		total_actions += int(_session_action_counts[k])
 	var density := float(total_actions) / minutes
 	# MET 기반 추정: 복싱 피트니스(중강도~고강도) 범위를 단순화
@@ -387,7 +377,7 @@ func get_last_session_calories() -> float:
 func get_recent_daily_calories(days: int = 30) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var count := maxi(1, days)
-	for i in range(count - 1, -1, -1):
+	for i: int in range(count - 1, -1, -1):
 		var ts := Time.get_unix_time_from_system() - (86400 * i)
 		var date_key := _date_key_from_unix(ts)
 		result.append({
@@ -400,7 +390,7 @@ func get_recent_daily_calories(days: int = 30) -> Array[Dictionary]:
 func get_recent_daily_weight_log(days: int = 30) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	var count := maxi(1, days)
-	for i in range(count - 1, -1, -1):
+	for i: int in range(count - 1, -1, -1):
 		var ts := Time.get_unix_time_from_system() - (86400 * i)
 		var date_key := _date_key_from_unix(ts)
 		var w: float = float(_daily_weight_log.get(date_key, 0.0))
@@ -601,7 +591,7 @@ func _roll_fresh_daily_challenges() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(_daily_challenge_date)
 	var pool: Array[String] = DAILY_CHALLENGE_POOL_IDS.duplicate()
-	for _t in range(3):
+	for _t: int in range(3):
 		if pool.is_empty():
 			break
 		var idx: int = rng.randi_range(0, pool.size() - 1)
@@ -687,9 +677,9 @@ func save_stats() -> void:
 	cfg.set_value("workout", "age", _age)
 	cfg.set_value("workout", "gender", _gender)
 	cfg.set_value("workout", "daily_kcal_goal", _daily_kcal_goal)
-	for date_key in _daily_calories.keys():
+	for date_key: String in _daily_calories.keys():
 		cfg.set_value("daily_calories", date_key, _daily_calories[date_key])
-	for date_key in _daily_weight_log.keys():
+	for date_key: String in _daily_weight_log.keys():
 		cfg.set_value("daily_weight_log", date_key, _daily_weight_log[date_key])
 	cfg.set_value("daily_challenges", "date", _daily_challenge_date)
 	cfg.set_value("daily_challenges", "sessions_completed", _daily_sessions_completed)
@@ -720,19 +710,9 @@ func load_stats() -> void:
 	if cfg.load(STATS_PATH) != OK:
 		refresh_combat_derived_from_upgrades()
 		return
-	for k in STATS_KEYS:
+	for k: String in STATS_KEYS:
 		if cfg.has_section_key("stats", k):
 			_punch_counts[k] = cfg.get_value("stats", k, 0)
-	# 구 저장(stats: jab_l/jab_r/hook_l/hook_r) → 펀치로 합산
-	if cfg.has_section("stats"):
-		if cfg.has_section_key("stats", "jab_l"):
-			_punch_counts["punch_l"] += int(cfg.get_value("stats", "jab_l", 0))
-		if cfg.has_section_key("stats", "hook_l"):
-			_punch_counts["punch_l"] += int(cfg.get_value("stats", "hook_l", 0))
-		if cfg.has_section_key("stats", "jab_r"):
-			_punch_counts["punch_r"] += int(cfg.get_value("stats", "jab_r", 0))
-		if cfg.has_section_key("stats", "hook_r"):
-			_punch_counts["punch_r"] += int(cfg.get_value("stats", "hook_r", 0))
 	if cfg.has_section_key("workout", "last_session_calories"):
 		_last_session_calories = float(cfg.get_value("workout", "last_session_calories", 0.0))
 	if cfg.has_section_key("workout", "weight_kg"):
@@ -750,10 +730,10 @@ func load_stats() -> void:
 	if cfg.has_section_key("workout", "daily_kcal_goal"):
 		_daily_kcal_goal = clampf(float(cfg.get_value("workout", "daily_kcal_goal", 0.0)), 0.0, 2000.0)
 	if cfg.has_section("daily_calories"):
-		for date_key in cfg.get_section_keys("daily_calories"):
+		for date_key: String in cfg.get_section_keys("daily_calories"):
 			_daily_calories[date_key] = float(cfg.get_value("daily_calories", date_key, 0.0))
 	if cfg.has_section("daily_weight_log"):
-		for date_key in cfg.get_section_keys("daily_weight_log"):
+		for date_key: String in cfg.get_section_keys("daily_weight_log"):
 			_daily_weight_log[date_key] = float(cfg.get_value("daily_weight_log", date_key, 0.0))
 	var ch_date: String = ""
 	if cfg.has_section_key("daily_challenges", "date"):
@@ -766,13 +746,12 @@ func load_stats() -> void:
 			var pk := "pick_%d" % i
 			if cfg.has_section_key("daily_challenges", pk):
 				var raw_pick: String = str(cfg.get_value("daily_challenges", pk, ""))
-				_daily_challenge_picks.append(_migrate_daily_challenge_id(raw_pick))
+				_daily_challenge_picks.append(raw_pick)
 		_daily_challenge_progress.clear()
 		if cfg.has_section("daily_challenge_progress"):
 			for pk2: String in cfg.get_section_keys("daily_challenge_progress"):
-				var nk: String = _migrate_daily_challenge_id(pk2)
-				var prev: int = int(_daily_challenge_progress.get(nk, 0))
-				_daily_challenge_progress[nk] = (
+				var prev: int = int(_daily_challenge_progress.get(pk2, 0))
+				_daily_challenge_progress[pk2] = (
 					prev + int(cfg.get_value("daily_challenge_progress", pk2, 0))
 				)
 		var picks_invalid: bool = _daily_challenge_picks.size() != 3
@@ -898,7 +877,7 @@ func get_ml_speed_profile() -> String:
 
 func _sanitize_ml_speed_profile(s: String) -> String:
 	var t := s.strip_edges()
-	for v in ML_SPEED_PROFILE_VALUES:
+	for v: String in ML_SPEED_PROFILE_VALUES:
 		if t == v:
 			return t
 	return "balanced"
@@ -906,7 +885,7 @@ func _sanitize_ml_speed_profile(s: String) -> String:
 
 func _sanitize_camera_backend(s: String) -> String:
 	var t := s.strip_edges().to_lower()
-	for v in CAMERA_BACKEND_VALUES:
+	for v: String in CAMERA_BACKEND_VALUES:
 		if t == v:
 			return t
 	return "auto"

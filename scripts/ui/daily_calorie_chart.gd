@@ -73,7 +73,7 @@ func _draw() -> void:
 	if n > 14:
 		bar_w = clampf(slot_w * 0.45, 2.0, 14.0)
 
-	for i in range(n):
+	for i: int in range(n):
 		var p: Dictionary = _points[i]
 		var val: float = float(p.get(_value_key, 0.0))
 		var ratio: float = 0.0

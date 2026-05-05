@@ -31,9 +31,9 @@ var current_hp: float
 ## 어퍼컷: 상단(머리/번) 쪽 — 왼손은 좌상단, 오른손은 우상단
 @export var hit_upper_l_offset: Vector2 = Vector2(-56, -96)
 @export var hit_upper_r_offset: Vector2 = Vector2(56, -96)
-## 잽·훅: 몸통 중앙 높이 — 왼쪽/오른쪽
-@export var hit_jab_l_offset: Vector2 = Vector2(-44, -10)
-@export var hit_jab_r_offset: Vector2 = Vector2(44, -10)
+## 펀치: 몸통 중앙 높이 — 왼쪽/오른쪽
+@export var hit_punch_l_offset: Vector2 = Vector2(-44, -10)
+@export var hit_punch_r_offset: Vector2 = Vector2(44, -10)
 ## 회피 시 스프라이트를 좌/우로 이동하는 픽셀 거리(랜덤 방향)
 @export var evade_dodge_offset_pixels: float = 72.0
 
@@ -161,7 +161,7 @@ func _setup_idle_sprite_frames() -> void:
 	if attack_textures.size() >= 1:
 		sf.add_animation("attack")
 		sf.set_animation_loop("attack", false)
-		for atex in attack_textures:
+		for atex: Texture2D in attack_textures:
 			# 상대 duration 1.0 = 동일 길이 프레임. 실제 초는 set_animation_speed로 맞춤.
 			sf.add_frame("attack", atex, 1.0)
 		var sec_per_frame: float = maxf(attack_frame_duration_sec, 0.001)
@@ -180,7 +180,7 @@ func _setup_idle_sprite_frames() -> void:
 	if hit_textures.size() >= 1:
 		sf.add_animation("hit")
 		sf.set_animation_loop("hit", false)
-		for htex in hit_textures:
+		for htex: Texture2D in hit_textures:
 			sf.add_frame("hit", htex, 1.0)
 		sf.set_animation_speed("hit", 1.0 / maxf(HIT_FRAME_DURATION_SEC, 0.001))
 	sprite.sprite_frames = sf
@@ -321,7 +321,7 @@ func _hit_vfx_profile(punch_type: String) -> Dictionary:
 		}
 	if t.begins_with("punch"):
 		return {
-			"offset": (hit_jab_l_offset if is_left else hit_jab_r_offset),
+			"offset": (hit_punch_l_offset if is_left else hit_punch_r_offset),
 			"scale": 1.38,
 			"upper": false,
 		}

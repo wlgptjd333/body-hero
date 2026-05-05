@@ -29,6 +29,7 @@ const KEY_ACTIONS := [
 	["upper_left", "Panel/Scroll/VBox/KeySection/KeyRowUpperLeft/KeyBtnUpperLeft"],
 	["upper_right", "Panel/Scroll/VBox/KeySection/KeyRowUpperRight/KeyBtnUpperRight"],
 	["guard", "Panel/Scroll/VBox/KeySection/KeyRowGuard/KeyBtnGuard"],
+	["squat", "Panel/Scroll/VBox/KeySection/KeyRowSquat/KeyBtnSquat"],
 ]
 
 var _waiting_action: String = ""
@@ -72,11 +73,11 @@ func _ready() -> void:
 	if _btn_apply:
 		_btn_apply.pressed.connect(_on_apply)
 	if _slider_master:
-		_slider_master.value_changed.connect(func(v: float): _update_label(_label_master, v))
+		_slider_master.value_changed.connect(func(v: float) -> void: _update_label(_label_master, v))
 	if _slider_sfx:
-		_slider_sfx.value_changed.connect(func(v: float): _update_label(_label_sfx, v))
+		_slider_sfx.value_changed.connect(func(v: float) -> void: _update_label(_label_sfx, v))
 	if _slider_music:
-		_slider_music.value_changed.connect(func(v: float): _update_label(_label_music, v))
+		_slider_music.value_changed.connect(func(v: float) -> void: _update_label(_label_music, v))
 	if _btn_refresh_cameras:
 		_btn_refresh_cameras.pressed.connect(_on_refresh_cameras_pressed)
 	if _btn_start_webcam_ml:
@@ -137,14 +138,14 @@ func _fill_camera_option_default() -> void:
 	if not _camera_option:
 		return
 	_camera_option.clear()
-	for i in range(10):
-		_camera_option.add_item("카메라 %d" % i, i)
+	for i: int in range(10):
+		_camera_option.add_item("칵ㅁ%d" % i, i)
 
 
 func _select_camera_id_in_option(want_id: int) -> void:
 	if not _camera_option:
 		return
-	for i in range(_camera_option.item_count):
+	for i: int in range(_camera_option.item_count):
 		if _camera_option.get_item_id(i) == want_id:
 			_camera_option.select(i)
 			return
@@ -482,7 +483,7 @@ func _on_back() -> void:
 # --- 키보드 설정 ---
 
 func _setup_keyboard() -> void:
-	for arr in KEY_ACTIONS:
+	for arr: Array in KEY_ACTIONS:
 		var action: String = arr[0]
 		var path: String = arr[1]
 		var btn: Button = get_node_or_null(path)
@@ -493,7 +494,7 @@ func _setup_keyboard() -> void:
 
 
 func _refresh_key_labels() -> void:
-	for action in _key_buttons:
+	for action: String in _key_buttons:
 		var btn: Button = _key_buttons[action]
 		if not btn or _waiting_action == action:
 			continue
@@ -508,7 +509,7 @@ func _get_first_key_event(action: String) -> InputEvent:
 	if not InputMap.has_action(action):
 		return null
 	var events: Array = InputMap.action_get_events(action)
-	for ev in events:
+	for ev: InputEvent in events:
 		if ev is InputEventKey:
 			return ev
 	return null
@@ -527,7 +528,7 @@ func _punch_action_key_display(action: String) -> String:
 	if not InputMap.has_action(action):
 		return "?"
 	var parts: Array[String] = []
-	for ev in InputMap.action_get_events(action):
+	for ev: InputEvent in InputMap.action_get_events(action):
 		if ev is InputEventKey:
 			var kk: InputEventKey = ev as InputEventKey
 			parts.append(kk.as_text_physical_keycode())
@@ -540,7 +541,7 @@ func _ordered_phys_codes_for_action(action: String) -> Array[int]:
 	var out: Array[int] = []
 	if not InputMap.has_action(action):
 		return out
-	for ev in InputMap.action_get_events(action):
+	for ev: InputEvent in InputMap.action_get_events(action):
 		if ev is InputEventKey:
 			var p: int = (ev as InputEventKey).physical_keycode
 			if p > 0 and not out.has(p):
@@ -580,11 +581,11 @@ func _input(event: InputEvent) -> void:
 
 
 func _assign_key_to_action(action: String, physical_keycode: int) -> void:
-	for other_action in _key_buttons:
+	for other_action: String in _key_buttons:
 		if other_action == action:
 			continue
-		var events: Array = InputMap.action_get_events(other_action)
-		for i in range(events.size() - 1, -1, -1):
+		var events: Array[InputEvent] = InputMap.action_get_events(other_action)
+		for i: int in range(events.size() - 1, -1, -1):
 			if events[i] is InputEventKey and (events[i] as InputEventKey).physical_keycode == physical_keycode:
 				InputMap.action_erase_event(other_action, events[i])
 	if action == "punch_left" or action == "punch_right":
@@ -610,7 +611,7 @@ func _save_input_config() -> void:
 	var cfg := ConfigFile.new()
 	if FileAccess.file_exists(INPUT_CONFIG_PATH):
 		cfg.load(INPUT_CONFIG_PATH)
-	for arr in KEY_ACTIONS:
+	for arr: Array in KEY_ACTIONS:
 		var action: String = arr[0]
 		if action == "punch_left" or action == "punch_right":
 			var codes: Array[int] = _ordered_phys_codes_for_action(action)
@@ -626,9 +627,6 @@ func _save_input_config() -> void:
 			var ev: InputEvent = _get_first_key_event(action)
 			if ev is InputEventKey:
 				cfg.set_value("input", action, (ev as InputEventKey).physical_keycode)
-	for dead: String in ["hook_left", "hook_right"]:
-		if cfg.has_section_key("input", dead):
-			cfg.erase_section_key("input", dead)
 	var err := cfg.save(INPUT_CONFIG_PATH)
 	if err != OK:
 		push_warning("키 설정 저장 실패: %s" % INPUT_CONFIG_PATH)
@@ -640,13 +638,7 @@ static func load_input_config_from_disk() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(INPUT_CONFIG_PATH) != OK:
 		return
-	var legacy_hook_l: int = 0
-	if cfg.has_section_key("input", "hook_left"):
-		legacy_hook_l = int(cfg.get_value("input", "hook_left", 0))
-	var legacy_hook_r: int = 0
-	if cfg.has_section_key("input", "hook_right"):
-		legacy_hook_r = int(cfg.get_value("input", "hook_right", 0))
-	for action in ["upper_left", "upper_right", "guard"]:
+	for action: String in ["upper_left", "upper_right", "guard", "squat"]:
 		if not cfg.has_section_key("input", action) or not InputMap.has_action(action):
 			continue
 		var phys: int = int(cfg.get_value("input", action, 0))
@@ -660,25 +652,19 @@ static func load_input_config_from_disk() -> void:
 		var touch_l: bool = (
 			cfg.has_section_key("input", "punch_left")
 			or cfg.has_section_key("input", "punch_left_aux")
-			or legacy_hook_l > 0
 		)
 		if touch_l:
 			var prim_l: int = int(cfg.get_value("input", "punch_left", 0))
 			var aux_l: int = int(cfg.get_value("input", "punch_left_aux", 0))
-			if aux_l <= 0 and legacy_hook_l > 0:
-				aux_l = legacy_hook_l
 			_apply_punch_keys_from_disk("punch_left", prim_l, aux_l, KEY_Z)
 	if InputMap.has_action("punch_right"):
 		var touch_r: bool = (
 			cfg.has_section_key("input", "punch_right")
 			or cfg.has_section_key("input", "punch_right_aux")
-			or legacy_hook_r > 0
 		)
 		if touch_r:
 			var prim_r: int = int(cfg.get_value("input", "punch_right", 0))
 			var aux_r: int = int(cfg.get_value("input", "punch_right_aux", 0))
-			if aux_r <= 0 and legacy_hook_r > 0:
-				aux_r = legacy_hook_r
 			_apply_punch_keys_from_disk("punch_right", prim_r, aux_r, KEY_C)
 
 
@@ -693,7 +679,7 @@ static func _apply_punch_keys_from_disk(action: String, primary: int, aux: int, 
 		keys.append(aux)
 	if keys.size() == 1 and default_aux > 0 and keys[0] != default_aux and not keys.has(default_aux):
 		keys.append(default_aux)
-	for code in keys:
+	for code: int in keys:
 		var k := InputEventKey.new()
 		k.physical_keycode = code
 		InputMap.action_add_event(action, k)

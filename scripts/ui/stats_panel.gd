@@ -36,20 +36,20 @@ func _refresh_stats() -> void:
 		return
 	var li: int = 0
 	var si: int = 0
-	for key in GameState.STATS_KEYS:
+	for key: String in GameState.STATS_KEYS:
 		var name_str: String = DISPLAY_NAMES.get(key, key)
 		var count: int = GameState.get_punch_count(key)
 		_get_label(li).text = "%s: %d번" % [name_str, count]
 		_get_label(li).add_theme_font_size_override("font_size", 18)
 		_get_label(li).visible = true
 		li += 1
-	var used: Array = _refresh_time_attack_section(li, si)
+	var used: Array[int] = _refresh_time_attack_section(li, si)
 	li = used[0]
 	si = used[1]
 	# 사용하지 않는 풀 항목 숨김
-	for i in range(li, _label_pool.size()):
+	for i: int in range(li, _label_pool.size()):
 		_label_pool[i].visible = false
-	for i in range(si, _sep_pool.size()):
+	for i: int in range(si, _sep_pool.size()):
 		_sep_pool[i].visible = false
 	_refresh_daily_chart()
 	_refresh_weight_ui()
@@ -74,7 +74,7 @@ func _get_sep(idx: int) -> HSeparator:
 	return sep
 
 
-func _refresh_time_attack_section(li: int, si: int) -> Array:
+func _refresh_time_attack_section(li: int, si: int) -> Array[int]:
 	if not _stats_list:
 		return [li, si]
 	_get_sep(si).visible = true
