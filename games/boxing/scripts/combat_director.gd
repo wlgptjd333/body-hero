@@ -79,9 +79,7 @@ func on_enemy_attack(damage: float) -> void:
 			_player.play_guard_block_fx()
 	else:
 		_reset_combo()
-		GameState.player_hp -= damage
-		if GameState.player_hp < 0.0:
-			GameState.player_hp = 0.0
+		GameState.apply_player_damage(damage)
 		if GameState.player_hp <= 0.0:
 			game_over_triggered.emit()
 		if _player and _player.has_method("play_take_damage_fx"):

@@ -36,6 +36,7 @@ func setup_audio() -> void:
 		if hit_sound and hit_sound.stream == null:
 			_try_load_stream(hit_sound, [
 				"res://assets/audio/sfx/sfx_punch_hit.wav",
+				"res://assets/audio/sfx_punch_hit.wav",
 			])
 
 

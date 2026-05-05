@@ -88,6 +88,7 @@ func _connect_signals() -> void:
 	_combat_director.training_hud_needs_update.connect(_ui_director.update_training)
 	_combat_director.bars_need_update.connect(_on_bars_need_update)
 	GameState.stamina_changed.connect(_on_stamina_changed)
+	GameState.player_hp_changed.connect(_on_player_hp_changed)
 
 
 func _connect_buttons() -> void:
@@ -233,6 +234,10 @@ func _on_bars_need_update() -> void:
 
 
 func _on_stamina_changed(_new_stamina: float) -> void:
+	_ui_director.update_bars(_enemy)
+
+
+func _on_player_hp_changed(_new_hp: float) -> void:
 	_ui_director.update_bars(_enemy)
 
 

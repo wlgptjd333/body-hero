@@ -3,6 +3,7 @@ extends Node
 ## 접근: GameState.stamina, GameState.consume_stamina(4) 등
 
 signal stamina_changed(new_stamina: float)
+signal player_hp_changed(new_hp: float)
 
 # 플레이어 (최대 체력·스태미너·초당 회복은 업그레이드 반영 후 `refresh_combat_derived_from_upgrades`가 갱신)
 var player_hp: float = 200.0
@@ -31,7 +32,7 @@ var _upgrade_stamina: int = 0
 var _upgrade_recover: int = 0
 
 # 가드 막기 성공 시 HP 소모 (방어 대가, 매우 소량)
-const HP_CHIP_ON_GUARD_BLOCK := 1.5
+const HP_CHIP_ON_GUARD_BLOCK := 8.0
 
 # 가드: 플레이어가 가드 중이면 true
 var is_guarding: bool = false
@@ -233,17 +234,32 @@ func consume_stamina(amount: float) -> bool:
 ## 적 공격을 가드로 막았을 때: 스태미너를 초당 회복과 동일한 양만큼 한 번 회복 + HP 소량 감소
 func apply_guard_block_success() -> void:
 	var prev_stamina: float = stamina
+	var prev_hp: float = player_hp
 	stamina = minf(stamina_max, stamina + stamina_passive_recover_per_sec)
 	player_hp = maxf(0.0, player_hp - HP_CHIP_ON_GUARD_BLOCK)
 	if stamina != prev_stamina:
 		stamina_changed.emit(stamina)
+	if player_hp != prev_hp:
+		player_hp_changed.emit(player_hp)
 
 
 ## 스쿼트(기존 회피 입력) 시 즉시 HP를 최대치의 일정 비율만큼 회복.
 func apply_squat_heal(heal_ratio: float = 0.10) -> void:
 	var r: float = clampf(heal_ratio, 0.0, 1.0)
 	var amount: float = player_max_hp * r
+	var prev_hp: float = player_hp
 	player_hp = minf(player_max_hp, player_hp + amount)
+	if player_hp != prev_hp:
+		player_hp_changed.emit(player_hp)
+
+
+func apply_player_damage(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	var prev_hp: float = player_hp
+	player_hp = maxf(0.0, player_hp - amount)
+	if player_hp != prev_hp:
+		player_hp_changed.emit(player_hp)
 
 func get_stamina_ratio() -> float:
 	if stamina_max <= 0.0:
@@ -262,9 +278,12 @@ func refresh_combat_derived_from_upgrades() -> void:
 	stamina_passive_recover_per_sec = (
 		BASE_STAMINA_PASSIVE_RECOVER + float(_upgrade_recover) * UPGRADE_RECOVER_PER_STEP
 	)
+	var prev_hp: float = player_hp
 	player_hp = minf(player_hp, player_max_hp)
 	var prev_stamina: float = stamina
 	stamina = minf(stamina, stamina_max)
+	if player_hp != prev_hp:
+		player_hp_changed.emit(player_hp)
 	if stamina != prev_stamina:
 		stamina_changed.emit(stamina)
 
@@ -303,14 +322,20 @@ func try_purchase_upgrade(kind: String) -> bool:
 			_sweat -= 1
 			_upgrade_hp += 1
 			refresh_combat_derived_from_upgrades()
+			var prev_hp: float = player_hp
 			player_hp = minf(player_hp + UPGRADE_HP_PER_STEP, player_max_hp)
+			if player_hp != prev_hp:
+				player_hp_changed.emit(player_hp)
 		"stamina":
 			if _upgrade_stamina >= UPGRADE_MAX_STEPS:
 				return false
 			_sweat -= 1
 			_upgrade_stamina += 1
 			refresh_combat_derived_from_upgrades()
+			var prev_stamina: float = stamina
 			stamina = minf(stamina + UPGRADE_STAMINA_PER_STEP, stamina_max)
+			if stamina != prev_stamina:
+				stamina_changed.emit(stamina)
 		"recover":
 			if _upgrade_recover >= UPGRADE_MAX_STEPS:
 				return false

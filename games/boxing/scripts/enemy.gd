@@ -24,7 +24,7 @@ var current_hp: float
 @export var attack_frame_duration_sec := 0.25
 ## 플레이어 피격 판정: 몇 번째 프레임 **시점**(0부터). 2 = 세 번째(03 임팩트)
 @export var enemy_attack_impact_frame_index := 2
-@export var attack_damage := 24.0
+@export var attack_damage := 30.0
 ## 타격 파티클 기본 위치 (미분류 시)
 @export var hit_effect_offset: Vector2 = Vector2(0, -48)
 ## 어퍼컷: 상단(머리/번) 쪽 — 왼손은 좌상단, 오른손은 우상단

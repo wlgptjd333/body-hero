@@ -145,7 +145,7 @@ attack_delay_max = 2.45
 evade_idle_min = 0.35
 evade_idle_max = 1.1
 evade_duration = 0.38
-attack_damage = 24.0
+attack_damage = 30.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Enemy" unique_id=1932976256]
 scale = Vector2(1.02, 1.02)
