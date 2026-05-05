@@ -3,6 +3,9 @@
 [ext_resource type="Script" path="res://games/boxing/scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://games/boxing/scripts/player.gd" id="2_player"]
 [ext_resource type="Script" path="res://games/boxing/scripts/enemy.gd" id="3_enemy"]
+[ext_resource type="Script" path="res://games/boxing/scripts/ui/ui_director.gd" id="9_ui_director"]
+[ext_resource type="Script" path="res://games/boxing/scripts/combat_director.gd" id="10_combat_director"]
+[ext_resource type="Script" path="res://games/boxing/scripts/stage_manager.gd" id="11_stage_manager"]
 [ext_resource type="Texture2D" uid="uid://invho4x6btls" path="res://assets/textures/bg/bg_stage1_burger.png" id="4_bg"]
 [ext_resource type="Texture2D" uid="uid://o40n87m6c3r3" path="res://assets/textures/characters/player/left_glove.png" id="5_left_glove"]
 [ext_resource type="Texture2D" uid="uid://brkuhdqyv2yk5" path="res://assets/textures/characters/player/right_glove.png" id="6_right_glove"]
@@ -119,6 +122,15 @@ shadow_offset = Vector2(0, 1)
 
 [node name="Main" type="Node2D" unique_id=1572593569]
 script = ExtResource("1_main")
+
+[node name="UIDirector" type="Node" parent="."]
+script = ExtResource("9_ui_director")
+
+[node name="CombatDirector" type="Node" parent="."]
+script = ExtResource("10_combat_director")
+
+[node name="StageManager" type="Node" parent="."]
+script = ExtResource("11_stage_manager")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=1284943906]
 position = Vector2(576, 324)
