@@ -22,11 +22,11 @@ extends Node
 
 func _ready() -> void:
 	if _game_over_layer:
-		_game_over_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+		_game_over_layer.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 	if _ko_intro_layer:
-		_ko_intro_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+		_ko_intro_layer.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 	if _win_layer:
-		_win_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+		_win_layer.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 
 
 # --- HUD 업데이트 ---

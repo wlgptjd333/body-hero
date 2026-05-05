@@ -60,6 +60,10 @@ func _fit_background_to_viewport() -> void:
 	_background.position = view_size / 2
 
 
+func get_view_size() -> Vector2:
+	return _get_view_size()
+
+
 func _get_view_size() -> Vector2:
 	var vp := get_viewport()
 	if vp:

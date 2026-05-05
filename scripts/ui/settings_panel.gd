@@ -594,15 +594,15 @@ func _assign_key_to_action(action: String, physical_keycode: int) -> void:
 		)
 		InputMap.action_erase_events(action)
 		var primary_ev := InputEventKey.new()
-		primary_ev.physical_keycode = physical_keycode
+		primary_ev.physical_keycode = physical_keycode as Key
 		InputMap.action_add_event(action, primary_ev)
 		if physical_keycode != aux_default:
 			var aux_ev := InputEventKey.new()
-			aux_ev.physical_keycode = aux_default
+			aux_ev.physical_keycode = aux_default as Key
 			InputMap.action_add_event(action, aux_ev)
 	else:
 		var new_ev := InputEventKey.new()
-		new_ev.physical_keycode = physical_keycode
+		new_ev.physical_keycode = physical_keycode as Key
 		InputMap.action_erase_events(action)
 		InputMap.action_add_event(action, new_ev)
 
@@ -646,7 +646,7 @@ static func load_input_config_from_disk() -> void:
 			continue
 		InputMap.action_erase_events(action)
 		var ev := InputEventKey.new()
-		ev.physical_keycode = phys
+		ev.physical_keycode = phys as Key
 		InputMap.action_add_event(action, ev)
 	if InputMap.has_action("punch_left"):
 		var touch_l: bool = (
@@ -681,5 +681,5 @@ static func _apply_punch_keys_from_disk(action: String, primary: int, aux: int, 
 		keys.append(default_aux)
 	for code: int in keys:
 		var k := InputEventKey.new()
-		k.physical_keycode = code
+		k.physical_keycode = code as Key
 		InputMap.action_add_event(action, k)

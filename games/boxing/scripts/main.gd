@@ -7,7 +7,7 @@ const PUNCH_ACTIONS: Array[String] = ["punch_l", "punch_r", "upper_l", "upper_r"
 
 @export var action_cooldown_sec: float = 0.015
 @export var auto_launch_webcam_ml: bool = true
-@export var webcam_ml_scene_load_delay_sec: float = 4.0
+@export var webcam_ml_scene_load_delay_sec: float = 0.0
 
 var _server: UDPServer
 var _port: int = 4242
@@ -42,7 +42,7 @@ func _ready() -> void:
 	_paused = false
 	_game_over_shown = false
 	if _pause_layer:
-		_pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+		_pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 		_pause_layer.visible = false
 	_load_input_config_safe()
 	GameState.reset_punch_counts()
@@ -83,13 +83,11 @@ func _connect_signals() -> void:
 	if _enemy and _enemy.has_signal("enemy_attack"):
 		_enemy.enemy_attack.connect(_combat_director.on_enemy_attack)
 	_combat_director.stage_cleared.connect(_on_stage_cleared)
-	# game_over_triggered는 combat_director에서 HP=0일 때 emit하도록 설계되어 있으나,
-	# 현재는 main._process에서 직접 HP를 체크하여 _show_game_over를 호출함.
-	# 향후 combat_director가 HP 체크를 담당하게 되면 이 연결을 활성화할 수 있음.
-	# _combat_director.game_over_triggered.connect(_on_game_over_triggered)
+	_combat_director.game_over_triggered.connect(_on_game_over_triggered)
 	_combat_director.combo_changed.connect(_ui_director.update_combo)
 	_combat_director.training_hud_needs_update.connect(_ui_director.update_training)
 	_combat_director.bars_need_update.connect(_on_bars_need_update)
+	GameState.stamina_changed.connect(_on_stamina_changed)
 
 
 func _connect_buttons() -> void:
@@ -129,7 +127,7 @@ func _initialize_all() -> void:
 		_stage_manager.setup_training_mode()
 		_ui_director.set_enemy_label("TRAINING DUMMY")
 	_combat_director.setup(training_mode)
-	_ui_director.update_training(training_mode, 0, _combat_director._training_action_counts)
+	_ui_director.update_training(training_mode, 0, _combat_director.get_training_action_counts())
 	_ui_director.update_bars(_enemy)
 	_ui_director.update_play_time(0.0)
 	_ui_director.update_combo(0)
@@ -163,7 +161,7 @@ func _on_exit_tree_cleanup() -> void:
 		_stage_manager.cleanup()
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if not _game_over_shown and GameState.player_hp <= 0.0:
 		_show_game_over()
 		return
@@ -179,8 +177,13 @@ func _process(delta: float) -> void:
 	_ui_director.update_play_time(_combat_director.get_stage_elapsed_sec())
 	if _enemy and _enemy.has_method("is_dead") and _enemy.is_dead():
 		return
+	if _server == null:
+		return
 	_server.poll()
-	while _server.is_connection_available():
+	var processed: int = 0
+	const MAX_UDP_PER_FRAME: int = 10
+	while _server.is_connection_available() and processed < MAX_UDP_PER_FRAME:
+		processed += 1
 		var peer: PacketPeerUDP = _server.take_connection()
 		var packet: PackedByteArray = peer.get_packet()
 		var data := packet.get_string_from_utf8().strip_edges()
@@ -209,7 +212,7 @@ func _apply_glove_data(data: String) -> bool:
 	if _use_position_mode:
 		var parts: PackedStringArray = data.split(",")
 		if parts.size() >= 4 and _player.has_method("update_gloves_position"):
-			var view_size: Vector2 = _stage_manager._get_view_size()
+			var view_size: Vector2 = _stage_manager.get_view_size()
 			var player_global: Vector2 = _player.global_position
 			var lx := float(parts[0].strip_edges())
 			var ly := float(parts[1].strip_edges())
@@ -229,6 +232,10 @@ func _on_bars_need_update() -> void:
 	_ui_director.update_bars(_enemy)
 
 
+func _on_stamina_changed(_new_stamina: float) -> void:
+	_ui_director.update_bars(_enemy)
+
+
 func _on_stage_cleared(_clear_sec: float) -> void:
 	_ui_director.show_ko_intro()
 	await get_tree().create_timer(3.0).timeout
@@ -243,6 +250,10 @@ func _on_game_over_triggered() -> void:
 
 
 # --- 일시정지 ---
+
+func toggle_pause() -> void:
+	_toggle_pause()
+
 
 func _toggle_pause() -> void:
 	_paused = not _paused
@@ -284,7 +295,7 @@ func _show_game_over() -> void:
 		return
 	_game_over_shown = true
 	_combat_director.stop_timer()
-	_combat_director._reset_combo()
+	_combat_director.reset_combo()
 	var kcal: float = GameState.end_workout_session()
 	var today_kcal: float = GameState.get_today_calories()
 	get_tree().paused = true

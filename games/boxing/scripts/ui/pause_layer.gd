@@ -3,7 +3,7 @@ extends CanvasLayer
 ## (일시정지 중에는 Main._process가 멈춰서, ESC를 이 레이어에서 처리해야 함)
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 
 
 func _input(event: InputEvent) -> void:
@@ -12,6 +12,6 @@ func _input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	var main: Node = get_parent()
-	if main and main.has_method("_toggle_pause"):
-		main._toggle_pause()
+	if main and main.has_method("toggle_pause"):
+		main.toggle_pause()
 		get_viewport().set_input_as_handled()

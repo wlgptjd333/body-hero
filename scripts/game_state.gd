@@ -2,6 +2,8 @@ extends Node
 ## 전역 게임 상태 (AutoLoad 싱글톤)
 ## 접근: GameState.stamina, GameState.consume_stamina(4) 등
 
+signal stamina_changed(new_stamina: float)
+
 # 플레이어 (최대 체력·스태미너·초당 회복은 업그레이드 반영 후 `refresh_combat_derived_from_upgrades`가 갱신)
 var player_hp: float = 200.0
 var player_max_hp: float = 200.0
@@ -118,7 +120,7 @@ const ML_SPEED_PROFILE_VALUES: Array[String] = ["balanced", "fast_react", "fast_
 ## true면 메뉴 대기 중 웹캠 ML을 미리 띄웁니다.
 const PREWARM_WEBCAM_ML_BRIDGE := true
 ## Godot·씬 첫 로드와 동시에 Python을 띄우면 디스크 경쟁으로 TensorFlow 첫 기동이 수배로 느려질 수 있어 지연합니다.
-const PREWARM_WEBCAM_ML_DELAY_SEC := 8.0
+const PREWARM_WEBCAM_ML_DELAY_SEC := 0.0
 
 func _init() -> void:
 	for k: String in STATS_KEYS:
@@ -215,19 +217,26 @@ func _process(delta: float) -> void:
 	# 가드 중에는 스태미너 초당 회복 없음 (막기 성공 시 `apply_guard_block_success`에서 1초 분량 회복)
 	if not is_guarding:
 		if stamina < stamina_max:
+			var prev_stamina: float = stamina
 			stamina = minf(stamina_max, stamina + stamina_passive_recover_per_sec * delta)
+			if stamina != prev_stamina:
+				stamina_changed.emit(stamina)
 
 func consume_stamina(amount: float) -> bool:
 	if stamina < amount:
 		return false
 	stamina -= amount
+	stamina_changed.emit(stamina)
 	return true
 
 
 ## 적 공격을 가드로 막았을 때: 스태미너를 초당 회복과 동일한 양만큼 한 번 회복 + HP 소량 감소
 func apply_guard_block_success() -> void:
+	var prev_stamina: float = stamina
 	stamina = minf(stamina_max, stamina + stamina_passive_recover_per_sec)
 	player_hp = maxf(0.0, player_hp - HP_CHIP_ON_GUARD_BLOCK)
+	if stamina != prev_stamina:
+		stamina_changed.emit(stamina)
 
 
 ## 스쿼트(기존 회피 입력) 시 즉시 HP를 최대치의 일정 비율만큼 회복.
@@ -254,7 +263,10 @@ func refresh_combat_derived_from_upgrades() -> void:
 		BASE_STAMINA_PASSIVE_RECOVER + float(_upgrade_recover) * UPGRADE_RECOVER_PER_STEP
 	)
 	player_hp = minf(player_hp, player_max_hp)
+	var prev_stamina: float = stamina
 	stamina = minf(stamina, stamina_max)
+	if stamina != prev_stamina:
+		stamina_changed.emit(stamina)
 
 
 func get_sweat() -> int:

@@ -52,8 +52,6 @@ func on_player_punch_impact(damage: float, punch_type: String) -> void:
 	if _enemy.has_method("is_dead") and _enemy.is_dead():
 		return
 	if _enemy.has_method("is_evading") and _enemy.is_evading():
-		if _enemy.has_signal("attack_missed"):
-			_enemy.attack_missed.emit()
 		return
 	if _enemy.has_method("take_damage"):
 		_enemy.take_damage(damage, punch_type)
@@ -84,6 +82,8 @@ func on_enemy_attack(damage: float) -> void:
 		GameState.player_hp -= damage
 		if GameState.player_hp < 0.0:
 			GameState.player_hp = 0.0
+		if GameState.player_hp <= 0.0:
+			game_over_triggered.emit()
 		if _player and _player.has_method("play_take_damage_fx"):
 			_player.play_take_damage_fx()
 	bars_need_update.emit()
@@ -139,6 +139,14 @@ func stop_timer() -> void:
 func _register_combo_hit() -> void:
 	_combo_count += 1
 	combo_changed.emit(_combo_count)
+
+
+func get_training_action_counts() -> Dictionary:
+	return _training_action_counts
+
+
+func reset_combo() -> void:
+	_reset_combo()
 
 
 func _reset_combo() -> void:

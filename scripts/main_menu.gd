@@ -152,7 +152,7 @@ func _refresh_daily_goal_progress_only() -> void:
 		) % [today, goal]
 	if _goal_prog_bar:
 		_goal_prog_bar.max_value = maxf(goal, 1.0)
-		_goal_prog_bar.value = mini(today, goal)
+		_goal_prog_bar.value = minf(today, goal)
 		if today >= goal and goal > 0.0:
 			_goal_prog_bar.modulate = Color(0.55, 0.95, 0.65, 1.0)
 		else:

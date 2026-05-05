@@ -3,7 +3,7 @@ extends Node
 ## Main은 process_mode 기본값으로 두어, 트리가 일시정지되면 게임 로직이 멈추도록 함.
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 
 
 func _input(event: InputEvent) -> void:
@@ -12,5 +12,5 @@ func _input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	var main: Node = get_parent()
-	if main and main.has_method("_toggle_pause"):
-		main._toggle_pause()
+	if main and main.has_method("toggle_pause"):
+		main.toggle_pause()

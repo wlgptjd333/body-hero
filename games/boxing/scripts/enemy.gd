@@ -5,7 +5,6 @@ extends Node2D
 ## 회피 중이면 빗나감, 아니면 무조건 히트.
 
 signal hit_received(damage: float)
-signal attack_missed  # 플레이어 공격이 회피로 빗나갔을 때 (연출/사운드용)
 signal enemy_attack(damage: float)  # 적이 플레이어를 공격할 때 (Main에서 가드/HP 처리)
 signal died
 
@@ -116,7 +115,7 @@ func _setup_idle_sprite_frames() -> void:
 		if not ResourceLoader.exists(p):
 			continue
 		var tex: Texture2D = ResourceLoader.load(
-			p, "", ResourceLoader.CACHE_MODE_REPLACE
+			p, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
 		) as Texture2D
 		if tex == null:
 			push_warning("Enemy: IDLE 텍스처 로드 실패: %s" % p)
@@ -139,7 +138,7 @@ func _setup_idle_sprite_frames() -> void:
 		if not ResourceLoader.exists(kp):
 			continue
 		var ktex: Texture2D = ResourceLoader.load(
-			kp, "", ResourceLoader.CACHE_MODE_REPLACE
+			kp, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
 		) as Texture2D
 		if ktex == null:
 			push_warning("Enemy: KO 텍스처 로드 실패: %s" % kp)
@@ -152,7 +151,7 @@ func _setup_idle_sprite_frames() -> void:
 		if not ResourceLoader.exists(ap):
 			continue
 		var atex: Texture2D = ResourceLoader.load(
-			ap, "", ResourceLoader.CACHE_MODE_REPLACE
+			ap, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
 		) as Texture2D
 		if atex == null:
 			push_warning("Enemy: ATTACK 텍스처 로드 실패: %s" % ap)
@@ -172,7 +171,9 @@ func _setup_idle_sprite_frames() -> void:
 		var hp: String = "%s%02d.png" % [HIT_TEXTURE_BASE, hidx]
 		if not ResourceLoader.exists(hp):
 			continue
-		var htex: Texture2D = ResourceLoader.load(hp, "", ResourceLoader.CACHE_MODE_REPLACE) as Texture2D
+		var htex: Texture2D = ResourceLoader.load(
+			hp, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
+		) as Texture2D
 		if htex == null:
 			push_warning("Enemy: HIT 텍스처 로드 실패: %s" % hp)
 			continue
@@ -199,7 +200,7 @@ func _setup_hit_particles() -> void:
 	_hit_particles.amount = 56
 	_hit_particles.lifetime = 0.34
 	_hit_particles.lifetime_randomness = 0.4
-	_hit_particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	_hit_particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE as CPUParticles2D.EmissionShape
 	_hit_particles.emission_sphere_radius = 24.0
 	_hit_particles.direction = Vector2(0, -1)
 	_hit_particles.spread = 180.0
@@ -230,7 +231,9 @@ func _setup_hit_particles() -> void:
 	_hit_particles_splat.amount = 26
 	_hit_particles_splat.lifetime = 0.28
 	_hit_particles_splat.lifetime_randomness = 0.25
-	_hit_particles_splat.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	_hit_particles_splat.emission_shape = (
+		CPUParticles2D.EMISSION_SHAPE_SPHERE as CPUParticles2D.EmissionShape
+	)
 	_hit_particles_splat.emission_sphere_radius = 15.0
 	_hit_particles_splat.direction = Vector2(0, -1)
 	_hit_particles_splat.spread = 180.0
@@ -266,7 +269,7 @@ func _make_hit_star_pop() -> CPUParticles2D:
 	p.amount = 72
 	p.lifetime = 0.42
 	p.lifetime_randomness = 0.35
-	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE as CPUParticles2D.EmissionShape
 	p.emission_sphere_radius = 18.0
 	p.direction = Vector2(0, -1)
 	p.spread = 180.0
@@ -294,7 +297,7 @@ func _make_hit_accent_burst() -> CPUParticles2D:
 	p.amount = 48
 	p.lifetime = 0.38
 	p.lifetime_randomness = 0.45
-	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE as CPUParticles2D.EmissionShape
 	p.emission_sphere_radius = 16.0
 	p.direction = Vector2(0, -0.3)
 	p.spread = 120.0

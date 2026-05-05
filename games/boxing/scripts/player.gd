@@ -108,7 +108,9 @@ func _setup_punch_l_body_sprite() -> void:
 	var idle_tex: Texture2D = null
 	var p1: String = "%s%02d.png" % [PUNCH_L_BODY_TEX_BASE, 1]
 	if ResourceLoader.exists(p1):
-		idle_tex = ResourceLoader.load(p1, "", ResourceLoader.CACHE_MODE_REPLACE) as Texture2D
+		idle_tex = ResourceLoader.load(
+			p1, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
+		) as Texture2D
 	if idle_tex:
 		sf.add_frame("idle", idle_tex, 1.0)
 	sf.set_animation_speed("idle", 2.0)
@@ -131,7 +133,9 @@ func _setup_punch_l_body_sprite() -> void:
 		var path: String = "%s%02d.png" % [PUNCH_L_BODY_TEX_BASE, idx]
 		if not ResourceLoader.exists(path):
 			continue
-		var tex: Texture2D = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REPLACE) as Texture2D
+		var tex: Texture2D = ResourceLoader.load(
+			path, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
+		) as Texture2D
 		if tex == null:
 			continue
 		var fi: int = idx - 1
@@ -272,7 +276,7 @@ func _make_spark_burst(
 	p.amount = amount
 	p.lifetime = lifetime
 	p.lifetime_randomness = 0.35
-	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE as CPUParticles2D.EmissionShape
 	p.emission_sphere_radius = emission_r
 	p.direction = Vector2(0, -1)
 	p.spread = 180.0
@@ -449,9 +453,9 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 			_guard_via_udp = false
 			_guarding = false
 			GameState.set_guarding(false)
-		_busy_global = true
-		_play_guard_exit(func() -> void: _busy_global = false)
-		return true
+			_busy_global = true
+			_play_guard_exit(func() -> void: _busy_global = false)
+			return true
 		_:
 			return false
 
