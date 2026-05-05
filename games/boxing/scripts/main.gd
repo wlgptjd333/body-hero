@@ -40,6 +40,7 @@ var _game_over_shown: bool = false
 func _ready() -> void:
 	get_tree().paused = false
 	_paused = false
+	_game_over_shown = false
 	if _pause_layer:
 		_pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 		_pause_layer.visible = false
@@ -49,24 +50,13 @@ func _ready() -> void:
 	GameState.stamina = GameState.stamina_max
 	GameState.start_workout_session()
 
-	_stage_manager.setup_stage()
-	_stage_manager.setup_audio()
-
-	var training_mode: bool = GameState.is_training_mode()
-	if training_mode:
-		_stage_manager.setup_training_mode()
-		_ui_director.set_enemy_label("TRAINING DUMMY")
-
-	_combat_director.setup(training_mode)
-	_ui_director.update_training(training_mode, 0, _combat_director._training_action_counts)
-
 	_connect_signals()
 	_connect_buttons()
 	_setup_game_over_buttons()
 	_setup_win_buttons()
 
-	# UI 초기화는 자식 노드들의 _ready() 이후에 실행되어야 함
-	call_deferred("_initialize_ui")
+	# 자식 노드들의 _ready()가 모두 끝난 뒤 초기화 (@onready 타이밍 문제 방지)
+	call_deferred("_initialize_all")
 
 	_server = UDPServer.new()
 	if _server.listen(_port) != OK:
@@ -131,7 +121,15 @@ func _setup_win_buttons() -> void:
 		btn_win_back.pressed.connect(_on_win_back)
 
 
-func _initialize_ui() -> void:
+func _initialize_all() -> void:
+	var training_mode: bool = GameState.is_training_mode()
+	_stage_manager.setup_stage()
+	_stage_manager.setup_audio()
+	if training_mode:
+		_stage_manager.setup_training_mode()
+		_ui_director.set_enemy_label("TRAINING DUMMY")
+	_combat_director.setup(training_mode)
+	_ui_director.update_training(training_mode, 0, _combat_director._training_action_counts)
 	_ui_director.update_bars(_enemy)
 	_ui_director.update_play_time(0.0)
 	_ui_director.update_combo(0)
@@ -161,7 +159,8 @@ func _on_exit_tree_cleanup() -> void:
 	if _server:
 		_server.stop()
 		_server = null
-	_stage_manager.cleanup()
+	if _stage_manager:
+		_stage_manager.cleanup()
 
 
 func _process(delta: float) -> void:
