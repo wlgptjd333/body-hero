@@ -34,6 +34,7 @@ const SCENE_SETTINGS: String = "res://scenes/ui/settings_panel.tscn"
 
 var _paused: bool = false
 var _settings_in_pause: Control
+var _game_over_shown: bool = false
 
 
 func _ready() -> void:
@@ -61,13 +62,11 @@ func _ready() -> void:
 
 	_connect_signals()
 	_connect_buttons()
-	_setup_pause_buttons()
 	_setup_game_over_buttons()
 	_setup_win_buttons()
 
-	_ui_director.update_bars(_enemy)
-	_ui_director.update_play_time(0.0)
-	_ui_director.update_combo(0)
+	# UI 초기화는 자식 노드들의 _ready() 이후에 실행되어야 함
+	call_deferred("_initialize_ui")
 
 	_server = UDPServer.new()
 	if _server.listen(_port) != OK:
@@ -94,7 +93,10 @@ func _connect_signals() -> void:
 	if _enemy and _enemy.has_signal("enemy_attack"):
 		_enemy.enemy_attack.connect(_combat_director.on_enemy_attack)
 	_combat_director.stage_cleared.connect(_on_stage_cleared)
-	_combat_director.game_over_triggered.connect(_on_game_over_triggered)
+	# game_over_triggered는 combat_director에서 HP=0일 때 emit하도록 설계되어 있으나,
+	# 현재는 main._process에서 직접 HP를 체크하여 _show_game_over를 호출함.
+	# 향후 combat_director가 HP 체크를 담당하게 되면 이 연결을 활성화할 수 있음.
+	# _combat_director.game_over_triggered.connect(_on_game_over_triggered)
 	_combat_director.combo_changed.connect(_ui_director.update_combo)
 	_combat_director.training_hud_needs_update.connect(_ui_director.update_training)
 	_combat_director.bars_need_update.connect(_on_bars_need_update)
@@ -109,15 +111,6 @@ func _connect_buttons() -> void:
 		_btn_pause_settings.pressed.connect(_on_pause_settings)
 	if _btn_pause_quit:
 		_btn_pause_quit.pressed.connect(_on_pause_quit)
-
-
-func _setup_pause_buttons() -> void:
-	var btn_go_restart: Button = get_node_or_null("GameOverLayer/GameOverVBox/GameOverButtons/BtnGameOverRestart")
-	var btn_go_back: Button = get_node_or_null("GameOverLayer/GameOverVBox/GameOverButtons/BtnGameOverBack")
-	if btn_go_restart:
-		btn_go_restart.pressed.connect(_on_game_over_restart)
-	if btn_go_back:
-		btn_go_back.pressed.connect(_on_game_over_back)
 
 
 func _setup_game_over_buttons() -> void:
@@ -136,6 +129,12 @@ func _setup_win_buttons() -> void:
 		btn_win_restart.pressed.connect(_on_win_restart)
 	if btn_win_back:
 		btn_win_back.pressed.connect(_on_win_back)
+
+
+func _initialize_ui() -> void:
+	_ui_director.update_bars(_enemy)
+	_ui_director.update_play_time(0.0)
+	_ui_director.update_combo(0)
 
 
 func _load_input_config_safe() -> void:
@@ -166,7 +165,7 @@ func _on_exit_tree_cleanup() -> void:
 
 
 func _process(delta: float) -> void:
-	if GameState.player_hp <= 0.0:
+	if not _game_over_shown and GameState.player_hp <= 0.0:
 		_show_game_over()
 		return
 	if _combat_director.is_win_shown():
@@ -282,6 +281,9 @@ func _on_pause_quit() -> void:
 # --- 게임오버 / 승리 ---
 
 func _show_game_over() -> void:
+	if _game_over_shown:
+		return
+	_game_over_shown = true
 	_combat_director.stop_timer()
 	_combat_director._reset_combo()
 	var kcal: float = GameState.end_workout_session()
