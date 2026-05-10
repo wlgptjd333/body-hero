@@ -89,7 +89,7 @@ func _ready() -> void:
 func _beautify_ui() -> void:
 	# --- RightPanel: 버튼 섹션별 재정렬 + 스타일링 ---
 	var button_box: VBoxContainer = $RightPanel/ButtonBox
-	button_box.theme_override_constants.separation = 6
+	button_box.add_theme_constant_override("separation", 6)
 
 	# 버튼 스타일 공통
 	for btn: Button in [
@@ -158,11 +158,11 @@ func _beautify_ui() -> void:
 			_ch_bars[i].visible = false
 	var challenge_rows: VBoxContainer = $LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows
 	if challenge_rows:
-		challenge_rows.theme_override_constants.separation = 4
+		challenge_rows.add_theme_constant_override("separation", 4)
 	for row_name in ["Row0", "Row1", "Row2"]:
 		var row: VBoxContainer = challenge_rows.get_node_or_null(row_name)
 		if row:
-			row.theme_override_constants.separation = 2
+			row.add_theme_constant_override("separation", 2)
 
 	# --- LeftPanel: 제목 라벨 스타일 ---
 	var daily_title: Label = $LeftPanel/Scroll/MarginContainer/DailyVBox/DailyMainTitle
