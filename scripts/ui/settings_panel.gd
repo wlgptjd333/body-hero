@@ -1,6 +1,6 @@
 class_name SettingsPanelUI
 extends Control
-## 설정 패널: 해상도, 웹캠(카메라 인덱스), 소리, 키보드 설정(리바인드), 적용, 뒤로가기
+## 설정 패널: 탭 기반 — 화면, 오디오, 사용자, 웹캠, 조작
 
 signal back_pressed
 
@@ -24,44 +24,54 @@ const ML_PROFILE_UI_LABELS: Array[String] = [
 ]
 
 const KEY_ACTIONS := [
-	["punch_left", "Panel/Scroll/VBox/KeySection/KeyRowPunchLeft/KeyBtnPunchLeft"],
-	["punch_right", "Panel/Scroll/VBox/KeySection/KeyRowPunchRight/KeyBtnPunchRight"],
-	["upper_left", "Panel/Scroll/VBox/KeySection/KeyRowUpperLeft/KeyBtnUpperLeft"],
-	["upper_right", "Panel/Scroll/VBox/KeySection/KeyRowUpperRight/KeyBtnUpperRight"],
-	["guard", "Panel/Scroll/VBox/KeySection/KeyRowGuard/KeyBtnGuard"],
-	["squat", "Panel/Scroll/VBox/KeySection/KeyRowSquat/KeyBtnSquat"],
+	["punch_left", "Panel/Scroll/VBox/ContentControls/KeySection/KeyRowPunchLeft/KeyBtnPunchLeft"],
+	["punch_right", "Panel/Scroll/VBox/ContentControls/KeySection/KeyRowPunchRight/KeyBtnPunchRight"],
+	["upper_left", "Panel/Scroll/VBox/ContentControls/KeySection/KeyRowUpperLeft/KeyBtnUpperLeft"],
+	["upper_right", "Panel/Scroll/VBox/ContentControls/KeySection/KeyRowUpperRight/KeyBtnUpperRight"],
+	["guard", "Panel/Scroll/VBox/ContentControls/KeySection/KeyRowGuard/KeyBtnGuard"],
+	["squat", "Panel/Scroll/VBox/ContentControls/KeySection/KeyRowSquat/KeyBtnSquat"],
 ]
 
 var _waiting_action: String = ""
 var _key_buttons: Dictionary = {}  # action_name -> Button
 
-@onready var _resolution_option: OptionButton = $Panel/Scroll/VBox/ResolutionSection/ResolutionRow/OptionButton
-@onready var _slider_master: HSlider = $Panel/Scroll/VBox/SoundSection/MasterRow/HSlider
-@onready var _label_master: Label = $Panel/Scroll/VBox/SoundSection/MasterRow/ValueLabel
-@onready var _slider_sfx: HSlider = $Panel/Scroll/VBox/SoundSection/GameRow/HSlider
-@onready var _label_sfx: Label = $Panel/Scroll/VBox/SoundSection/GameRow/ValueLabel
-@onready var _slider_music: HSlider = $Panel/Scroll/VBox/SoundSection/MusicRow/HSlider
-@onready var _label_music: Label = $Panel/Scroll/VBox/SoundSection/MusicRow/ValueLabel
-@onready var _gender_option: OptionButton = $Panel/Scroll/VBox/HealthSection/GenderRow/GenderOption
-@onready var _age_spin: SpinBox = $Panel/Scroll/VBox/HealthSection/AgeRow/AgeSpinBox
-@onready var _height_spin: SpinBox = $Panel/Scroll/VBox/HealthSection/HeightRow/HeightSpinBox
-@onready var _weight_spin: SpinBox = $Panel/Scroll/VBox/HealthSection/WeightRow/WeightSpinBox
-@onready var _intensity_option: OptionButton = $Panel/Scroll/VBox/HealthSection/IntensityRow/IntensityOption
-@onready var _camera_option: OptionButton = $Panel/Scroll/VBox/WebcamSection/CameraRow/CameraOption
-@onready var _backend_option: OptionButton = $Panel/Scroll/VBox/WebcamSection/BackendRow/BackendOption
-@onready var _ml_profile_option: OptionButton = $Panel/Scroll/VBox/WebcamSection/MlProfileRow/MlProfileOption
-@onready var _btn_refresh_cameras: Button = $Panel/Scroll/VBox/WebcamSection/RefreshRow/BtnRefreshCameras
-@onready var _btn_start_webcam_ml: Button = $Panel/Scroll/VBox/WebcamSection/WebcamMlRow/BtnStartWebcamMl
-@onready var _btn_stop_webcam_ml: Button = $Panel/Scroll/VBox/WebcamSection/WebcamMlRow/BtnStopWebcamMl
-@onready var _btn_start_collect_pose: Button = $Panel/Scroll/VBox/WebcamSection/CollectPoseRow/BtnStartCollectPose
-@onready var _lbl_collect_pose_hint: Label = $Panel/Scroll/VBox/WebcamSection/LblCollectPoseHint
-@onready var _lbl_webcam_ml_bridge: Label = $Panel/Scroll/VBox/WebcamSection/LblWebcamMlBridge
-@onready var _lbl_camera_hint: Label = $Panel/Scroll/VBox/WebcamSection/CameraHintLabel
-@onready var _btn_back: Button = $Panel/Scroll/VBox/BackButton
-@onready var _btn_apply: Button = $Panel/ApplyButton
+@onready var _tab_bar: HBoxContainer = $Panel/TabBar
+@onready var _btn_back: Button = $Panel/BottomBar/BackButton
+@onready var _btn_apply: Button = $Panel/BottomBar/ApplyButton
+
+@onready var _resolution_option: OptionButton = $Panel/Scroll/VBox/ContentDisplay/ResolutionSection/ResolutionRow/OptionButton
+
+@onready var _slider_master: HSlider = $Panel/Scroll/VBox/ContentAudio/SoundSection/MasterRow/HSlider
+@onready var _label_master: Label = $Panel/Scroll/VBox/ContentAudio/SoundSection/MasterRow/ValueLabel
+@onready var _slider_sfx: HSlider = $Panel/Scroll/VBox/ContentAudio/SoundSection/GameRow/HSlider
+@onready var _label_sfx: Label = $Panel/Scroll/VBox/ContentAudio/SoundSection/GameRow/ValueLabel
+@onready var _slider_music: HSlider = $Panel/Scroll/VBox/ContentAudio/SoundSection/MusicRow/HSlider
+@onready var _label_music: Label = $Panel/Scroll/VBox/ContentAudio/SoundSection/MusicRow/ValueLabel
+
+@onready var _gender_option: OptionButton = $Panel/Scroll/VBox/ContentUser/HealthSection/GenderRow/GenderOption
+@onready var _age_spin: SpinBox = $Panel/Scroll/VBox/ContentUser/HealthSection/AgeRow/AgeSpinBox
+@onready var _height_spin: SpinBox = $Panel/Scroll/VBox/ContentUser/HealthSection/HeightRow/HeightSpinBox
+@onready var _weight_spin: SpinBox = $Panel/Scroll/VBox/ContentUser/HealthSection/WeightRow/WeightSpinBox
+@onready var _intensity_option: OptionButton = $Panel/Scroll/VBox/ContentUser/HealthSection/IntensityRow/IntensityOption
+
+@onready var _camera_option: OptionButton = $Panel/Scroll/VBox/ContentWebcam/WebcamSection/CameraRow/CameraOption
+@onready var _backend_option: OptionButton = $Panel/Scroll/VBox/ContentWebcam/WebcamSection/BackendRow/BackendOption
+@onready var _ml_profile_option: OptionButton = $Panel/Scroll/VBox/ContentWebcam/WebcamSection/MlProfileRow/MlProfileOption
+@onready var _btn_refresh_cameras: Button = $Panel/Scroll/VBox/ContentWebcam/WebcamSection/RefreshRow/BtnRefreshCameras
+@onready var _btn_start_webcam_ml: Button = $Panel/Scroll/VBox/ContentWebcam/WebcamSection/WebcamMlRow/BtnStartWebcamMl
+@onready var _btn_stop_webcam_ml: Button = $Panel/Scroll/VBox/ContentWebcam/WebcamSection/WebcamMlRow/BtnStopWebcamMl
+@onready var _btn_start_collect_pose: Button = $Panel/Scroll/VBox/ContentWebcam/WebcamSection/CollectPoseRow/BtnStartCollectPose
+@onready var _lbl_collect_pose_hint: Label = $Panel/Scroll/VBox/ContentWebcam/WebcamSection/LblCollectPoseHint
+@onready var _lbl_webcam_ml_bridge: Label = $Panel/Scroll/VBox/ContentWebcam/WebcamSection/LblWebcamMlBridge
+@onready var _lbl_camera_hint: Label = $Panel/Scroll/VBox/ContentWebcam/WebcamSection/CameraHintLabel
+
+var _tab_buttons: Array[Button] = []
+var _tab_panels: Array[VBoxContainer] = []
+var _current_tab: int = 0
 
 
 func _ready() -> void:
+	_setup_tabs()
 	_setup_resolutions()
 	_setup_webcam_camera()
 	_setup_ml_profile_option()
@@ -86,6 +96,55 @@ func _ready() -> void:
 		_btn_stop_webcam_ml.pressed.connect(_on_stop_webcam_ml_pressed)
 	if _btn_start_collect_pose:
 		_btn_start_collect_pose.pressed.connect(_on_start_collect_pose_pressed)
+	_show_tab(0)
+
+
+func _setup_tabs() -> void:
+	if not _tab_bar:
+		return
+	var tab_names: Array[String] = ["화면", "오디오", "사용자", "웹캠", "조작"]
+	for i: int in range(tab_names.size()):
+		var btn := Button.new()
+		btn.text = tab_names[i]
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.pressed.connect(_on_tab_pressed.bind(i))
+		_tab_bar.add_child(btn)
+		_tab_buttons.append(btn)
+
+	var contents_path := "Panel/Scroll/VBox"
+	var content_names: Array[String] = [
+		"ContentDisplay",
+		"ContentAudio",
+		"ContentUser",
+		"ContentWebcam",
+		"ContentControls",
+	]
+	for name: String in content_names:
+		var node: VBoxContainer = get_node_or_null("%s/%s" % [contents_path, name])
+		if node:
+			_tab_panels.append(node)
+		else:
+			push_warning("SettingsPanel: 탭 콘텐츠를 찾을 수 없음: %s" % name)
+
+
+func _on_tab_pressed(index: int) -> void:
+	_show_tab(index)
+
+
+func _show_tab(index: int) -> void:
+	_current_tab = clampi(index, 0, _tab_panels.size() - 1)
+	for i: int in range(_tab_panels.size()):
+		var panel: VBoxContainer = _tab_panels[i]
+		if panel:
+			panel.visible = (i == _current_tab)
+	for i: int in range(_tab_buttons.size()):
+		var btn: Button = _tab_buttons[i]
+		if not btn:
+			continue
+		if i == _current_tab:
+			UIThemeHelper.style_button_primary(btn)
+		else:
+			UIThemeHelper.style_button_secondary(btn)
 
 
 func _setup_webcam_camera() -> void:
@@ -139,7 +198,7 @@ func _fill_camera_option_default() -> void:
 		return
 	_camera_option.clear()
 	for i: int in range(10):
-		_camera_option.add_item("칵ㅁ%d" % i, i)
+		_camera_option.add_item("카메라 %d" % i, i)
 
 
 func _select_camera_id_in_option(want_id: int) -> void:

@@ -63,173 +63,90 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -290.0
-offset_right = 220.0
-offset_bottom = 290.0
+offset_left = -260.0
+offset_top = -300.0
+offset_right = 260.0
+offset_bottom = 300.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Scroll" type="ScrollContainer" parent="Panel"]
+[node name="TabBar" type="HBoxContainer" parent="Panel"]
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = -1
 anchor_right = 1.0
-anchor_bottom = 1.0
 offset_left = 12.0
 offset_top = 12.0
 offset_right = -12.0
-offset_bottom = -60.0
+offset_bottom = 48.0
+grow_horizontal = 2
+theme_override_constants/separation = 8
+
+[node name="Scroll" type="ScrollContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 56.0
+offset_right = -12.0
+offset_bottom = -56.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="Panel/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 20
 
-[node name="BackButton" type="Button" parent="Panel/Scroll/VBox"]
+[node name="ContentDisplay" type="VBoxContainer" parent="Panel/Scroll/VBox"]
 layout_mode = 2
-size_flags_horizontal = 0
-text = "← 뒤로"
+theme_override_constants/separation = 20
 
-[node name="ResolutionSection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+[node name="ResolutionSection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentDisplay"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/ResolutionSection"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection"]
 layout_mode = 2
 text = "해상도 설정"
 
-[node name="ResolutionRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ResolutionSection"]
+[node name="ResolutionRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/ResolutionSection/ResolutionRow"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection/ResolutionRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "해상도"
 
-[node name="OptionButton" type="OptionButton" parent="Panel/Scroll/VBox/ResolutionSection/ResolutionRow"]
+[node name="OptionButton" type="OptionButton" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection/ResolutionRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 item_count = 0
 selected = -1
 
-[node name="WebcamSection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+[node name="ContentAudio" type="VBoxContainer" parent="Panel/Scroll/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 20
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/WebcamSection"]
-layout_mode = 2
-text = "웹캠 (포즈 / ML 연동)"
-
-[node name="CameraHintLabel" type="Label" parent="Panel/Scroll/VBox/WebcamSection"]
-layout_mode = 2
-autowrap_mode = 3
-text = "내장이 아니면 번호를 바꿔 적용하세요. USB는 보통 1·2입니다. Windows는 목록 스캔 시 DirectShow 우선입니다."
-
-[node name="CameraRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
+[node name="SoundSection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentAudio"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/WebcamSection/CameraRow"]
-layout_mode = 2
-size_flags_vertical = 1
-text = "카메라"
-
-[node name="CameraOption" type="OptionButton" parent="Panel/Scroll/VBox/WebcamSection/CameraRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-item_count = 0
-selected = -1
-
-[node name="BackendRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/WebcamSection/BackendRow"]
-layout_mode = 2
-size_flags_vertical = 1
-text = "카메라 API"
-
-[node name="BackendOption" type="OptionButton" parent="Panel/Scroll/VBox/WebcamSection/BackendRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-item_count = 0
-selected = -1
-
-[node name="MlProfileRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/WebcamSection/MlProfileRow"]
-layout_mode = 2
-size_flags_vertical = 1
-text = "ML 속도 프로필"
-
-[node name="MlProfileOption" type="OptionButton" parent="Panel/Scroll/VBox/WebcamSection/MlProfileRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-item_count = 0
-selected = -1
-
-[node name="RefreshRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="BtnRefreshCameras" type="Button" parent="Panel/Scroll/VBox/WebcamSection/RefreshRow"]
-layout_mode = 2
-text = "목록 새로고침 (OpenCV)"
-
-[node name="WebcamMlRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="BtnStartWebcamMl" type="Button" parent="Panel/Scroll/VBox/WebcamSection/WebcamMlRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "웹캠 ML 실행 (Python)"
-
-[node name="BtnStopWebcamMl" type="Button" parent="Panel/Scroll/VBox/WebcamSection/WebcamMlRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "웹캠 ML 종료"
-
-[node name="CollectPoseRow" type="HBoxContainer" parent="Panel/Scroll/VBox/WebcamSection"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="BtnStartCollectPose" type="Button" parent="Panel/Scroll/VBox/WebcamSection/CollectPoseRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "포즈 녹화 (학습 데이터 수집)"
-
-[node name="LblCollectPoseHint" type="Label" parent="Panel/Scroll/VBox/WebcamSection"]
-layout_mode = 2
-autowrap_mode = 3
-text = "위에서 고른 카메라 번호·백엔드로 collect_pose_data.py 를 실행합니다. Windows에서는 새 콘솔이 열립니다. macOS/Linux에서는 실행 명령이 클립보드로 복사됩니다. 터미널에서 직접 쓸 때도 --camera-index / --camera-backend 를 지정할 수 있습니다."
-
-[node name="LblWebcamMlBridge" type="Label" parent="Panel/Scroll/VBox/WebcamSection"]
-layout_mode = 2
-autowrap_mode = 3
-text = "카메라·API·ML 속도 프로필을 적용한 뒤 udp_send_webcam_ml.py 를 실행합니다. 프로필은 display_settings.cfg 에 저장됩니다."
-
-[node name="SoundSection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/SoundSection"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection"]
 layout_mode = 2
 text = "소리 설정"
 
-[node name="MasterRow" type="HBoxContainer" parent="Panel/Scroll/VBox/SoundSection"]
+[node name="MasterRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentAudio/SoundSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/SoundSection/MasterRow"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MasterRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "전체 볼륨"
 
-[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/SoundSection/MasterRow"]
+[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MasterRow"]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -237,21 +154,21 @@ min_value = 0.0
 max_value = 100.0
 value = 80.0
 
-[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/SoundSection/MasterRow"]
+[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MasterRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "80%"
 
-[node name="GameRow" type="HBoxContainer" parent="Panel/Scroll/VBox/SoundSection"]
+[node name="GameRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentAudio/SoundSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/SoundSection/GameRow"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/GameRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "게임 볼륨"
 
-[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/SoundSection/GameRow"]
+[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/GameRow"]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -259,21 +176,21 @@ min_value = 0.0
 max_value = 100.0
 value = 100.0
 
-[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/SoundSection/GameRow"]
+[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/GameRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "100%"
 
-[node name="MusicRow" type="HBoxContainer" parent="Panel/Scroll/VBox/SoundSection"]
+[node name="MusicRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentAudio/SoundSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/SoundSection/MusicRow"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MusicRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "음악 볼륨"
 
-[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/SoundSection/MusicRow"]
+[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MusicRow"]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -281,29 +198,33 @@ min_value = 0.0
 max_value = 100.0
 value = 100.0
 
-[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/SoundSection/MusicRow"]
+[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MusicRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "100%"
 
-[node name="HealthSection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+[node name="ContentUser" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="HealthSection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentUser"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection"]
 layout_mode = 2
-text = "헬스 정보"
+text = "사용자 정보"
 
-[node name="GenderRow" type="HBoxContainer" parent="Panel/Scroll/VBox/HealthSection"]
+[node name="GenderRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/HealthSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection/GenderRow"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection/GenderRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "성별"
 
-[node name="GenderOption" type="OptionButton" parent="Panel/Scroll/VBox/HealthSection/GenderRow"]
+[node name="GenderOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentUser/HealthSection/GenderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 item_count = 4
@@ -317,16 +238,16 @@ popup/item_2/id = 2
 popup/item_3/text = "기타"
 popup/item_3/id = 3
 
-[node name="AgeRow" type="HBoxContainer" parent="Panel/Scroll/VBox/HealthSection"]
+[node name="AgeRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/HealthSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection/AgeRow"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection/AgeRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "나이"
 
-[node name="AgeSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/HealthSection/AgeRow"]
+[node name="AgeSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/ContentUser/HealthSection/AgeRow"]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -335,16 +256,16 @@ max_value = 100.0
 step = 1.0
 value = 0.0
 
-[node name="HeightRow" type="HBoxContainer" parent="Panel/Scroll/VBox/HealthSection"]
+[node name="HeightRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/HealthSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection/HeightRow"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection/HeightRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "키(cm)"
 
-[node name="HeightSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/HealthSection/HeightRow"]
+[node name="HeightSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/ContentUser/HealthSection/HeightRow"]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -353,16 +274,16 @@ max_value = 220.0
 step = 0.5
 value = 0.0
 
-[node name="WeightRow" type="HBoxContainer" parent="Panel/Scroll/VBox/HealthSection"]
+[node name="WeightRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/HealthSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection/WeightRow"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection/WeightRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "체중(kg)"
 
-[node name="WeightSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/HealthSection/WeightRow"]
+[node name="WeightSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/ContentUser/HealthSection/WeightRow"]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -371,16 +292,16 @@ max_value = 180.0
 step = 0.5
 value = 0.0
 
-[node name="IntensityRow" type="HBoxContainer" parent="Panel/Scroll/VBox/HealthSection"]
+[node name="IntensityRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/HealthSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/HealthSection/IntensityRow"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection/IntensityRow"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "운동 강도 보정"
 
-[node name="IntensityOption" type="OptionButton" parent="Panel/Scroll/VBox/HealthSection/IntensityRow"]
+[node name="IntensityOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentUser/HealthSection/IntensityRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 item_count = 3
@@ -392,114 +313,236 @@ popup/item_1/id = 1
 popup/item_2/text = "강함 (1.1x)"
 popup/item_2/id = 2
 
-[node name="KeySection" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+[node name="ContentWebcam" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="WebcamSection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection"]
 layout_mode = 2
-text = "키보드 설정"
+text = "웹캠 (포즈 / ML 연동)"
 
-[node name="KeyRowPunchLeft" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+[node name="CameraHintLabel" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection"]
+layout_mode = 2
+autowrap_mode = 3
+text = "내장이 아니면 번호를 바꿔 적용하세요. USB는 보통 1·2입니다. Windows는 목록 스캔 시 DirectShow 우선입니다."
+
+[node name="CameraRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchLeft"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/CameraRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "카메라"
+
+[node name="CameraOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/CameraRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 0
+selected = -1
+
+[node name="BackendRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/BackendRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "카메라 API"
+
+[node name="BackendOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/BackendRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 0
+selected = -1
+
+[node name="MlProfileRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/MlProfileRow"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "ML 속도 프로필"
+
+[node name="MlProfileOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/MlProfileRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 0
+selected = -1
+
+[node name="RefreshRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnRefreshCameras" type="Button" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/RefreshRow"]
+layout_mode = 2
+text = "목록 새로고침 (OpenCV)"
+
+[node name="WebcamMlRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnStartWebcamMl" type="Button" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/WebcamMlRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "웹캠 ML 실행 (Python)"
+
+[node name="BtnStopWebcamMl" type="Button" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/WebcamMlRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "웹캠 ML 종료"
+
+[node name="CollectPoseRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnStartCollectPose" type="Button" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/CollectPoseRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "포즈 녹화 (학습 데이터 수집)"
+
+[node name="LblCollectPoseHint" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection"]
+layout_mode = 2
+autowrap_mode = 3
+text = "위에서 고른 카메라 번호·백엔드로 collect_pose_data.py 를 실행합니다. Windows에서는 새 콘솔이 열립니다. macOS/Linux에서는 실행 명령이 클립보드로 복사됩니다. 터미널에서 직접 쓸 때도 --camera-index / --camera-backend 를 지정할 수 있습니다."
+
+[node name="LblWebcamMlBridge" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection"]
+layout_mode = 2
+autowrap_mode = 3
+text = "카메라·API·ML 속도 프로필을 적용한 뒤 udp_send_webcam_ml.py 를 실행합니다. 프로필은 display_settings.cfg 에 저장됩니다."
+
+[node name="ContentControls" type="VBoxContainer" parent="Panel/Scroll/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="KeySection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentControls"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection"]
+layout_mode = 2
+text = "키보드 설정"
+
+[node name="KeyRowPunchLeft" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowPunchLeft"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "왼손 펀치 (여러 키)"
 
-[node name="KeyBtnPunchLeft" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchLeft"]
+[node name="KeyBtnPunchLeft" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowPunchLeft"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "A"
 
-[node name="KeyRowPunchRight" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+[node name="KeyRowPunchRight" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchRight"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowPunchRight"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "오른손 펀치 (여러 키)"
 
-[node name="KeyBtnPunchRight" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowPunchRight"]
+[node name="KeyBtnPunchRight" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowPunchRight"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "D"
 
-[node name="KeyRowUpperLeft" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+[node name="KeyRowUpperLeft" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowUpperLeft"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowUpperLeft"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "왼쪽 어퍼컷"
 
-[node name="KeyBtnUpperLeft" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowUpperLeft"]
+[node name="KeyBtnUpperLeft" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowUpperLeft"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Q"
 
-[node name="KeyRowUpperRight" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+[node name="KeyRowUpperRight" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowUpperRight"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowUpperRight"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "오른쪽 어퍼컷"
 
-[node name="KeyBtnUpperRight" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowUpperRight"]
+[node name="KeyBtnUpperRight" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowUpperRight"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "E"
 
-[node name="KeyRowGuard" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+[node name="KeyRowGuard" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowGuard"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowGuard"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "가드"
 
-[node name="KeyBtnGuard" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowGuard"]
+[node name="KeyBtnGuard" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowGuard"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Space"
 
-[node name="KeyRowSquat" type="HBoxContainer" parent="Panel/Scroll/VBox/KeySection"]
+[node name="KeyRowSquat" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/KeySection/KeyRowSquat"]
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowSquat"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "스쿼트(회피)"
 
-[node name="KeyBtnSquat" type="Button" parent="Panel/Scroll/VBox/KeySection/KeyRowSquat"]
+[node name="KeyBtnSquat" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowSquat"]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "S"
 
-[node name="ApplyButton" type="Button" parent="Panel"]
+[node name="BottomBar" type="HBoxContainer" parent="Panel"]
 layout_mode = 1
-anchors_preset = 12
+anchors_preset = -1
 anchor_top = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 14.0
+offset_left = 12.0
 offset_top = -52.0
-offset_right = -14.0
+offset_right = -12.0
 offset_bottom = -12.0
 grow_horizontal = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Panel/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "← 뒤로"
+
+[node name="Spacer" type="Control" parent="Panel/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ApplyButton" type="Button" parent="Panel/BottomBar"]
+layout_mode = 2
+size_flags_horizontal = 0
 theme_override_colors/font_color = Color(0.98, 1, 0.96, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.9, 0.95, 0.9, 1)
