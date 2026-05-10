@@ -39,13 +39,6 @@ func _beautify_ui() -> void:
 	var title: Label = $Root/Center/VBox/Title
 	if title:
 		UIThemeHelper.style_label_title(title)
-		# Subtle gradient accent line below title
-		var accent := ColorRect.new()
-		accent.custom_minimum_size = Vector2(60, 3)
-		accent.color = UIThemeHelper.C_ACCENT
-		accent.anchors_preset = Control.PRESET_CENTER_TOP
-		accent.position = Vector2(-30, 0)
-		# We can't easily add it in the middle, so skip for now
 
 	var sub: Label = $Root/Center/VBox/SubTitle
 	if sub:
@@ -80,7 +73,7 @@ func _beautify_ui() -> void:
 		center.add_child(glass)
 		old_vbox.add_theme_constant_override("separation", 14)
 		# Recenter the vbox inside panel
-		old_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		old_vbox.alignment = BoxContainer.ALIGN_CENTER
 
 
 

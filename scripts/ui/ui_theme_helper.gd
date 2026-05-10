@@ -1,3 +1,4 @@
+extends Node
 ## UI 테마 헬퍼 — 현대적인 다크 게임 스타일 공통 함수
 ## 사용: UIThemeHelper.style_button_primary(btn), UIThemeHelper.style_panel_glass(panel) 등
 

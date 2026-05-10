@@ -25,6 +25,7 @@ buses/default_bus_layout="uid://cdre03mx4y5ar"
 [autoload]
 
 GameState="*res://scripts/game_state.gd"
+UIThemeHelper="*res://scripts/ui/ui_theme_helper.gd"
 
 [display]
 
