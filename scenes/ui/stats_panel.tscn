@@ -52,23 +52,25 @@ text = "← 뒤로"
 [node name="TitleLabel" type="Label" parent="Panel/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
-text = "통계"
+text = "사용자 정보"
 horizontal_alignment = 1
 
 [node name="Scroll" type="ScrollContainer" parent="Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-horizontal_scroll_mode = 1
+horizontal_scroll_mode = 0
 
 [node name="ScrollInner" type="VBoxContainer" parent="Panel/VBox/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 16
 
-[node name="StatsList" type="VBoxContainer" parent="Panel/VBox/Scroll/ScrollInner"]
+[node name="ProfileLabel" type="Label" parent="Panel/VBox/Scroll/ScrollInner"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 12
+theme_override_font_sizes/font_size = 15
+text = ""
+autowrap_mode = 3
 
 [node name="DailyChartTitle" type="Label" parent="Panel/VBox/Scroll/ScrollInner"]
 layout_mode = 2

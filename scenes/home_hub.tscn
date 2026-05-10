@@ -83,14 +83,23 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
 text = "설정"
 
-[node name="BtnStats" type="Button" parent="Root/Center/VBox"]
+[node name="BtnGameRecords" type="Button" parent="Root/Center/VBox"]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
-text = "통계"
+text = "게임 기록"
+
+[node name="BtnUserInfo" type="Button" parent="Root/Center/VBox"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn")
+text = "사용자 정보"
 
 [node name="BtnQuit" type="Button" parent="Root/Center/VBox"]
 custom_minimum_size = Vector2(0, 56)

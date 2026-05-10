@@ -2,15 +2,18 @@ extends Control
 
 const SCENE_BOXING := "res://scenes/main_menu.tscn"
 const SCENE_SETTINGS := "res://scenes/ui/settings_panel.tscn"
-const SCENE_STATS := "res://scenes/ui/stats_panel.tscn"
+const SCENE_USER_INFO := "res://scenes/ui/stats_panel.tscn"
+const SCENE_GAME_RECORDS := "res://scenes/ui/game_records_panel.tscn"
 
 @onready var _btn_boxing: Button = $Root/Center/VBox/BtnBoxing
 @onready var _btn_settings: Button = $Root/Center/VBox/BtnSettings
-@onready var _btn_stats: Button = $Root/Center/VBox/BtnStats
+@onready var _btn_game_records: Button = $Root/Center/VBox/BtnGameRecords
+@onready var _btn_user_info: Button = $Root/Center/VBox/BtnUserInfo
 @onready var _btn_quit: Button = $Root/Center/VBox/BtnQuit
 
 var _settings_panel: Control
-var _stats_panel: Control
+var _user_info_panel: Control
+var _game_records_panel: Control
 
 
 func _ready() -> void:
@@ -18,8 +21,10 @@ func _ready() -> void:
 		_btn_boxing.pressed.connect(_on_boxing)
 	if _btn_settings:
 		_btn_settings.pressed.connect(_on_settings)
-	if _btn_stats:
-		_btn_stats.pressed.connect(_on_stats)
+	if _btn_game_records:
+		_btn_game_records.pressed.connect(_on_game_records)
+	if _btn_user_info:
+		_btn_user_info.pressed.connect(_on_user_info)
 	if _btn_quit:
 		_btn_quit.pressed.connect(_on_quit)
 
@@ -48,27 +53,46 @@ func _close_settings() -> void:
 		_settings_panel = null
 
 
-func _on_stats() -> void:
-	if _stats_panel:
+func _on_user_info() -> void:
+	if _user_info_panel:
 		return
-	var packed := load(SCENE_STATS) as PackedScene
+	var packed := load(SCENE_USER_INFO) as PackedScene
 	if not packed:
 		return
-	_stats_panel = packed.instantiate() as Control
-	if _stats_panel:
-		add_child(_stats_panel)
-		_stats_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-		if _stats_panel.has_signal("back_pressed"):
-			_stats_panel.back_pressed.connect(_close_stats)
+	_user_info_panel = packed.instantiate() as Control
+	if _user_info_panel:
+		add_child(_user_info_panel)
+		_user_info_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+		if _user_info_panel.has_signal("back_pressed"):
+			_user_info_panel.back_pressed.connect(_close_user_info)
 
 
-func _close_stats() -> void:
-	if _stats_panel:
-		_stats_panel.queue_free()
-		_stats_panel = null
+func _close_user_info() -> void:
+	if _user_info_panel:
+		_user_info_panel.queue_free()
+		_user_info_panel = null
+
+
+func _on_game_records() -> void:
+	if _game_records_panel:
+		return
+	var packed := load(SCENE_GAME_RECORDS) as PackedScene
+	if not packed:
+		return
+	_game_records_panel = packed.instantiate() as Control
+	if _game_records_panel:
+		add_child(_game_records_panel)
+		_game_records_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+		if _game_records_panel.has_signal("back_pressed"):
+			_game_records_panel.back_pressed.connect(_close_game_records)
+
+
+func _close_game_records() -> void:
+	if _game_records_panel:
+		_game_records_panel.queue_free()
+		_game_records_panel = null
 
 
 func _on_quit() -> void:
 	GameState.shutdown_webcam_ml_bridge()
 	get_tree().quit()
-
