@@ -56,7 +56,7 @@ new_parent.add_child(node)
 | `tools/` | Python ML/UDP 도구 |
 
 ### 주요 스크립트 역할
-- `games/boxing/scripts/main.gd` — UDP 수신 + 씬 초기화/연결
+- `games/boxing/scripts/stage_1.gd` — UDP 수신 + 씬 초기화/연결
 - `games/boxing/scripts/player.gd` — 펀치/가드/회피 Tween + 키보드 입력
 - `games/boxing/scripts/enemy.gd` — 히트 판정, HP, 피격 연출
 - `games/boxing/scripts/combat_director.gd` — 전투 판정, 콤보, 승/패

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dmvb8xugprx8"]
 
-[ext_resource type="Script" path="res://games/boxing/scripts/ui/boxing_upgrade_panel.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/ui/boxing_upgrade_panel.gd" id="1_script"]
 
 [node name="BoxingUpgradePanel" type="Control"]
 layout_mode = 3

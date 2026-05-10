@@ -1,11 +1,11 @@
 extends Control
 ## 메인 메뉴: 게임 시작, 업그레이드, 튜토리얼, 홈 이동
 
-const SCENE_GAME := "res://games/boxing/scenes/main.tscn"
+const SCENE_GAME := "res://games/boxing/scenes/stage_1.tscn"
 const SCENE_HOME_HUB := "res://scenes/home_hub.tscn"
 const SCENE_HOW_TO_PLAY := "res://scenes/ui/how_to_play_panel.tscn"
-const SCENE_BOXING_UPGRADE := "res://games/boxing/scenes/boxing_upgrade_panel.tscn"
-const SCENE_TRAINING := "res://games/boxing/scenes/main.tscn"
+const SCENE_BOXING_UPGRADE := "res://scenes/ui/boxing_upgrade_panel.tscn"
+const SCENE_TRAINING := "res://games/boxing/scenes/stage_1.tscn"
 const SCENE_SHOP := "res://scenes/ui/shop_panel.tscn"
 const SCENE_ACHIEVEMENTS := "res://scenes/ui/achievement_panel.tscn"
 

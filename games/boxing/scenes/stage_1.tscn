@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://7kbu855s0lc2"]
 
-[ext_resource type="Script" path="res://games/boxing/scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://games/boxing/scripts/stage_1.gd" id="1_main"]
 [ext_resource type="Script" path="res://games/boxing/scripts/player.gd" id="2_player"]
 [ext_resource type="Script" path="res://games/boxing/scripts/enemy.gd" id="3_enemy"]
 [ext_resource type="Script" path="res://games/boxing/scripts/ui/ui_director.gd" id="9_ui_director"]

@@ -28,7 +28,7 @@ var _last_punch_accepted_time: float = -999.0
 @onready var _combat_director: Node = $CombatDirector
 @onready var _stage_manager: Node = $StageManager
 
-const SCENE_MAIN: String = "res://games/boxing/scenes/main.tscn"
+const SCENE_MAIN: String = "res://games/boxing/scenes/stage_1.tscn"
 const SCENE_MAIN_MENU: String = "res://scenes/main_menu.tscn"
 const SCENE_SETTINGS: String = "res://scenes/ui/settings_panel.tscn"
 
