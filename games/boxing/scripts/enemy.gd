@@ -110,19 +110,17 @@ func _ready() -> void:
 	_roll_next_evade_idle_delay()
 
 func _apply_difficulty_stats() -> void:
-	var mul: float = GameState.get_difficulty_enemy_stat_mul()
-	max_hp = maxf(50.0, max_hp * mul)
-	attack_damage = maxf(5.0, attack_damage * mul)
-	# 하드는 공격 빈도도 살짝 증가, 이지는 감소
 	match GameState.get_difficulty():
 		GameState.DIFFICULTY_EASY:
+			max_hp = maxf(50.0, max_hp * 0.75)
+			attack_damage = maxf(5.0, attack_damage * 0.75 * 0.85)
 			attack_delay_min = attack_delay_min * 1.25
 			attack_delay_max = attack_delay_max * 1.25
-			attack_damage = attack_damage * 0.85
 		GameState.DIFFICULTY_HARD:
+			max_hp = maxf(50.0, max_hp * 1.4)
+			attack_damage = maxf(5.0, attack_damage * 1.4 * 1.15)
 			attack_delay_min = attack_delay_min * 0.85
 			attack_delay_max = attack_delay_max * 0.85
-			attack_damage = attack_damage * 1.15
 		_:
 			pass
 

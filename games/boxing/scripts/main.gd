@@ -176,6 +176,7 @@ func _on_boss_phase_changed(new_phase: int) -> void:
 	var options: Array[Dictionary] = GameState.get_boss_buff_options()
 	# 3개 랜덤 선택
 	var rng := RandomNumberGenerator.new()
+	rng.randomize()
 	var pool: Array[Dictionary] = options.duplicate()
 	var picks: Array[Dictionary] = []
 	for i in range(3):
@@ -345,10 +346,15 @@ func _show_game_over() -> void:
 	_game_over_shown = true
 	_combat_director.stop_timer()
 	_combat_director.reset_combo()
+	# 별 / 기록 / 업적 처리 (게임오버 시에도 콤보 업적 등은 체크)
+	var stage_id: String = "stage_1"
+	GameState.update_stage_record(stage_id, _combat_director.get_stage_elapsed_sec(), _combat_director.get_max_combo(), _combat_director.get_damage_taken())
+	_combat_director._newly_unlocked_achievements = GameState.check_and_unlock_achievements_after_session(_combat_director.get_stage_elapsed_sec(), _combat_director.get_max_combo(), _combat_director.get_damage_taken(), false)
 	var kcal: float = GameState.end_workout_session()
 	var today_kcal: float = GameState.get_today_calories()
 	get_tree().paused = true
 	_ui_director.show_game_over(kcal, today_kcal)
+	_flash_achievement_unlocks()
 
 
 func _show_win() -> void:
@@ -358,9 +364,19 @@ func _show_win() -> void:
 	var clear_sec: float = GameState.get_last_stage_clear_sec()
 	get_tree().paused = true
 	_ui_director.show_win(kcal, today_kcal, clear_sec)
+	_flash_achievement_unlocks()
 
 
 # --- 씬 전환 ---
+
+func _flash_achievement_unlocks() -> void:
+	var unlocked: Array[String] = _combat_director.get_newly_unlocked_achievements()
+	if unlocked.is_empty():
+		return
+	for id: String in unlocked:
+		var def: Dictionary = GameState.get_achievement_defs().get(id, {})
+		_ui_director.show_achievement_popup(id, str(def.get("title", id)))
+
 
 func _on_game_over_restart() -> void:
 	GameState.end_workout_session()

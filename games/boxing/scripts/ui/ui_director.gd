@@ -146,3 +146,25 @@ func show_ko_intro() -> void:
 func hide_ko_intro() -> void:
 	if _ko_intro_layer:
 		_ko_intro_layer.visible = false
+
+
+func show_achievement_popup(_ach_id: String, title: String) -> void:
+	var layer := CanvasLayer.new()
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
+	var lbl := Label.new()
+	lbl.text = "업적 달성!  " + title
+	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.35))
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.anchors_preset = Control.PRESET_CENTER_TOP
+	lbl.offset_top = 100.0
+	lbl.offset_left = -250.0
+	lbl.offset_right = 250.0
+	lbl.offset_bottom = 140.0
+	layer.add_child(lbl)
+	var parent: Node = get_parent()
+	if parent:
+		parent.add_child(layer)
+		var tween := lbl.create_tween()
+		tween.tween_property(lbl, "modulate:a", 0.0, 0.5).set_delay(2.5)
+		tween.tween_callback(layer.queue_free)

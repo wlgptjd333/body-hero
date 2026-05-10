@@ -14,11 +14,9 @@ config/name="Body Hero"
 config/tags=PackedStringArray("2d", "animation")
 run/main_scene="res://scenes/home_hub.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="res://icon.svg"
 boot_splash/bg_color=Color(0.11, 0.11, 0.13, 1)
+config/icon="res://icon.svg"
 boot_splash/enabled=true
-boot_splash/fullsize=true
-boot_splash/use_filter=true
 
 [audio]
 

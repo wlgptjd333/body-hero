@@ -20,7 +20,7 @@ func setup(options: Array[Dictionary], phase: int) -> void:
 		var btn := Button.new()
 		btn.text = "%s" % str(opt.get("name", "?"))
 		btn.custom_minimum_size = Vector2(0, 48)
-		btn.pressed.connect(func() -> void: _on_select(opt))
+		btn.pressed.connect(_on_select.bind(opt))
 		_list.add_child(btn)
 
 func _on_select(buff: Dictionary) -> void:

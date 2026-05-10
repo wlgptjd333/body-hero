@@ -27,6 +27,7 @@ var _training_action_counts: Dictionary = {
 	"squat": 0,
 }
 var _win_shown: bool = false
+var _newly_unlocked_achievements: Array[String] = []
 
 const COMBO_DAMAGE_MUL_BASE := 1.0
 const COMBO_DAMAGE_MUL_PER_10 := 0.08
@@ -42,6 +43,7 @@ func setup(training: bool) -> void:
 	_max_combo_this_session = 0
 	_damage_taken_this_session = 0.0
 	_win_shown = false
+	_newly_unlocked_achievements.clear()
 	for k: String in _training_action_counts.keys():
 		_training_action_counts[k] = 0
 
@@ -126,7 +128,7 @@ func on_enemy_died() -> void:
 	var stars: int = GameState.evaluate_stage_stars(_stage_elapsed_sec, _max_combo_this_session, _damage_taken_this_session)
 	GameState.record_stage_stars(stage_id, stars)
 	GameState.update_stage_record(stage_id, _stage_elapsed_sec, _max_combo_this_session, _damage_taken_this_session)
-	GameState.check_and_unlock_achievements_after_session(_stage_elapsed_sec, _max_combo_this_session, _damage_taken_this_session, true)
+	_newly_unlocked_achievements = GameState.check_and_unlock_achievements_after_session(_stage_elapsed_sec, _max_combo_this_session, _damage_taken_this_session, true)
 	_begin_ko_intro_then_win()
 
 
@@ -170,6 +172,9 @@ func get_max_combo() -> int:
 
 func get_damage_taken() -> float:
 	return _damage_taken_this_session
+
+func get_newly_unlocked_achievements() -> Array[String]:
+	return _newly_unlocked_achievements.duplicate()
 
 func get_training_action_counts() -> Dictionary:
 	return _training_action_counts

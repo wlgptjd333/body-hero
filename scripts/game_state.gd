@@ -1300,8 +1300,6 @@ func bump_achievement_progress(id: String, amount: int = 1) -> void:
 	_achievement_progress[id] = mini(cur + amount, target)
 	if _achievement_progress[id] >= target:
 		unlock_achievement(id)
-	else:
-		save_stats()
 
 func check_and_unlock_achievements_after_session(clear_sec: float, max_combo: int, damage_taken: float, is_clear: bool) -> Array[String]:
 	var newly_unlocked: Array[String] = []
@@ -1319,6 +1317,7 @@ func check_and_unlock_achievements_after_session(clear_sec: float, max_combo: in
 	for aid in ["combo_10", "combo_30", "combo_50"]:
 		if _achievement_progress.get(aid, 0) >= ACHIEVEMENT_DEFS[aid]["target"] and unlock_achievement(aid):
 			newly_unlocked.append(aid)
+	save_stats()
 	return newly_unlocked
 
 
