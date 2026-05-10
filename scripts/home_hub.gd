@@ -27,6 +27,61 @@ func _ready() -> void:
 		_btn_user_info.pressed.connect(_on_user_info)
 	if _btn_quit:
 		_btn_quit.pressed.connect(_on_quit)
+	_beautify_ui()
+
+func _beautify_ui() -> void:
+	var root: Control = $Root
+	var bg: ColorRect = $Root/Bg
+	if bg:
+		bg.color = UIThemeHelper.C_BG
+
+	# Title
+	var title: Label = $Root/Center/VBox/Title
+	if title:
+		UIThemeHelper.style_label_title(title)
+		# Subtle gradient accent line below title
+		var accent := ColorRect.new()
+		accent.custom_minimum_size = Vector2(60, 3)
+		accent.color = UIThemeHelper.C_ACCENT
+		accent.anchors_preset = Control.PRESET_CENTER_TOP
+		accent.position = Vector2(-30, 0)
+		# We can't easily add it in the middle, so skip for now
+
+	var sub: Label = $Root/Center/VBox/SubTitle
+	if sub:
+		UIThemeHelper.style_label_caption(sub)
+		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+	# Style buttons
+	UIThemeHelper.style_button_primary(_btn_boxing)
+	UIThemeHelper.style_button_secondary(_btn_settings)
+	UIThemeHelper.style_button_secondary(_btn_game_records)
+	UIThemeHelper.style_button_secondary(_btn_user_info)
+	UIThemeHelper.style_button_danger(_btn_quit)
+
+	# Make buttons wider and add spacing
+	var vbox: VBoxContainer = $Root/Center/VBox
+	vbox.add_theme_constant_override("separation", 12)
+	for btn: Button in [_btn_boxing, _btn_settings, _btn_game_records, _btn_user_info, _btn_quit]:
+		if btn == null:
+			continue
+		btn.custom_minimum_size = Vector2(320, 48)
+
+	# PanelContainer glass style for the whole center area? No, it's a CenterContainer.
+	# Instead, wrap the VBox in a PanelContainer with glass style
+	var center: CenterContainer = $Root/Center
+	var old_vbox: VBoxContainer = $Root/Center/VBox
+	if center and old_vbox:
+		# Reparent vbox into a PanelContainer
+		center.remove_child(old_vbox)
+		var glass := PanelContainer.new()
+		UIThemeHelper.style_panel_container_glass(glass)
+		glass.add_child(old_vbox)
+		center.add_child(glass)
+		old_vbox.add_theme_constant_override("separation", 14)
+		# Recenter the vbox inside panel
+		old_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+
 
 
 func _on_boxing() -> void:

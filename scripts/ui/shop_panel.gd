@@ -12,6 +12,22 @@ var _item_rows: Dictionary = {}
 
 func _ready() -> void:
 	_btn_close.pressed.connect(_on_close)
+	UIThemeHelper.style_button_secondary(_btn_close)
+
+	# 패널 스타일
+	var panel: Panel = $Dim/Panel
+	if panel:
+		UIThemeHelper.style_panel_glass(panel)
+	var title: Label = $Dim/Panel/Margin/VBox/Title
+	if title:
+		UIThemeHelper.style_label_title(title)
+	if _lbl_sweat:
+		UIThemeHelper.style_label_body(_lbl_sweat)
+		_lbl_sweat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if _equip_label:
+		UIThemeHelper.style_label_caption(_equip_label)
+		_equip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
 	_refresh()
 
 func _on_close() -> void:

@@ -14,8 +14,34 @@ signal back_pressed
 func _ready() -> void:
 	if _back_btn:
 		_back_btn.pressed.connect(_on_back)
+		UIThemeHelper.style_button_secondary(_back_btn)
 	if _weight_save_btn:
 		_weight_save_btn.pressed.connect(_on_weight_save_pressed)
+		UIThemeHelper.style_button_primary(_weight_save_btn)
+		_weight_save_btn.custom_minimum_size = Vector2(80, 0)
+
+	# 패널과 배경 스타일
+	var panel: Panel = $Panel
+	if panel:
+		UIThemeHelper.style_panel_glass(panel)
+	var title: Label = $Panel/VBox/TitleLabel
+	if title:
+		UIThemeHelper.style_label_title(title)
+	var chart_title1: Label = $Panel/VBox/Scroll/ScrollInner/DailyChartTitle
+	if chart_title1:
+		UIThemeHelper.style_label_section(chart_title1)
+		chart_title1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var chart_title2: Label = $Panel/VBox/Scroll/ScrollInner/WeightChartTitle
+	if chart_title2:
+		UIThemeHelper.style_label_section(chart_title2)
+		chart_title2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var weight_lbl: Label = $Panel/VBox/Scroll/ScrollInner/WeightRow/WeightRowLabel
+	if weight_lbl:
+		UIThemeHelper.style_label_body(weight_lbl)
+	if _profile_label:
+		UIThemeHelper.style_label_body(_profile_label)
+		_profile_label.add_theme_color_override("font_color", UIThemeHelper.C_TEXT_PRIMARY)
+
 	_refresh_all()
 
 

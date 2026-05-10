@@ -10,6 +10,19 @@ signal back_pressed
 
 func _ready() -> void:
 	_btn_close.pressed.connect(_on_close)
+	UIThemeHelper.style_button_secondary(_btn_close)
+
+	# 패널 스타일
+	var panel: Panel = $Dim/Panel
+	if panel:
+		UIThemeHelper.style_panel_glass(panel)
+	var title: Label = $Dim/Panel/Margin/VBox/Title
+	if title:
+		UIThemeHelper.style_label_title(title)
+	if _summary:
+		UIThemeHelper.style_label_body(_summary)
+		_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
 	_refresh_list()
 
 func _on_close() -> void:

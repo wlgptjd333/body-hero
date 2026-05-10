@@ -87,51 +87,52 @@ func _ready() -> void:
 
 
 func _beautify_ui() -> void:
-	# --- RightPanel: 버튼 섹션별 재정렬 + 스타일링 ---
-	var button_box: VBoxContainer = $RightPanel/ButtonBox
-	button_box.add_theme_constant_override("separation", 6)
+	# ── 배경 ──
+	var bg: TextureRect = $Background
+	if bg:
+		bg.modulate = Color(0.6, 0.6, 0.7, 1.0)  # 배경 살짝 어둡게
 
-	# 버튼 스타일 공통
-	for btn: Button in [
-		_btn_start, _btn_training, _btn_upgrade, _btn_shop,
-		_btn_achievements, _btn_difficulty, _btn_how_to_play, _btn_home,
-	]:
+	# ── RightPanel: Glass Panel ──
+	var right_panel: PanelContainer = $RightPanel
+	if right_panel:
+		UIThemeHelper.style_panel_container_glass(right_panel)
+	var button_box: VBoxContainer = $RightPanel/ButtonBox
+	button_box.add_theme_constant_override("separation", 8)
+
+	# 버튼 스타일링
+	UIThemeHelper.style_button_primary(_btn_start)
+	UIThemeHelper.style_button_secondary(_btn_training)
+	UIThemeHelper.style_button_secondary(_btn_upgrade)
+	UIThemeHelper.style_button_secondary(_btn_shop)
+	UIThemeHelper.style_button_secondary(_btn_achievements)
+	UIThemeHelper.style_button_secondary(_btn_difficulty)
+	UIThemeHelper.style_button_secondary(_btn_how_to_play)
+	UIThemeHelper.style_button_danger(_btn_home)
+	for btn: Button in [_btn_start, _btn_training, _btn_upgrade, _btn_shop, _btn_achievements, _btn_difficulty, _btn_how_to_play, _btn_home]:
 		if btn == null:
 			continue
-		btn.custom_minimum_size = Vector2(0, 40)
-		btn.add_theme_font_size_override("font_size", 15)
-		btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
+		btn.custom_minimum_size = Vector2(0, 42)
 
-	# "게임 시작" 강조
-	if _btn_start:
-		_btn_start.custom_minimum_size = Vector2(0, 52)
-		_btn_start.add_theme_font_size_override("font_size", 17)
-		var accent := StyleBoxFlat.new()
-		accent.bg_color = Color(0.22, 0.55, 0.35, 0.95)
-		accent.border_color = Color(0.45, 0.85, 0.55, 1)
-		accent.border_width_left = 2
-		accent.border_width_top = 2
-		accent.border_width_right = 2
-		accent.border_width_bottom = 2
-		accent.corner_radius_top_left = 8
-		accent.corner_radius_top_right = 8
-		accent.corner_radius_bottom_right = 8
-		accent.corner_radius_bottom_left = 8
-		_btn_start.add_theme_stylebox_override("normal", accent)
-		_btn_start.add_theme_stylebox_override("hover", accent)
-		_btn_start.add_theme_stylebox_override("pressed", accent)
-
-	# 섹션 구분 라벨 생성 함수
-	var make_sep := func(title: String) -> Label:
+	# 섹션 구분 라벨 (accent line + text)
+	var make_sep := func(title: String) -> HBoxContainer:
+		var hbox := HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 8)
+		var line := ColorRect.new()
+		line.custom_minimum_size = Vector2(24, 2)
+		line.color = UIThemeHelper.C_ACCENT
+		line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		hbox.add_child(line)
 		var lbl := Label.new()
 		lbl.text = title
-		lbl.add_theme_font_size_override("font_size", 11)
-		lbl.add_theme_color_override("font_color", Color(0.55, 0.52, 0.62, 1))
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		lbl.add_theme_constant_override("margin_top", 6)
-		return lbl
+		UIThemeHelper.style_label_caption(lbl)
+		lbl.add_theme_color_override("font_color", UIThemeHelper.C_ACCENT)
+		hbox.add_child(lbl)
+		var stretch := Control.new()
+		stretch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hbox.add_child(stretch)
+		return hbox
 
-	# 재정렬: 게임시작, 훈련장, [성장], 업그레이드, 상점, 업적, [설정], 난이도, 튜토리얼, 홈으로
+	# 재정렬
 	var order: Array[Button] = [
 		_btn_start, _btn_training, _btn_upgrade, _btn_shop,
 		_btn_achievements, _btn_difficulty, _btn_how_to_play, _btn_home,
@@ -143,50 +144,57 @@ func _beautify_ui() -> void:
 
 	button_box.add_child(_btn_start)
 	button_box.add_child(_btn_training)
-	button_box.add_child(make_sep.call("  성장"))
+	button_box.add_child(make_sep.call("성장"))
 	button_box.add_child(_btn_upgrade)
 	button_box.add_child(_btn_shop)
 	button_box.add_child(_btn_achievements)
-	button_box.add_child(make_sep.call("  설정"))
+	button_box.add_child(make_sep.call("설정"))
 	button_box.add_child(_btn_difficulty)
 	button_box.add_child(_btn_how_to_play)
 	button_box.add_child(_btn_home)
 
-	# --- LeftPanel: 도전과제 ProgressBar 숨기고 텍스트로 대체 ---
+	# ── LeftPanel: Glass Panel ──
+	var left_panel: PanelContainer = $LeftPanel
+	if left_panel:
+		UIThemeHelper.style_panel_container_glass(left_panel)
+
+	# 도전과제 ProgressBar 숨기고 깔끔한 텍스트로
 	for i in range(3):
 		if i < _ch_bars.size():
 			_ch_bars[i].visible = false
 	var challenge_rows: VBoxContainer = $LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows
 	if challenge_rows:
-		challenge_rows.add_theme_constant_override("separation", 4)
-	for row_name in ["Row0", "Row1", "Row2"]:
-		var row: VBoxContainer = challenge_rows.get_node_or_null(row_name)
-		if row:
-			row.add_theme_constant_override("separation", 2)
+		challenge_rows.add_theme_constant_override("separation", 6)
 
-	# --- LeftPanel: 제목 라벨 스타일 ---
+	# 제목 스타일
 	var daily_title: Label = $LeftPanel/Scroll/MarginContainer/DailyVBox/DailyMainTitle
 	if daily_title:
-		daily_title.add_theme_font_size_override("font_size", 18)
-		daily_title.add_theme_color_override("font_color", Color(0.95, 0.93, 0.88))
+		UIThemeHelper.style_label_section(daily_title)
+		daily_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var daily_sub: Label = $LeftPanel/Scroll/MarginContainer/DailyVBox/DailySubTitle
 	if daily_sub:
-		daily_sub.add_theme_font_size_override("font_size", 12)
-		daily_sub.add_theme_color_override("font_color", Color(0.65, 0.62, 0.75))
+		UIThemeHelper.style_label_caption(daily_sub)
+		daily_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var goal_title: Label = $LeftPanel/Scroll/MarginContainer/DailyVBox/GoalTitle
 	if goal_title:
-		goal_title.add_theme_font_size_override("font_size", 16)
-		goal_title.add_theme_color_override("font_color", Color(0.95, 0.93, 0.88))
+		UIThemeHelper.style_label_section(goal_title)
+		goal_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
-	# --- LeftPanel: 텍스트 라벨 스타일 조정 ---
+	# 본문 스타일
 	if _bmi_hint:
-		_bmi_hint.add_theme_font_size_override("font_size", 11)
+		UIThemeHelper.style_label_caption(_bmi_hint)
 	if _rec_hint:
-		_rec_hint.add_theme_font_size_override("font_size", 11)
+		UIThemeHelper.style_label_caption(_rec_hint)
 	if _goal_prog_lbl:
-		_goal_prog_lbl.add_theme_font_size_override("font_size", 13)
+		UIThemeHelper.style_label_body(_goal_prog_lbl)
+		_goal_prog_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if _goal_hints:
-		_goal_hints.add_theme_font_size_override("font_size", 11)
+		UIThemeHelper.style_label_caption(_goal_hints)
+		_goal_hints.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+	# ProgressBar 스타일
+	if _goal_prog_bar:
+		UIThemeHelper.style_progress_bar(_goal_prog_bar)
 
 
 func _notification(what: int) -> void:

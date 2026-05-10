@@ -22,6 +22,16 @@ const DISPLAY_NAMES := {
 func _ready() -> void:
 	if _back_btn:
 		_back_btn.pressed.connect(_on_back)
+		UIThemeHelper.style_button_secondary(_back_btn)
+
+	# 패널과 배경 스타일
+	var panel: Panel = $Panel
+	if panel:
+		UIThemeHelper.style_panel_glass(panel)
+	var title: Label = $Panel/VBox/TitleLabel
+	if title:
+		UIThemeHelper.style_label_title(title)
+
 	_refresh_all()
 
 
