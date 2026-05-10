@@ -83,6 +83,110 @@ func _ready() -> void:
 		_goal_spin.value_changed.connect(_on_goal_spin_changed)
 	_refresh_daily_challenges_ui()
 	_refresh_daily_goal_ui()
+	_beautify_ui()
+
+
+func _beautify_ui() -> void:
+	# --- RightPanel: 버튼 섹션별 재정렬 + 스타일링 ---
+	var button_box: VBoxContainer = $RightPanel/ButtonBox
+	button_box.theme_override_constants.separation = 6
+
+	# 버튼 스타일 공통
+	for btn: Button in [
+		_btn_start, _btn_training, _btn_upgrade, _btn_shop,
+		_btn_achievements, _btn_difficulty, _btn_how_to_play, _btn_home,
+	]:
+		if btn == null:
+			continue
+		btn.custom_minimum_size = Vector2(0, 40)
+		btn.add_theme_font_size_override("font_size", 15)
+		btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+	# "게임 시작" 강조
+	if _btn_start:
+		_btn_start.custom_minimum_size = Vector2(0, 52)
+		_btn_start.add_theme_font_size_override("font_size", 17)
+		var accent := StyleBoxFlat.new()
+		accent.bg_color = Color(0.22, 0.55, 0.35, 0.95)
+		accent.border_color = Color(0.45, 0.85, 0.55, 1)
+		accent.border_width_left = 2
+		accent.border_width_top = 2
+		accent.border_width_right = 2
+		accent.border_width_bottom = 2
+		accent.corner_radius_top_left = 8
+		accent.corner_radius_top_right = 8
+		accent.corner_radius_bottom_right = 8
+		accent.corner_radius_bottom_left = 8
+		_btn_start.add_theme_stylebox_override("normal", accent)
+		_btn_start.add_theme_stylebox_override("hover", accent)
+		_btn_start.add_theme_stylebox_override("pressed", accent)
+
+	# 섹션 구분 라벨 생성 함수
+	var make_sep := func(title: String) -> Label:
+		var lbl := Label.new()
+		lbl.text = title
+		lbl.add_theme_font_size_override("font_size", 11)
+		lbl.add_theme_color_override("font_color", Color(0.55, 0.52, 0.62, 1))
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		lbl.add_theme_constant_override("margin_top", 6)
+		return lbl
+
+	# 재정렬: 게임시작, 훈련장, [성장], 업그레이드, 상점, 업적, [설정], 난이도, 튜토리얼, 홈으로
+	var order: Array[Button] = [
+		_btn_start, _btn_training, _btn_upgrade, _btn_shop,
+		_btn_achievements, _btn_difficulty, _btn_how_to_play, _btn_home,
+	]
+	for btn: Button in order:
+		if btn == null:
+			continue
+		button_box.remove_child(btn)
+
+	button_box.add_child(_btn_start)
+	button_box.add_child(_btn_training)
+	button_box.add_child(make_sep.call("  성장"))
+	button_box.add_child(_btn_upgrade)
+	button_box.add_child(_btn_shop)
+	button_box.add_child(_btn_achievements)
+	button_box.add_child(make_sep.call("  설정"))
+	button_box.add_child(_btn_difficulty)
+	button_box.add_child(_btn_how_to_play)
+	button_box.add_child(_btn_home)
+
+	# --- LeftPanel: 도전과제 ProgressBar 숨기고 텍스트로 대체 ---
+	for i in range(3):
+		if i < _ch_bars.size():
+			_ch_bars[i].visible = false
+	var challenge_rows: VBoxContainer = $LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows
+	if challenge_rows:
+		challenge_rows.theme_override_constants.separation = 4
+	for row_name in ["Row0", "Row1", "Row2"]:
+		var row: VBoxContainer = challenge_rows.get_node_or_null(row_name)
+		if row:
+			row.theme_override_constants.separation = 2
+
+	# --- LeftPanel: 제목 라벨 스타일 ---
+	var daily_title: Label = $LeftPanel/Scroll/MarginContainer/DailyVBox/DailyMainTitle
+	if daily_title:
+		daily_title.add_theme_font_size_override("font_size", 18)
+		daily_title.add_theme_color_override("font_color", Color(0.95, 0.93, 0.88))
+	var daily_sub: Label = $LeftPanel/Scroll/MarginContainer/DailyVBox/DailySubTitle
+	if daily_sub:
+		daily_sub.add_theme_font_size_override("font_size", 12)
+		daily_sub.add_theme_color_override("font_color", Color(0.65, 0.62, 0.75))
+	var goal_title: Label = $LeftPanel/Scroll/MarginContainer/DailyVBox/GoalTitle
+	if goal_title:
+		goal_title.add_theme_font_size_override("font_size", 16)
+		goal_title.add_theme_color_override("font_color", Color(0.95, 0.93, 0.88))
+
+	# --- LeftPanel: 텍스트 라벨 스타일 조정 ---
+	if _bmi_hint:
+		_bmi_hint.add_theme_font_size_override("font_size", 11)
+	if _rec_hint:
+		_rec_hint.add_theme_font_size_override("font_size", 11)
+	if _goal_prog_lbl:
+		_goal_prog_lbl.add_theme_font_size_override("font_size", 13)
+	if _goal_hints:
+		_goal_hints.add_theme_font_size_override("font_size", 11)
 
 
 func _notification(what: int) -> void:
@@ -94,27 +198,22 @@ func _notification(what: int) -> void:
 func _refresh_daily_challenges_ui() -> void:
 	var rows: Array[Dictionary] = GameState.get_daily_challenges_for_ui()
 	for i: int in range(3):
-		if i >= _ch_titles.size() or i >= _ch_bars.size():
+		if i >= _ch_titles.size():
 			break
 		var t: Label = _ch_titles[i]
-		var bar: ProgressBar = _ch_bars[i]
 		if i < rows.size():
 			var r: Dictionary = rows[i]
 			var cur: int = int(r.get("current", 0))
 			var tgt: int = maxi(1, int(r.get("target", 1)))
 			var done: bool = bool(r.get("completed", false))
-			t.text = "%s  (%d / %d)" % [str(r.get("title", "")), cur, tgt]
-			bar.max_value = float(tgt)
-			bar.value = float(mini(cur, tgt))
-			if done:
-				bar.modulate = Color(0.55, 0.95, 0.65, 1.0)
-			else:
-				bar.modulate = Color(1, 1, 1, 1)
+			var icon: String = "✓" if done else "○"
+			var pct: int = int(100.0 * float(cur) / float(tgt))
+			var color: Color = Color(0.55, 0.95, 0.65) if done else Color(0.88, 0.88, 0.92)
+			t.text = "%s %s  %d/%d (%d%%)" % [icon, str(r.get("title", "")), cur, tgt, pct]
+			t.add_theme_color_override("font_color", color)
 		else:
 			t.text = "—"
-			bar.max_value = 1.0
-			bar.value = 0.0
-			bar.modulate = Color(1, 1, 1, 1)
+			t.add_theme_color_override("font_color", Color(0.6, 0.6, 0.65))
 
 
 func _on_apply_recommended_goal() -> void:
@@ -130,23 +229,16 @@ func _on_goal_spin_changed(v: float) -> void:
 
 
 func _refresh_daily_goal_ui() -> void:
+	var bmi: float = GameState.get_bmi()
+	var rec: float = GameState.get_recommended_daily_kcal_goal()
 	if _bmi_hint:
-		var bmi: float = GameState.get_bmi()
 		if bmi > 0.0:
-			_bmi_hint.text = "BMI %.1f (%s) · 체중·키·나이·성별은 설정에서 바꿀 수 있어요" % [
-				bmi,
-				GameState.get_bmi_category_label(),
-			]
+			_bmi_hint.text = "BMI %.1f (%s)" % [bmi, GameState.get_bmi_category_label()]
 		else:
-			_bmi_hint.text = "키·체중을 설정하면 BMI와 권장 목표를 계산해요"
+			_bmi_hint.text = "설정에서 키·체중을 입력하면 BMI를 계산해요"
 	if _rec_hint:
-		var rec: float = GameState.get_recommended_daily_kcal_goal()
-		var src: String = "BMI·BMR 기준 권장(운동 추가 소모 추정): 약 %d kcal/일" % int(roundf(rec))
-		if GameState.has_custom_daily_kcal_goal():
-			src += " · 지금 목표는 직접 저장된 값"
-		else:
-			src += " · 지금 목표에 반영 중"
-		_rec_hint.text = src
+		var custom: String = "(사용자 지정)" if GameState.has_custom_daily_kcal_goal() else "(권장)"
+		_rec_hint.text = "일일 권장 소모: 약 %d kcal %s" % [int(roundf(rec)), custom]
 	if _goal_spin:
 		_goal_spin_suppress = true
 		_goal_spin.value = GameState.get_daily_kcal_goal()
@@ -160,10 +252,13 @@ func _refresh_daily_goal_progress_only() -> void:
 	var today: float = float(h.get("today", 0.0))
 	var rem: float = float(h.get("remaining", 0.0))
 	if _goal_prog_lbl:
-		_goal_prog_lbl.text = (
-			"오늘 %.0f / 목표 %.0f kcal\n"
-			+ "· 오늘 누적은 한 판이 끝날 때(KO·게임오버·메뉴로 나가기 등) 더해져요"
-		) % [today, goal]
+		var pct: int = int(100.0 * today / maxf(goal, 1.0))
+		if today >= goal and goal > 0.0:
+			_goal_prog_lbl.text = "오늘 %.0f / %.0f kcal  ·  목표 달성! ✓" % [today, goal]
+			_goal_prog_lbl.add_theme_color_override("font_color", Color(0.55, 0.95, 0.65))
+		else:
+			_goal_prog_lbl.text = "오늘 %.0f / %.0f kcal  (%d%%)" % [today, goal, pct]
+			_goal_prog_lbl.add_theme_color_override("font_color", Color(0.82, 0.88, 0.95))
 	if _goal_prog_bar:
 		_goal_prog_bar.max_value = maxf(goal, 1.0)
 		_goal_prog_bar.value = minf(today, goal)
@@ -174,21 +269,13 @@ func _refresh_daily_goal_progress_only() -> void:
 	if not _goal_hints:
 		return
 	if rem <= 0.0001 and goal > 0.0 and today >= goal - 0.0001:
-		_goal_hints.text = "오늘 목표 칼로리를 채웠어요. 잘했어요!"
+		_goal_hints.text = "목표 달성! 훌륭해요."
 		return
 	if goal <= 0.0:
 		_goal_hints.text = ""
 		return
-	var p: int = int(h.get("punch_only", 0))
-	var u: int = int(h.get("upper_only", 0))
-	var g_sec: int = int(h.get("guard_hold_sec", 0))
 	var m: int = int(h.get("mixed_same", 0))
-	_goal_hints.text = (
-		"남은 약 %.0f kcal을 게임 내 동작 상수만으로 채울 때 대략:\n"
-		+ "• 펀치만: 약 %d회 · 어퍼만: 약 %d회 · 가드 유지만: 약 %d초\n"
-		+ "• 펀치/어퍼를 비슷하게 섞으면: 약 %d회 분량\n"
-		+ "(세션 종료 시 MET 보정으로 실제 누적과 다를 수 있어요.)"
-	) % [rem, p, u, g_sec, m]
+	_goal_hints.text = "약 %.0f kcal 남음  ·  펀치/어퍼 섞으면 약 %d회" % [rem, m]
 
 
 func _try_load_stream(player: AudioStreamPlayer, paths: Array[String]) -> void:
