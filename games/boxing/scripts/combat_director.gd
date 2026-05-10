@@ -14,6 +14,8 @@ signal bars_need_update
 var _stage_timer_active: bool = true
 var _stage_elapsed_sec: float = 0.0
 var _combo_count: int = 0
+var _max_combo_this_session: int = 0
+var _damage_taken_this_session: float = 0.0
 var _training_mode: bool = false
 var _training_kill_count: int = 0
 var _training_action_counts: Dictionary = {
@@ -26,6 +28,9 @@ var _training_action_counts: Dictionary = {
 }
 var _win_shown: bool = false
 
+const COMBO_DAMAGE_MUL_BASE := 1.0
+const COMBO_DAMAGE_MUL_PER_10 := 0.08
+
 
 func setup(training: bool) -> void:
 	_training_mode = training
@@ -34,6 +39,8 @@ func setup(training: bool) -> void:
 	_stage_timer_active = true
 	_stage_elapsed_sec = 0.0
 	_combo_count = 0
+	_max_combo_this_session = 0
+	_damage_taken_this_session = 0.0
 	_win_shown = false
 	for k: String in _training_action_counts.keys():
 		_training_action_counts[k] = 0
@@ -54,9 +61,16 @@ func on_player_punch_impact(damage: float, punch_type: String) -> void:
 	if _enemy.has_method("is_evading") and _enemy.is_evading():
 		return
 	if _enemy.has_method("take_damage"):
-		_enemy.take_damage(damage, punch_type)
+		var mul: float = get_combo_damage_multiplier()
+		var final_dmg: float = damage * mul
+		_enemy.take_damage(final_dmg, punch_type)
 		GameState.add_punch_count(punch_type)
 		_register_combo_hit()
+		# 업적: 누적 펀치/어퍼/가드/회피
+		GameState.bump_achievement_progress("punch_100", 1)
+		GameState.bump_achievement_progress("punch_500", 1)
+		if punch_type.begins_with("upper"):
+			GameState.bump_achievement_progress("upper_50", 1)
 
 
 func on_player_action_performed(action: String) -> void:
@@ -77,9 +91,11 @@ func on_enemy_attack(damage: float) -> void:
 		GameState.apply_guard_block_success()
 		if _player and _player.has_method("play_guard_block_fx"):
 			_player.play_guard_block_fx()
+		GameState.bump_achievement_progress("guard_50", 1)
 	else:
 		_reset_combo()
 		GameState.apply_player_damage(damage)
+		_damage_taken_this_session += damage
 		if GameState.player_hp <= 0.0:
 			game_over_triggered.emit()
 		if _player and _player.has_method("play_take_damage_fx"):
@@ -105,6 +121,12 @@ func on_enemy_died() -> void:
 	_reset_combo()
 	_stage_timer_active = false
 	GameState.record_stage_clear_time(_stage_elapsed_sec)
+	# 별 / 기록 / 업적 처리
+	var stage_id: String = "stage_1"
+	var stars: int = GameState.evaluate_stage_stars(_stage_elapsed_sec, _max_combo_this_session, _damage_taken_this_session)
+	GameState.record_stage_stars(stage_id, stars)
+	GameState.update_stage_record(stage_id, _stage_elapsed_sec, _max_combo_this_session, _damage_taken_this_session)
+	GameState.check_and_unlock_achievements_after_session(_stage_elapsed_sec, _max_combo_this_session, _damage_taken_this_session, true)
 	_begin_ko_intro_then_win()
 
 
@@ -136,8 +158,18 @@ func stop_timer() -> void:
 
 func _register_combo_hit() -> void:
 	_combo_count += 1
+	if _combo_count > _max_combo_this_session:
+		_max_combo_this_session = _combo_count
 	combo_changed.emit(_combo_count)
 
+func get_combo_damage_multiplier() -> float:
+	return COMBO_DAMAGE_MUL_BASE + (float(_combo_count) / 10.0) * COMBO_DAMAGE_MUL_PER_10
+
+func get_max_combo() -> int:
+	return _max_combo_this_session
+
+func get_damage_taken() -> float:
+	return _damage_taken_this_session
 
 func get_training_action_counts() -> Dictionary:
 	return _training_action_counts

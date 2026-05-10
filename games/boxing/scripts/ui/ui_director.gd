@@ -18,6 +18,7 @@ extends Node
 @onready var _win_calories_label: Label = $"../WinLayer/WinVBox/WinCaloriesLabel"
 @onready var _win_daily_calories_label: Label = $"../WinLayer/WinVBox/WinDailyCaloriesLabel"
 @onready var _win_clear_time_label: Label = $"../WinLayer/WinVBox/WinClearTimeLabel"
+@onready var _win_stars_label: Label = $"../WinLayer/WinVBox/WinStarsLabel"
 
 
 func _ready() -> void:
@@ -43,7 +44,11 @@ func update_bars(enemy: Node) -> void:
 
 func update_play_time(elapsed_sec: float) -> void:
 	if _play_time_label:
-		_play_time_label.text = "플레이 %s" % _format_play_time_sec(elapsed_sec)
+		var best: float = GameState.get_best_stage_clear_sec()
+		var base: String = "플레이 %s" % _format_play_time_sec(elapsed_sec)
+		if best > 0.0:
+			base += "  |  최고: %s" % GameState.format_stage_clear_time(best)
+		_play_time_label.text = base
 
 
 func _format_play_time_sec(sec: float) -> String:
@@ -63,6 +68,17 @@ func update_combo(count: int) -> void:
 		_combo_label.text = ""
 	else:
 		_combo_label.visible = true
+		var scale: float = 1.0 + minf(float(count) / 50.0, 0.5)
+		_combo_label.scale = Vector2(scale, scale)
+		# 색상 변화: 2~9 노랑, 10~19 주황, 20~29 빨강, 30+ 별빛
+		if count >= 30:
+			_combo_label.add_theme_color_override("font_color", Color(1.0, 0.45, 0.9))
+		elif count >= 20:
+			_combo_label.add_theme_color_override("font_color", Color(1.0, 0.2, 0.2))
+		elif count >= 10:
+			_combo_label.add_theme_color_override("font_color", Color(1.0, 0.55, 0.1))
+		else:
+			_combo_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.35))
 		_combo_label.text = "%d COMBO" % count
 
 
@@ -110,6 +126,12 @@ func show_win(kcal: float, today_kcal: float, clear_sec: float) -> void:
 		_win_daily_calories_label.text = "오늘 누적: %.1f kcal" % today_kcal
 	if _win_clear_time_label:
 		_win_clear_time_label.text = "클리어 시간: %s" % GameState.format_stage_clear_time(clear_sec)
+	if _win_stars_label:
+		var stars: int = GameState.get_stage_stars("stage_1")
+		var star_str: String = ""
+		for i in range(3):
+			star_str += "★" if i < stars else "☆"
+		_win_stars_label.text = star_str
 	if _win_layer:
 		_win_layer.visible = true
 

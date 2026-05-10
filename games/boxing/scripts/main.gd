@@ -48,12 +48,17 @@ func _ready() -> void:
 	GameState.reset_punch_counts()
 	GameState.player_hp = GameState.player_max_hp
 	GameState.stamina = GameState.stamina_max
+	# 소모성 버프 적용
+	var buffs: Dictionary = GameState.consume_buff_for_session()
+	if buffs.has("start_hp_bonus"):
+		GameState.player_hp = minf(GameState.player_max_hp, GameState.player_hp + GameState.player_max_hp * float(buffs["start_hp_bonus"]))
 	GameState.start_workout_session()
 
 	_connect_signals()
 	_connect_buttons()
 	_setup_game_over_buttons()
 	_setup_win_buttons()
+	_setup_boss_phase_if_needed()
 
 	# 자식 노드들의 _ready()가 모두 끝난 뒤 초기화 (@onready 타이밍 문제 방지)
 	call_deferred("_initialize_all")
@@ -153,6 +158,45 @@ func _schedule_webcam_ml_after_scene_idle() -> void:
 		await get_tree().process_frame
 	GameState.ensure_webcam_ml_bridge(true)
 
+
+func _setup_boss_phase_if_needed() -> void:
+	if _enemy and _enemy.has_signal("phase_changed"):
+		_enemy.phase_changed.connect(_on_boss_phase_changed)
+
+func _on_boss_phase_changed(new_phase: int) -> void:
+	# 보스 페이즈 전환: 버프 선택 UI
+	get_tree().paused = true
+	var packed := load("res://scenes/ui/boss_buff_select.tscn") as PackedScene
+	if not packed:
+		get_tree().paused = false
+		return
+	var panel: Control = packed.instantiate() as Control
+	add_child(panel)
+	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var options: Array[Dictionary] = GameState.get_boss_buff_options()
+	# 3개 랜덤 선택
+	var rng := RandomNumberGenerator.new()
+	var pool: Array[Dictionary] = options.duplicate()
+	var picks: Array[Dictionary] = []
+	for i in range(3):
+		if pool.is_empty():
+			break
+		var idx: int = rng.randi_range(0, pool.size() - 1)
+		picks.append(pool[idx])
+		pool.remove_at(idx)
+	if panel.has_method("setup"):
+		panel.setup(picks, new_phase)
+	if panel.has_signal("buff_selected"):
+		panel.buff_selected.connect(func(buff: Dictionary) -> void:
+			GameState.add_boss_buff(buff)
+			panel.queue_free()
+			get_tree().paused = false
+		)
+	if panel.has_signal("skip_pressed"):
+		panel.skip_pressed.connect(func() -> void:
+			panel.queue_free()
+			get_tree().paused = false
+		)
 
 func _on_exit_tree_cleanup() -> void:
 	if _server:

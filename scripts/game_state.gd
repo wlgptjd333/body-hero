@@ -100,6 +100,63 @@ const DISPLAY_MIN_H := 360
 ## 저장된 창 크기(0이면 기본값 유지). 설정 패널에서 적용 시 갱신.
 var _saved_window_width: int = 0
 var _saved_window_height: int = 0
+
+# --- 난이도 ---
+const DIFFICULTY_EASY := "easy"
+const DIFFICULTY_NORMAL := "normal"
+const DIFFICULTY_HARD := "hard"
+var _difficulty: String = DIFFICULTY_NORMAL
+
+# --- 별(Star) 시스템: 스테이지 ID -> 최대 별 개수 (0~3) ---
+var _stage_stars: Dictionary = {}  # stage_id -> int
+# --- 스테이지 클리어 기록: 스테이지 ID -> {best_time, best_combo, least_damage} ---
+var _stage_records: Dictionary = {}  # stage_id -> Dictionary
+
+# --- 업적 시스템 ---
+const ACHIEVEMENT_DEFS: Dictionary = {
+	"first_blood": {"title": "첫 KO", "desc": "처음으로 적을 처치하세요", "kind": "kills", "target": 1},
+	"combo_10": {"title": "콤보 초보", "desc": "10콤보 달성", "kind": "combo", "target": 10},
+	"combo_30": {"title": "콤보 마스터", "desc": "30콤보 달성", "kind": "combo", "target": 30},
+	"combo_50": {"title": "콤보의 신", "desc": "50콤보 달성", "kind": "combo", "target": 50},
+	"punch_100": {"title": "주먹 단련", "desc": "누적 펀치 100회", "kind": "punches_total", "target": 100},
+	"punch_500": {"title": "복싱 중독", "desc": "누적 펀치 500회", "kind": "punches_total", "target": 500},
+	"guard_50": {"title": "철벽 수비", "desc": "누적 가드 50회", "kind": "guards_total", "target": 50},
+	"dodge_30": {"title": "회피 달인", "desc": "누적 회피 30회", "kind": "dodges_total", "target": 30},
+	"speedrun": {"title": "스피드러너", "desc": "30초 이내 스테이지 클리어", "kind": "clear_time", "target": 30},
+	"no_damage": {"title": "무적", "desc": "플레이어가 한 번도 맞지 않고 클리어", "kind": "no_damage_clear", "target": 1},
+	"upper_50": {"title": "어퍼킹", "desc": "누적 어퍼컷 50회", "kind": "uppers_total", "target": 50},
+}
+var _achievements_unlocked: Dictionary = {}  # id -> bool
+var _achievement_progress: Dictionary = {}  # id -> int (누적 진행도)
+
+# --- 상점 시스템 ---
+const SHOP_ITEMS: Dictionary = {
+	"glove_red": {"name": "붉은 글러브", "kind": "glove_skin", "price": 5, "desc": "붉은색 글러브 스킨"},
+	"glove_blue": {"name": "푸른 글러브", "kind": "glove_skin", "price": 5, "desc": "푸른색 글러브 스킨"},
+	"glove_gold": {"name": "황금 글러브", "kind": "glove_skin", "price": 20, "desc": "화려한 황금 글러브"},
+	"buff_speed": {"name": "아드레날린", "kind": "consumable", "price": 3, "desc": "다음 세션 공격 속도 +15%", "effect": {"attack_speed_mul": 1.15}},
+	"buff_heal": {"name": "에너지 드링크", "kind": "consumable", "price": 3, "desc": "세션 시작 시 HP +20%", "effect": {"start_hp_bonus": 0.20}},
+	"buff_shield": {"name": "바세린", "kind": "consumable", "price": 4, "desc": "다음 세션 피해 무효 1회", "effect": {"damage_block": 1}},
+}
+var _shop_owned_items: Dictionary = {}  # item_id -> bool (glove_skin 등 영구 아이템)
+var _shop_inventory: Dictionary = {}  # item_id -> count (소모성 아이템 개수)
+var _equipped_glove_skin: String = ""
+var _active_buffs: Dictionary = {}  # 세션 시작 시 적용할 버프
+
+# --- 보스 스테이지 ---
+var _boss_phase: int = 0
+var _boss_buffs_selected: Array[Dictionary] = []
+const BOSS_BUFF_OPTIONS: Array[Dictionary] = [
+	{"name": "공격력 증가", "effect": {"player_damage_mul": 1.25}},
+	{"name": "스태미너 효율", "effect": {"stamina_cost_mul": 0.8}},
+	{"name": "철벽", "effect": {"guard_chip_reduction": 0.5}},
+	{"name": "급속 회복", "effect": {"stamina_recover_mul": 1.3}},
+	{"name": "천하장사", "effect": {"max_hp_mul": 1.2}},
+	{"name": "콤보 유지", "effect": {"combo_reset_time_bonus": 2.0}},
+]
+
+# --- 타임어택 Ghost 기록 ---
+var _time_attack_ghost_data: Dictionary = {}  # stage_id -> Array[{time_sec, action}]
 ## OpenCV 카메라 인덱스 (USB 웹캠은 보통 1 이상).
 var _camera_index: int = 0
 ## udp_send_webcam_ml.py 의 --camera-backend (auto|dshow|msmf|default).
@@ -736,6 +793,32 @@ func save_stats() -> void:
 	cfg.set_value("meta", "up_hp", _upgrade_hp)
 	cfg.set_value("meta", "up_sta", _upgrade_stamina)
 	cfg.set_value("meta", "up_rec", _upgrade_recover)
+	# 난이도
+	cfg.set_value("progress", "difficulty", _difficulty)
+	# 별 / 스테이지 기록
+	for sid: String in _stage_stars.keys():
+		cfg.set_value("stage_stars", sid, _stage_stars[sid])
+	for sid: String in _stage_records.keys():
+		var rec: Dictionary = _stage_records[sid]
+		cfg.set_value("stage_records", sid + "_best_time", rec.get("best_time", -1.0))
+		cfg.set_value("stage_records", sid + "_best_combo", rec.get("best_combo", 0))
+		cfg.set_value("stage_records", sid + "_least_dmg", rec.get("least_dmg", -1.0))
+	# 업적
+	for aid: String in _achievements_unlocked.keys():
+		cfg.set_value("achievements_unlocked", aid, _achievements_unlocked[aid])
+	for aid: String in _achievement_progress.keys():
+		cfg.set_value("achievement_progress", aid, _achievement_progress[aid])
+	# 상점
+	for iid: String in _shop_owned_items.keys():
+		cfg.set_value("shop_owned", iid, _shop_owned_items[iid])
+	for iid: String in _shop_inventory.keys():
+		cfg.set_value("shop_inventory", iid, _shop_inventory[iid])
+	cfg.set_value("shop", "equipped_glove_skin", _equipped_glove_skin)
+	# 보스 버프
+	cfg.set_value("boss", "phase", _boss_phase)
+	for i: int in range(_boss_buffs_selected.size()):
+		var bname: String = str(_boss_buffs_selected[i].get("name", ""))
+		cfg.set_value("boss_buffs", "buff_%d" % i, bname)
 	cfg.save(STATS_PATH)
 
 
@@ -823,6 +906,52 @@ func load_stats() -> void:
 		_upgrade_stamina = clampi(int(cfg.get_value("meta", "up_sta", 0)), 0, UPGRADE_MAX_STEPS)
 	if cfg.has_section_key("meta", "up_rec"):
 		_upgrade_recover = clampi(int(cfg.get_value("meta", "up_rec", 0)), 0, UPGRADE_MAX_STEPS)
+	# difficulty
+	if cfg.has_section_key("progress", "difficulty"):
+		var d: String = str(cfg.get_value("progress", "difficulty", DIFFICULTY_NORMAL))
+		if d == DIFFICULTY_EASY or d == DIFFICULTY_NORMAL or d == DIFFICULTY_HARD:
+			_difficulty = d
+	# stars
+	if cfg.has_section("stage_stars"):
+		for sid: String in cfg.get_section_keys("stage_stars"):
+			_stage_stars[sid] = clampi(int(cfg.get_value("stage_stars", sid, 0)), 0, 3)
+	# stage records
+	if cfg.has_section("stage_records"):
+		for key: String in cfg.get_section_keys("stage_records"):
+			if key.ends_with("_best_time"):
+				var sid: String = key.substr(0, key.length() - 10)
+				if not _stage_records.has(sid):
+					_stage_records[sid] = {}
+				_stage_records[sid]["best_time"] = float(cfg.get_value("stage_records", key, -1.0))
+			elif key.ends_with("_best_combo"):
+				var sid: String = key.substr(0, key.length() - 11)
+				if not _stage_records.has(sid):
+					_stage_records[sid] = {}
+				_stage_records[sid]["best_combo"] = int(cfg.get_value("stage_records", key, 0))
+			elif key.ends_with("_least_dmg"):
+				var sid: String = key.substr(0, key.length() - 10)
+				if not _stage_records.has(sid):
+					_stage_records[sid] = {}
+				_stage_records[sid]["least_dmg"] = float(cfg.get_value("stage_records", key, -1.0))
+	# achievements
+	if cfg.has_section("achievements_unlocked"):
+		for aid: String in cfg.get_section_keys("achievements_unlocked"):
+			_achievements_unlocked[aid] = bool(cfg.get_value("achievements_unlocked", aid, false))
+	if cfg.has_section("achievement_progress"):
+		for aid: String in cfg.get_section_keys("achievement_progress"):
+			_achievement_progress[aid] = int(cfg.get_value("achievement_progress", aid, 0))
+	# shop
+	if cfg.has_section("shop_owned"):
+		for iid: String in cfg.get_section_keys("shop_owned"):
+			_shop_owned_items[iid] = bool(cfg.get_value("shop_owned", iid, false))
+	if cfg.has_section("shop_inventory"):
+		for iid: String in cfg.get_section_keys("shop_inventory"):
+			_shop_inventory[iid] = int(cfg.get_value("shop_inventory", iid, 0))
+	if cfg.has_section_key("shop", "equipped_glove_skin"):
+		_equipped_glove_skin = str(cfg.get_value("shop", "equipped_glove_skin", ""))
+	# boss
+	if cfg.has_section_key("boss", "phase"):
+		_boss_phase = int(cfg.get_value("boss", "phase", 0))
 	refresh_combat_derived_from_upgrades()
 
 
@@ -1076,3 +1205,221 @@ func set_training_mode(on: bool) -> void:
 
 func is_training_mode() -> bool:
 	return _training_mode
+
+
+# --- 난이도 ---
+
+func get_difficulty() -> String:
+	return _difficulty
+
+func set_difficulty(d: String) -> void:
+	if d == DIFFICULTY_EASY or d == DIFFICULTY_NORMAL or d == DIFFICULTY_HARD:
+		_difficulty = d
+		save_stats()
+
+func get_difficulty_label() -> String:
+	match _difficulty:
+		DIFFICULTY_EASY: return "EASY"
+		DIFFICULTY_HARD: return "HARD"
+		_: return "NORMAL"
+
+func get_difficulty_enemy_stat_mul() -> float:
+	match _difficulty:
+		DIFFICULTY_EASY: return 0.75
+		DIFFICULTY_HARD: return 1.4
+		_: return 1.0
+
+
+# --- 별(Star) 시스템 ---
+
+func get_stage_stars(stage_id: String) -> int:
+	return _stage_stars.get(stage_id, 0)
+
+func get_all_stage_stars() -> Dictionary:
+	return _stage_stars.duplicate()
+
+func record_stage_stars(stage_id: String, stars: int) -> void:
+	var prev: int = _stage_stars.get(stage_id, 0)
+	_stage_stars[stage_id] = maxi(prev, clampi(stars, 0, 3))
+	save_stats()
+
+func evaluate_stage_stars(clear_sec: float, max_combo: int, damage_taken: float) -> int:
+	var s: int = 1
+	if clear_sec <= 45.0:
+		s += 1
+	if max_combo >= 20:
+		s += 1
+	if damage_taken <= 30.0:
+		s += 1
+	return clampi(s, 0, 3)
+
+func get_stage_record(stage_id: String) -> Dictionary:
+	return _stage_records.get(stage_id, {}).duplicate()
+
+func update_stage_record(stage_id: String, clear_sec: float, max_combo: int, damage_taken: float) -> void:
+	if not _stage_records.has(stage_id):
+		_stage_records[stage_id] = {}
+	var rec: Dictionary = _stage_records[stage_id]
+	var bt: float = rec.get("best_time", -1.0)
+	if bt < 0.0 or clear_sec < bt:
+		rec["best_time"] = clear_sec
+	var bc: int = rec.get("best_combo", 0)
+	rec["best_combo"] = maxi(bc, max_combo)
+	var ld: float = rec.get("least_dmg", -1.0)
+	if ld < 0.0 or damage_taken < ld:
+		rec["least_dmg"] = damage_taken
+	save_stats()
+
+
+# --- 업적 시스템 ---
+
+func get_achievement_defs() -> Dictionary:
+	return ACHIEVEMENT_DEFS.duplicate()
+
+func is_achievement_unlocked(id: String) -> bool:
+	return _achievements_unlocked.get(id, false)
+
+func get_achievement_progress(id: String) -> int:
+	return _achievement_progress.get(id, 0)
+
+func unlock_achievement(id: String) -> bool:
+	if not ACHIEVEMENT_DEFS.has(id):
+		return false
+	if _achievements_unlocked.get(id, false):
+		return false
+	_achievements_unlocked[id] = true
+	save_stats()
+	return true
+
+func bump_achievement_progress(id: String, amount: int = 1) -> void:
+	if not ACHIEVEMENT_DEFS.has(id):
+		return
+	var cur: int = _achievement_progress.get(id, 0)
+	var def: Dictionary = ACHIEVEMENT_DEFS[id]
+	var target: int = int(def.get("target", 1))
+	_achievement_progress[id] = mini(cur + amount, target)
+	if _achievement_progress[id] >= target:
+		unlock_achievement(id)
+	else:
+		save_stats()
+
+func check_and_unlock_achievements_after_session(clear_sec: float, max_combo: int, damage_taken: float, is_clear: bool) -> Array[String]:
+	var newly_unlocked: Array[String] = []
+	if is_clear:
+		bump_achievement_progress("first_blood", 1)
+		if _achievement_progress.get("first_blood", 0) >= 1 and unlock_achievement("first_blood"):
+			newly_unlocked.append("first_blood")
+		if clear_sec <= 30.0 and unlock_achievement("speedrun"):
+			newly_unlocked.append("speedrun")
+		if damage_taken <= 0.01 and unlock_achievement("no_damage"):
+			newly_unlocked.append("no_damage")
+	bump_achievement_progress("combo_10", max_combo)
+	bump_achievement_progress("combo_30", max_combo)
+	bump_achievement_progress("combo_50", max_combo)
+	for aid in ["combo_10", "combo_30", "combo_50"]:
+		if _achievement_progress.get(aid, 0) >= ACHIEVEMENT_DEFS[aid]["target"] and unlock_achievement(aid):
+			newly_unlocked.append(aid)
+	return newly_unlocked
+
+
+# --- 상점 시스템 ---
+
+func get_shop_items() -> Dictionary:
+	return SHOP_ITEMS.duplicate()
+
+func get_shop_inventory() -> Dictionary:
+	return _shop_inventory.duplicate()
+
+func is_item_owned(item_id: String) -> bool:
+	return _shop_owned_items.get(item_id, false)
+
+func get_item_inventory_count(item_id: String) -> int:
+	return _shop_inventory.get(item_id, 0)
+
+func equip_glove_skin(skin_id: String) -> bool:
+	if skin_id == "":
+		_equipped_glove_skin = ""
+		save_stats()
+		return true
+	if not _shop_owned_items.get(skin_id, false):
+		return false
+	var def: Dictionary = SHOP_ITEMS.get(skin_id, {})
+	if def.get("kind", "") != "glove_skin":
+		return false
+	_equipped_glove_skin = skin_id
+	save_stats()
+	return true
+
+func get_equipped_glove_skin() -> String:
+	return _equipped_glove_skin
+
+func try_purchase_item(item_id: String) -> bool:
+	if not SHOP_ITEMS.has(item_id):
+		return false
+	var def: Dictionary = SHOP_ITEMS[item_id]
+	var price: int = int(def.get("price", 0))
+	if _sweat < price:
+		return false
+	var kind: String = def.get("kind", "")
+	if kind == "glove_skin":
+		if _shop_owned_items.get(item_id, false):
+			return false
+		_shop_owned_items[item_id] = true
+	else:
+		_shop_inventory[item_id] = _shop_inventory.get(item_id, 0) + 1
+	_sweat -= price
+	save_stats()
+	return true
+
+func consume_buff_for_session() -> Dictionary:
+	var consumed: Dictionary = {}
+	for item_id: String in _shop_inventory.keys():
+		var count: int = _shop_inventory[item_id]
+		if count <= 0:
+			continue
+		var def: Dictionary = SHOP_ITEMS.get(item_id, {})
+		if def.get("kind", "") != "consumable":
+			continue
+		var effect: Dictionary = def.get("effect", {})
+		if not effect.is_empty():
+			for k: String in effect.keys():
+				consumed[k] = effect[k]
+		_shop_inventory[item_id] = count - 1
+	if not consumed.is_empty():
+		save_stats()
+	return consumed
+
+
+# --- 보스 스테이지 ---
+
+func get_boss_phase() -> int:
+	return _boss_phase
+
+func set_boss_phase(p: int) -> void:
+	_boss_phase = p
+	save_stats()
+
+func get_boss_buffs_selected() -> Array[Dictionary]:
+	return _boss_buffs_selected.duplicate()
+
+func add_boss_buff(buff: Dictionary) -> void:
+	_boss_buffs_selected.append(buff)
+	save_stats()
+
+func reset_boss_buffs() -> void:
+	_boss_buffs_selected.clear()
+	save_stats()
+
+func get_boss_buff_options() -> Array[Dictionary]:
+	return BOSS_BUFF_OPTIONS.duplicate()
+
+func get_active_buff_effects() -> Dictionary:
+	var result: Dictionary = {}
+	for buff: Dictionary in _boss_buffs_selected:
+		var eff: Dictionary = buff.get("effect", {})
+		for k: String in eff.keys():
+			if result.has(k):
+				result[k] = maxf(result[k], eff[k])
+			else:
+				result[k] = eff[k]
+	return result

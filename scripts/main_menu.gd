@@ -6,12 +6,17 @@ const SCENE_HOME_HUB := "res://scenes/home_hub.tscn"
 const SCENE_HOW_TO_PLAY := "res://scenes/ui/how_to_play_panel.tscn"
 const SCENE_BOXING_UPGRADE := "res://games/boxing/scenes/boxing_upgrade_panel.tscn"
 const SCENE_TRAINING := "res://games/boxing/scenes/main.tscn"
+const SCENE_SHOP := "res://scenes/ui/shop_panel.tscn"
+const SCENE_ACHIEVEMENTS := "res://scenes/ui/achievement_panel.tscn"
 
 @onready var _btn_start: Button = $RightPanel/ButtonBox/BtnStart
 @onready var _btn_upgrade: Button = $RightPanel/ButtonBox/BtnUpgrade
 @onready var _btn_how_to_play: Button = $RightPanel/ButtonBox/BtnHowToPlay
 @onready var _btn_training: Button = $RightPanel/ButtonBox/BtnTraining
 @onready var _btn_home: Button = $RightPanel/ButtonBox/BtnHome
+@onready var _btn_shop: Button = $RightPanel/ButtonBox/BtnShop
+@onready var _btn_achievements: Button = $RightPanel/ButtonBox/BtnAchievements
+@onready var _btn_difficulty: Button = $RightPanel/ButtonBox/BtnDifficulty
 
 var _ch_titles: Array[Label] = []
 var _ch_bars: Array[ProgressBar] = []
@@ -28,6 +33,8 @@ var _goal_spin_suppress: bool = false
 
 var _how_to_play_panel: Control
 var _upgrade_panel: Control
+var _shop_panel: Control
+var _achievement_panel: Control
 
 
 func _ready() -> void:
@@ -53,6 +60,13 @@ func _ready() -> void:
 		_btn_training.pressed.connect(_on_training)
 	if _btn_home:
 		_btn_home.pressed.connect(_on_home)
+	if _btn_shop:
+		_btn_shop.pressed.connect(_on_shop)
+	if _btn_achievements:
+		_btn_achievements.pressed.connect(_on_achievements)
+	if _btn_difficulty:
+		_btn_difficulty.pressed.connect(_on_difficulty)
+	_refresh_difficulty_button()
 	_ch_titles = [
 		$LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows/Row0/ChTitle0,
 		$LeftPanel/Scroll/MarginContainer/DailyVBox/ChallengeRows/Row1/ChTitle1,
@@ -246,3 +260,67 @@ func _on_home() -> void:
 	get_tree().paused = false
 	GameState.set_training_mode(false)
 	get_tree().change_scene_to_file(SCENE_HOME_HUB)
+
+
+func _on_shop() -> void:
+	if _shop_panel:
+		return
+	var packed := load(SCENE_SHOP) as PackedScene
+	if not packed:
+		return
+	_shop_panel = packed.instantiate() as Control
+	if _shop_panel:
+		add_child(_shop_panel)
+		_shop_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+		if _shop_panel.has_signal("back_pressed"):
+			_shop_panel.back_pressed.connect(_close_shop)
+
+func _close_shop() -> void:
+	if _shop_panel:
+		_shop_panel.queue_free()
+		_shop_panel = null
+
+
+func _on_achievements() -> void:
+	if _achievement_panel:
+		return
+	var packed := load(SCENE_ACHIEVEMENTS) as PackedScene
+	if not packed:
+		return
+	_achievement_panel = packed.instantiate() as Control
+	if _achievement_panel:
+		add_child(_achievement_panel)
+		_achievement_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+		if _achievement_panel.has_signal("back_pressed"):
+			_achievement_panel.back_pressed.connect(_close_achievements)
+
+func _close_achievements() -> void:
+	if _achievement_panel:
+		_achievement_panel.queue_free()
+		_achievement_panel = null
+
+
+func _on_difficulty() -> void:
+	var cur: String = GameState.get_difficulty()
+	var next: String
+	match cur:
+		GameState.DIFFICULTY_EASY:
+			next = GameState.DIFFICULTY_NORMAL
+		GameState.DIFFICULTY_HARD:
+			next = GameState.DIFFICULTY_EASY
+		_:
+			next = GameState.DIFFICULTY_HARD
+	GameState.set_difficulty(next)
+	_refresh_difficulty_button()
+
+func _refresh_difficulty_button() -> void:
+	if _btn_difficulty:
+		var label: String = GameState.get_difficulty_label()
+		_btn_difficulty.text = "난이도: %s" % label
+		match GameState.get_difficulty():
+			GameState.DIFFICULTY_EASY:
+				_btn_difficulty.add_theme_color_override("font_color", Color(0.55, 0.95, 0.65))
+			GameState.DIFFICULTY_HARD:
+				_btn_difficulty.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45))
+			_:
+				_btn_difficulty.add_theme_color_override("font_color", Color(1.0, 0.92, 0.35))

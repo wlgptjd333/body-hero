@@ -97,6 +97,23 @@ func _ready() -> void:
 	_set_glove_hit(right_glove, false)
 	_setup_combat_feedback()
 	_setup_punch_l_body_sprite()
+	_apply_glove_skin()
+
+func _apply_glove_skin() -> void:
+	var skin: String = GameState.get_equipped_glove_skin()
+	var color: Color = Color.WHITE
+	match skin:
+		"glove_red": color = Color(1.0, 0.35, 0.35)
+		"glove_blue": color = Color(0.35, 0.55, 1.0)
+		"glove_gold": color = Color(1.0, 0.82, 0.2)
+		_:
+			return
+	for g: Area2D in [left_glove, right_glove]:
+		if g == null:
+			continue
+		var spr: Node = g.get_node_or_null("Sprite2D")
+		if spr is Sprite2D:
+			(spr as Sprite2D).modulate = color
 
 
 func _setup_punch_l_body_sprite() -> void:

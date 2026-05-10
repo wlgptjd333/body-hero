@@ -7,10 +7,17 @@ extends Node2D
 signal hit_received(damage: float)
 signal enemy_attack(damage: float)  # 적이 플레이어를 공격할 때 (Main에서 가드/HP 처리)
 signal died
+signal phase_changed(new_phase: int)
 
 @export var max_hp := 100.0
 @export var ai_enabled: bool = true
 var current_hp: float
+
+## 보스 모드 설정
+@export var is_boss: bool = false
+@export var boss_phases: int = 1
+var _current_phase: int = 1
+var _phase_hp_thresholds: Array[float] = []
 
 ## 회피: 대기(랜덤) 후 evade_duration 동안 회피. 공격 텔레그래프 중엔 '시작'만 막고 대기 타이머는 쌓임.
 @export var evade_duration := 0.38
@@ -89,6 +96,7 @@ var _hit_anim_ticket: int = 0
 
 
 func _ready() -> void:
+	_apply_difficulty_stats()
 	current_hp = max_hp
 	_setup_idle_sprite_frames()
 	if sprite:
@@ -100,6 +108,23 @@ func _ready() -> void:
 	_setup_hit_particles()
 	_roll_next_attack_delay()
 	_roll_next_evade_idle_delay()
+
+func _apply_difficulty_stats() -> void:
+	var mul: float = GameState.get_difficulty_enemy_stat_mul()
+	max_hp = maxf(50.0, max_hp * mul)
+	attack_damage = maxf(5.0, attack_damage * mul)
+	# 하드는 공격 빈도도 살짝 증가, 이지는 감소
+	match GameState.get_difficulty():
+		GameState.DIFFICULTY_EASY:
+			attack_delay_min = attack_delay_min * 1.25
+			attack_delay_max = attack_delay_max * 1.25
+			attack_damage = attack_damage * 0.85
+		GameState.DIFFICULTY_HARD:
+			attack_delay_min = attack_delay_min * 0.85
+			attack_delay_max = attack_delay_max * 0.85
+			attack_damage = attack_damage * 1.15
+		_:
+			pass
 
 
 func _setup_idle_sprite_frames() -> void:
@@ -591,6 +616,12 @@ func take_damage(amount: float, punch_type: String = "punch_l") -> void:
 	_flash_hit(punch_type)
 	if current_hp <= 0:
 		current_hp = 0
+		if is_boss and _current_phase < boss_phases:
+			_current_phase += 1
+			phase_changed.emit(_current_phase)
+			# 페이즈 전환: 처음부터 다시 (버프는 외부에서 적용)
+			current_hp = max_hp
+			return
 		_is_dead = true
 		_start_ko()
 
