@@ -72,8 +72,7 @@ func _beautify_ui() -> void:
 		glass.add_child(old_vbox)
 		center.add_child(glass)
 		old_vbox.add_theme_constant_override("separation", 14)
-		# Recenter the vbox inside panel
-		old_vbox.alignment = BoxContainer.ALIGN_CENTER
+		# NOTE: CenterContainer가 자동 중앙정렬하므로 alignment 설정 불필요
 
 
 
