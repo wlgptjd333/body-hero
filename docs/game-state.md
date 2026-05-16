@@ -11,7 +11,7 @@ AutoLoad: `GameState` (`res://scripts/game_state.gd`)
 GameState owns:
 
 - player HP / stamina / guard state
-- upgrade levels (sweat-based)
+- upgrade levels + sweat balance (via `_upgrade_system`)
 - persistent stats, records, stars
 - achievements + progress
 - shop inventory + equipment
@@ -19,14 +19,24 @@ GameState owns:
 - stage definitions + navigation
 - difficulty settings
 - display settings & window size
+- demo mode flag (`_demo_mode`, `enter_demo_mode(amount)`, `is_demo_mode()`)
 
-GameState delegates to internal modules:
+GameState delegates to internal modules (see `scripts/game_state/`):
 
-- `game_state/webcam_bridge_internal.gd` — ML process lifecycle
-- `game_state/workout_tracker.gd` — Calorie estimation and workout sessions
-- `game_state/shop.gd` — Inventory and consumable logic
-- `game_state/daily_challenges.gd` — Daily challenge progress and calendar sync
-- `game_state/persistence.gd` — Save/load serialization
+| Module | Responsibility |
+|--------|---------------|
+| `workout_tracker.gd` | Workout sessions, calorie estimation, body profile |
+| `shop.gd` | Shop items, purchases, equipment |
+| `daily_challenges.gd` | Daily challenge rolling & progress |
+| `persistence.gd` | Save/load to ConfigFile |
+| `achievements.gd` | Achievement defs, unlock, progress |
+| `difficulty.gd` | Difficulty get/set/label/multiplier |
+| `stage_progress.gd` | Stars, records, clear times, stage defs |
+| `boss_manager.gd` | Boss phase, buff selection, effects |
+| `webcam_settings.gd` | Camera/display/window mode settings |
+| `training.gd` | Training mode toggle |
+| `upgrade_system.gd` | Sweat, HP/stamina/recover upgrades |
+| `webcam_bridge_internal.gd` | Webcam ML bridge process management |
 
 ---
 

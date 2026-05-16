@@ -42,12 +42,11 @@ Parameterized by `StageConfig` resource per-stage.
 
 Responsibilities:
 
-* punch animation
-* squat (HP regen) / guard
-* tween logic
-* keyboard input
-* impact timing
-* busy flags
+* punch / uppercut animation (tween + AnimatedSprite2D)
+* guard (3초 timeout 강제 해제, `GUARD_MIN_DURATION`/`GUARD_MAX_DURATION`)
+* squat (HP regen)
+* keyboard + UDP input handling
+* busy flags (per-hand `_busy_left/right`, global `_busy_global`)
 
 ---
 
@@ -55,10 +54,11 @@ Responsibilities:
 
 Responsibilities:
 
-* hit reaction
-* HP management
-* damage handling
-* hit effects
+* **Enemy FSM**: 5 states (IDLE/ATTACK/EVADE/HIT/DEAD), `transition_to()` 단일 창구
+* **Attack sub-phase**: STARTUP→ACTIVE→RECOVERY, animation frame-driven (`frame_changed` signal)
+* hit reaction / VFX (CPUParticles2D multi-layer)
+* damage handling / HP management
+* training respawn (`reset_for_respawn`)
 
 ---
 
