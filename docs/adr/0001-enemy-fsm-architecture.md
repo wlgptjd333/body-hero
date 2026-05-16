@@ -1,0 +1,3 @@
+# Enemy FSM over boolean-gate + parallel-timer
+
+기존 Enemy 행동 시스템은 boolean 플래그(`_is_attacking`, `_is_evading`) + 병렬 타이머(`_update_attack_pattern` / `_update_evade_pattern`)로 동작했으나, 상태 전환 authority가 분산되어(ticket callback / timer / process) transition race와 애니메이션 sync 문제가 발생했다. 5개 상태(EnemyState: IDLE, ATTACK, EVADE, HIT, DEAD)의 단일 `transition_to()` 창구로 전환하고, ATTACK 내부 sub-phase(STARTUP→ACTIVE→RECOVERY)는 AnimatedSprite2D의 frame_changed 시그널로 구동한다. Generic FSM framework를 만들지 않고 `enemy.gd` 내부 enum + match dispatch로 유지한 이유: Godot solo project에서 gameplay feel iteration이 architecture purity보다 중요하고, 외부 contract(`take_damage()`, `is_evading()`, signals)를 유지하면서 최소 변경으로 predictability를 올리는 게 목표였기 때문.
