@@ -5,7 +5,7 @@ ML 서버 없이 동작하는 테스트/개발용 스크립트입니다.
 
 설치: pip install mediapipe opencv-python
 실행: Godot 실행 후, cd tools → python udp_send_webcam.py
-액션: punch_l, punch_r, upper_l, upper_r, guard, guard_end, dodge
+액션: punch_l, punch_r, upper_l, upper_r, guard, guard_end, squat
 
 판정(전부 규칙 기반): 가드=양손이 코보다 높고 가까울 때, 펀치=팔 뻗음, 어퍼컷=손목이 어깨보다 위,
 회피=고개+어깨가 함께 좌/우로 이동할 때.
@@ -351,19 +351,19 @@ def main():
                             last_sent[act] = now
                             last_any_action = now
 
-            # ── 3) 회피 (dodge): 고개와 어깨가 함께 확실히 좌/우로 움직일 때만 ──
+            # ── 3) 스쿼트 (squat): 고개와 어깨가 함께 확실히 좌/우로 움직일 때만 ──
             if action is None and not guarding and (now - last_any_action) >= DEADZONE_SEC:
                 if len(nose_x_hist) >= DODGE_HISTORY and len(shoulder_center_x_hist) >= DODGE_HISTORY:
                     dx_nose = nose_x_hist[-1] - nose_x_hist[-DODGE_HISTORY]
                     dx_shoulder = shoulder_center_x_hist[-1] - shoulder_center_x_hist[-DODGE_HISTORY]
                     if dx_nose < -DODGE_DX_THRESH and dx_shoulder < -DODGE_SHOULDER_MIN:
-                        act = "dodge"
+                        act = "squat"
                         if (now - last_sent.get(act, 0)) >= DODGE_COOLDOWN:
                             action = act
                             last_sent[act] = now
                             last_any_action = now
                     elif dx_nose > DODGE_DX_THRESH and dx_shoulder > DODGE_SHOULDER_MIN:
-                        act = "dodge"
+                        act = "squat"
                         if (now - last_sent.get(act, 0)) >= DODGE_COOLDOWN:
                             action = act
                             last_sent[act] = now

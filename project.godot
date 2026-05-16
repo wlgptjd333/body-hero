@@ -12,6 +12,8 @@ config_version=5
 
 config/name="Body Hero"
 config/tags=PackedStringArray("2d", "animation")
+config/use_custom_user_dir=true
+config/custom_user_dir_name="body-hero"
 run/main_scene="res://scenes/home_hub.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 boot_splash/bg_color=Color(0.11, 0.11, 0.13, 1)

@@ -15,7 +15,7 @@
   가드만 뜨면 --skip-guard-single 으로 단일 가드 모델 단축을 끄고 비교.
   어퍼 윈드업에서 직선이 먼저 나가면: `--upper-windup-punch-suppress`. 직선 잽은 어퍼보다 확정 프레임 짧게·softmax는 어퍼와 동일 하한 권장.
   한 번의 펀치·어퍼에 UDP가 여러 번 나가면: `--attack-rearm-frames`(기본 3). 0이면 끔.
-  Godot UDP 액션: punch_l, punch_r, upper_l, upper_r, guard, dodge …
+  Godot UDP 액션: punch_l, punch_r, upper_l, upper_r, guard, squat …
 """
 import math
 import os
@@ -1288,7 +1288,7 @@ def main():
                                         squat_valid = False
                                         squat_count = 0
                             if squat_valid and squat_armed and squat_count >= SQUAT_CONFIRM_FRAMES:
-                                action = "dodge"
+                                action = "squat"
                                 squat_armed = False
                         else:
                             # none 등: 펀치 카운트는 유지. 동작이 짧아 punch→none→punch 패턴이 흔함.

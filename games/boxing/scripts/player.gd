@@ -463,8 +463,6 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 			_play_squat(_next_squat_left, func(): _busy_global = false)
 			_next_squat_left = not _next_squat_left
 			return true
-		"dodge":
-			return play_action("squat", via_udp)
 		"guard":
 			if _guarding:
 				return false
