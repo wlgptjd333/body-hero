@@ -5,7 +5,7 @@ extends RefCounted
 # Calorie estimation constants (approximate, not medical advice)
 const KCAL_PUNCH := 0.42
 const KCAL_UPPERCUT := 0.55
-const KCAL_SQUAT := 0.30  # 이전 명칭: KCAL_DODGE
+const KCAL_SQUAT := 0.30
 const KCAL_GUARD_PER_SEC := 0.06
 const DEFAULT_WEIGHT_KG := 70.0
 const DEFAULT_HEIGHT_CM := 170.0
