@@ -8,7 +8,7 @@ if not exist "tools\venv_ml\" (
     echo [1/3] Python 가상환경 생성 중...
     python -m venv tools\venv_ml
     if %errorlevel% neq 0 (
-        echo Python이 설치되어 있지 않습니다. https://python.org 에서 3.12를 설치하세요.
+        echo Python이 설치되어 있지 않습니다. https://python.org 에서 3.10을 설치하세요.
         pause
         exit /b 1
     )
