@@ -513,7 +513,7 @@ def main():
     parser.add_argument(
         "--full-body-squat",
         action="store_true",
-        help="스쿼트(dodge) 판정 시 하체 visibility + 엉덩이 하강을 요구. 전신이 보일 때만 스쿼트 인식. 기본은 끔(상반신만으로도 스쿼트 가능).",
+        help="스쿼트 판정 시 하체 visibility + 엉덩이 하강을 요구. 전신이 보일 때만 스쿼트 인식. 기본은 끔(상반신만으로도 스쿼트 가능).",
     )
     parser.add_argument(
         "--punch-confidence",
@@ -1266,7 +1266,7 @@ def main():
                                 other_punch_pred = None
                                 other_punch_count = 0
                         elif pred == "squat":
-                            # 스쿼트 1회(짧게 내려갔다 올라오기)당 dodge 1회만 전송.
+                            # 스쿼트 1회(짧게 내려갔다 올라오기)당 1회만 전송.
                             # 유지 자세에서 반복 전송되지 않도록 squat_armed 로 재장전.
                             punch_l_count = 0
                             punch_r_count = 0

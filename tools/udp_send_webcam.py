@@ -62,11 +62,11 @@ PUNCH_EXTEND_X      = 0.22   # 손목-어깨 x 차이 (팔 길이에 맞게 0.18
 PUNCH_VELOCITY_MIN  = 0.02   # 최소 속도
 PUNCH_HISTORY       = 4
 
-# ── 회피 (dodge): 고개와 어깨가 함께 확실히 좌/우로 움직일 때만 ─────────────────
-DODGE_DX_THRESH   = 0.135   # 코 x가 이만큼 이상 이동 (작으면 펀치/고개만 살짝 움직여도 오인)
-DODGE_SHOULDER_MIN = 0.065  # 어깨 중심 x도 같은 방향으로 이만큼 이상 이동해야 회피 (몸이 따라와야 함)
-DODGE_HISTORY     = 6       # 몇 프레임 구간으로 이동량 계산
-DODGE_COOLDOWN    = 0.85    # 회피 쿨다운 (초)
+# ── 스쿼트: 고개와 어깨가 함께 확실히 좌/우로 움직일 때만 ─────────────────
+SQUAT_DX_THRESH   = 0.135   # 코 x가 이만큼 이상 이동 (작으면 펀치/고개만 살짝 움직여도 오인)
+SQUAT_SHOULDER_MIN = 0.065  # 어깨 중심 x도 같은 방향으로 이만큼 이상 이동해야 (몸이 따라와야 함)
+SQUAT_HISTORY     = 6       # 몇 프레임 구간으로 이동량 계산
+SQUAT_COOLDOWN    = 0.85    # 스쿼트 쿨다운 (초)
 
 
 # ── 기타 ─────────────────────────────────────────────────────
@@ -353,18 +353,18 @@ def main():
 
             # ── 3) 스쿼트 (squat): 고개와 어깨가 함께 확실히 좌/우로 움직일 때만 ──
             if action is None and not guarding and (now - last_any_action) >= DEADZONE_SEC:
-                if len(nose_x_hist) >= DODGE_HISTORY and len(shoulder_center_x_hist) >= DODGE_HISTORY:
-                    dx_nose = nose_x_hist[-1] - nose_x_hist[-DODGE_HISTORY]
-                    dx_shoulder = shoulder_center_x_hist[-1] - shoulder_center_x_hist[-DODGE_HISTORY]
-                    if dx_nose < -DODGE_DX_THRESH and dx_shoulder < -DODGE_SHOULDER_MIN:
+                if len(nose_x_hist) >= SQUAT_HISTORY and len(shoulder_center_x_hist) >= SQUAT_HISTORY:
+                    dx_nose = nose_x_hist[-1] - nose_x_hist[-SQUAT_HISTORY]
+                    dx_shoulder = shoulder_center_x_hist[-1] - shoulder_center_x_hist[-SQUAT_HISTORY]
+                    if dx_nose < -SQUAT_DX_THRESH and dx_shoulder < -SQUAT_SHOULDER_MIN:
                         act = "squat"
-                        if (now - last_sent.get(act, 0)) >= DODGE_COOLDOWN:
+                        if (now - last_sent.get(act, 0)) >= SQUAT_COOLDOWN:
                             action = act
                             last_sent[act] = now
                             last_any_action = now
-                    elif dx_nose > DODGE_DX_THRESH and dx_shoulder > DODGE_SHOULDER_MIN:
+                    elif dx_nose > SQUAT_DX_THRESH and dx_shoulder > SQUAT_SHOULDER_MIN:
                         act = "squat"
-                        if (now - last_sent.get(act, 0)) >= DODGE_COOLDOWN:
+                        if (now - last_sent.get(act, 0)) >= SQUAT_COOLDOWN:
                             action = act
                             last_sent[act] = now
                             last_any_action = now

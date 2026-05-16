@@ -47,7 +47,7 @@ var _phase_hp_thresholds: Array[float] = []
 @export var hit_punch_l_offset: Vector2 = Vector2(-44, -10)
 @export var hit_punch_r_offset: Vector2 = Vector2(44, -10)
 ## 회피 시 스프라이트를 좌/우로 이동하는 픽셀 거리(랜덤 방향)
-@export var evade_dodge_offset_pixels: float = 72.0
+@export var evade_offset_pixels: float = 72.0
 
 var _current_state: int = EnemyState.IDLE
 var _state_enter_time: int = 0
@@ -720,9 +720,9 @@ func _start_evade_tween() -> void:
 	if not sprite:
 		return
 	_evade_side_sign = -1.0 if randf() < 0.5 else 1.0
-	var dodge_pos := Vector2(evade_dodge_offset_pixels * _evade_side_sign, -4.0)
+	var evade_pos := Vector2(evade_offset_pixels * _evade_side_sign, -4.0)
 	_evade_tween = create_tween()
-	_evade_tween.tween_property(sprite, "position", dodge_pos, 0.1).set_trans(Tween.TRANS_QUAD)
+	_evade_tween.tween_property(sprite, "position", evade_pos, 0.1).set_trans(Tween.TRANS_QUAD)
 
 
 func _play_hit_anim() -> void:
