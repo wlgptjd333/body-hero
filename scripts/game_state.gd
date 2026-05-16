@@ -18,44 +18,42 @@ const _WebcamSettings = preload("res://scripts/game_state/webcam_settings.gd")
 const _Training = preload("res://scripts/game_state/training.gd")
 const _UpgradeSystem = preload("res://scripts/game_state/upgrade_system.gd")
 
-# 플레이어 (최대 체력·스태미너·초당 회복은 업그레이드 반영 후 `refresh_combat_derived_from_upgrades`가 갱신)
-var player_hp: float = BASE_PLAYER_MAX_HP
-var player_max_hp: float = BASE_PLAYER_MAX_HP
-var stamina: float = BASE_STAMINA_MAX
-var stamina_max: float = BASE_STAMINA_MAX
-var stamina_passive_recover_per_sec: float = BASE_STAMINA_PASSIVE_RECOVER
+# ── 플레이어 스탯 (game_constants.gd가 단일 진실 공급원, _C로 접근) ──
+var player_hp: float = _C.BASE_PLAYER_MAX_HP
+var player_max_hp: float = _C.BASE_PLAYER_MAX_HP
+var stamina: float = _C.BASE_STAMINA_MAX
+var stamina_max: float = _C.BASE_STAMINA_MAX
+var stamina_passive_recover_per_sec: float = _C.BASE_STAMINA_PASSIVE_RECOVER
 
-# 스태미너 소모량 (피트니스 복싱 밸런스). 잽:어퍼 ≈ 1:2 유지
-const STAMINA_PUNCH := 5
-const STAMINA_UPPERCUT := 10
-const STAMINA_SQUAT := 5
-
-# Exported constants for external callers (values mirrored from modules)
+# ── 외부 노출 상수 (값은 game_constants.gd가 단일 진실 공급원) ──
+const _C = preload("res://scripts/game_state/game_constants.gd")
+const STAMINA_PUNCH := _C.STAMINA_PUNCH
+const STAMINA_UPPERCUT := _C.STAMINA_UPPERCUT
+const STAMINA_SQUAT := _C.STAMINA_SQUAT
+const BASE_PLAYER_MAX_HP := _C.BASE_PLAYER_MAX_HP
+const BASE_STAMINA_MAX := _C.BASE_STAMINA_MAX
+const BASE_STAMINA_PASSIVE_RECOVER := _C.BASE_STAMINA_PASSIVE_RECOVER
+const UPGRADE_HP_PER_STEP := _C.UPGRADE_HP_PER_STEP
+const UPGRADE_STAMINA_PER_STEP := _C.UPGRADE_STAMINA_PER_STEP
+const UPGRADE_RECOVER_PER_STEP := _C.UPGRADE_RECOVER_PER_STEP
+const UPGRADE_MAX_STEPS := _C.UPGRADE_MAX_STEPS
 const DIFFICULTY_EASY := "easy"
 const DIFFICULTY_NORMAL := "normal"
 const DIFFICULTY_HARD := "hard"
-const BASE_PLAYER_MAX_HP := 200.0
-const BASE_STAMINA_MAX := 100.0
-const BASE_STAMINA_PASSIVE_RECOVER := 10.0
-const UPGRADE_HP_PER_STEP := 5.0
-const UPGRADE_STAMINA_PER_STEP := 5.0
-const UPGRADE_RECOVER_PER_STEP := 0.5
-const UPGRADE_MAX_STEPS := 20
+const GENDER_MALE := "male"
+const GENDER_FEMALE := "female"
+const GENDER_OTHER := "other"
 const ML_SPEED_PROFILE_VALUES: Array[String] = ["balanced", "fast_react", "fast_combo", "max_speed"]
 const CAMERA_BACKEND_VALUES := ["auto", "dshow", "msmf", "default"]
+const STATS_KEYS := ["guard", "squat", "punch_l", "punch_r", "upper_l", "upper_r"]
 
-# 가드: 플레이어가 가드 중이면 true
+# ── 가드 / 데모 모드 ──
 var is_guarding: bool = false
 var _has_guard_mastery: bool = false
 var _demo_mode: bool = false
 
-const GENDER_MALE := "male"
-const GENDER_FEMALE := "female"
-const GENDER_OTHER := "other"
-
-# 통계: 가드, 스쿼트, 왼/오 펀치, 왼/오 어퍼 (누적, 저장됨)
-const STATS_KEYS := ["guard", "squat", "punch_l", "punch_r", "upper_l", "upper_r"]
-var _punch_counts: Dictionary = {}  # key -> int (현재 세션 + 로드된 누적)
+# ── 통계 (누적) ──
+var _punch_counts: Dictionary = {}
 
 # DAILY_CHALLENGE_DEFS/POOL_IDS moved to daily_challenges.gd
 # STAGE_DEFS moved to stage_progress.gd
@@ -770,11 +768,11 @@ func reset_all_data() -> void:
 	_punch_counts = {}
 	for k: String in STATS_KEYS:
 		_punch_counts[k] = 0
-	player_hp = BASE_PLAYER_MAX_HP
-	player_max_hp = BASE_PLAYER_MAX_HP
-	stamina = BASE_STAMINA_MAX
-	stamina_max = BASE_STAMINA_MAX
-	stamina_passive_recover_per_sec = BASE_STAMINA_PASSIVE_RECOVER
+	player_hp = _C.BASE_PLAYER_MAX_HP
+	player_max_hp = _C.BASE_PLAYER_MAX_HP
+	stamina = _C.BASE_STAMINA_MAX
+	stamina_max = _C.BASE_STAMINA_MAX
+	stamina_passive_recover_per_sec = _C.BASE_STAMINA_PASSIVE_RECOVER
 	is_guarding = false
 	_has_guard_mastery = false
 	_Persistence.delete_save()

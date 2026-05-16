@@ -7,13 +7,14 @@ var _upgrade_stamina: int = 0
 var _upgrade_recover: int = 0
 var _on_refresh: Callable = func(_p_max_hp: float, _p_sta_max: float, _p_rec: float): pass
 
-const BASE_PLAYER_MAX_HP := 200.0
-const BASE_STAMINA_MAX := 100.0
-const BASE_STAMINA_PASSIVE_RECOVER := 10.0
-const UPGRADE_MAX_STEPS := 20
-const UPGRADE_HP_PER_STEP := 5.0
-const UPGRADE_STAMINA_PER_STEP := 5.0
-const UPGRADE_RECOVER_PER_STEP := 0.5
+const _C = preload("res://scripts/game_state/game_constants.gd")
+const BASE_PLAYER_MAX_HP := _C.BASE_PLAYER_MAX_HP
+const BASE_STAMINA_MAX := _C.BASE_STAMINA_MAX
+const BASE_STAMINA_PASSIVE_RECOVER := _C.BASE_STAMINA_PASSIVE_RECOVER
+const UPGRADE_MAX_STEPS := _C.UPGRADE_MAX_STEPS
+const UPGRADE_HP_PER_STEP := _C.UPGRADE_HP_PER_STEP
+const UPGRADE_STAMINA_PER_STEP := _C.UPGRADE_STAMINA_PER_STEP
+const UPGRADE_RECOVER_PER_STEP := _C.UPGRADE_RECOVER_PER_STEP
 
 
 func set_save_fn(fn: Callable) -> void:

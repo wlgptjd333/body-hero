@@ -3,7 +3,7 @@ extends Node2D
 ## Parameterized by StageConfig resource for stage-specific values.
 ## 게임 로직은 CombatDirector, UI는 UIDirector, 스테이지는 StageManager에 위임.
 
-const VALID_ACTIONS: Array[String] = ["punch_l", "punch_r", "upper_l", "upper_r", "guard", "guard_end", "squat", "dodge"]
+const VALID_ACTIONS: Array[String] = ["punch_l", "punch_r", "upper_l", "upper_r", "guard", "guard_end", "squat"]  # "dodge" → "squat"으로 통합, 하위호환은 player.gd에서 처리
 const PUNCH_ACTIONS: Array[String] = ["punch_l", "punch_r", "upper_l", "upper_r"]
 
 const SCENE_MAIN_MENU: String = "res://scenes/main_menu.tscn"

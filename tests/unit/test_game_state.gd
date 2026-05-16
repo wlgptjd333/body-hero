@@ -248,6 +248,20 @@ func test_stamina_recovery_base_constant_is_10() -> void:
 	assert_eq(GameState.BASE_STAMINA_PASSIVE_RECOVER, 10.0, "기본 회복 상수 10.0")
 
 
+func test_game_state_constants_match_game_constants() -> void:
+	const _C = preload("res://scripts/game_state/game_constants.gd")
+	assert_eq(GameState.BASE_STAMINA_PASSIVE_RECOVER, _C.BASE_STAMINA_PASSIVE_RECOVER, "BASE_STAMINA_PASSIVE_RECOVER 일치")
+	assert_eq(GameState.BASE_STAMINA_MAX, _C.BASE_STAMINA_MAX, "BASE_STAMINA_MAX 일치")
+	assert_eq(GameState.BASE_PLAYER_MAX_HP, _C.BASE_PLAYER_MAX_HP, "BASE_PLAYER_MAX_HP 일치")
+	assert_eq(GameState.UPGRADE_MAX_STEPS, _C.UPGRADE_MAX_STEPS, "UPGRADE_MAX_STEPS 일치")
+	assert_eq(GameState.UPGRADE_HP_PER_STEP, _C.UPGRADE_HP_PER_STEP, "UPGRADE_HP_PER_STEP 일치")
+	assert_eq(GameState.UPGRADE_STAMINA_PER_STEP, _C.UPGRADE_STAMINA_PER_STEP, "UPGRADE_STAMINA_PER_STEP 일치")
+	assert_eq(GameState.UPGRADE_RECOVER_PER_STEP, _C.UPGRADE_RECOVER_PER_STEP, "UPGRADE_RECOVER_PER_STEP 일치")
+	assert_eq(GameState.STAMINA_PUNCH, _C.STAMINA_PUNCH, "STAMINA_PUNCH 일치")
+	assert_eq(GameState.STAMINA_UPPERCUT, _C.STAMINA_UPPERCUT, "STAMINA_UPPERCUT 일치")
+	assert_eq(GameState.STAMINA_SQUAT, _C.STAMINA_SQUAT, "STAMINA_SQUAT 일치")
+
+
 # =============================================================================
 # GameState → 모듈 delegation 계약: 모든 public 위임 함수가 실제 모듈에 구현되어 있는지 검증
 # =============================================================================
