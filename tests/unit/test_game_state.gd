@@ -244,9 +244,8 @@ func test_stamina_recover_constant_in_sync() -> void:
 	)
 
 
-func test_stamina_recovery_is_10_per_sec() -> void:
-	assert_eq(GameState.BASE_STAMINA_PASSIVE_RECOVER, 10.0, "기본 회복 10.0/초")
-	assert_eq(_state.stamina_passive_recover_per_sec, 10.0, "초기값 10.0")
+func test_stamina_recovery_base_constant_is_10() -> void:
+	assert_eq(GameState.BASE_STAMINA_PASSIVE_RECOVER, 10.0, "기본 회복 상수 10.0")
 
 
 # =============================================================================

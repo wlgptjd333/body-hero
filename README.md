@@ -104,4 +104,4 @@ GUT 테스트 프레임워크 (59개, Godot 4.6):
 | Python | 3.12 |
 | TensorFlow/Keras | 2.16+ |
 | MediaPipe | 0.10+ |
-| GUT (테스트) | 9.4.0 |
+
