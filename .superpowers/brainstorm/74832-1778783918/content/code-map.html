@@ -1,0 +1,140 @@
+<h2>상세 설계 — Section 5: Code Map</h2>
+<p class="subtitle">enemy.gd 리팩터링 후 파일 구조 미리보기</p>
+
+<div class="section">
+  <h3>enemy.gd — 예상 구조 (764 → ~550줄)</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+extends Node2D
+
+# ===== Enums =====                                    ~15줄
+enum EnemyState { IDLE, ATTACK, EVADE, HIT, DEAD }
+enum AttackPhase { STARTUP, ACTIVE, RECOVERY }
+
+# ===== Exports / Config =====                         ~30줄
+@export var ...
+var attack_delay_min/max, evade_delay_min/max 등 (기존 유지)
+
+# ===== State =====                                    ~15줄
+var _current_state: EnemyState
+var _attack_phase: AttackPhase
+var _is_transitioning: bool
+var _state_enter_time: int
+
+# ===== Timers =====                                   ~10줄
+var _attack_idle_timer: float
+var _evade_idle_timer: float
+var _attack_phase_timer: float
+var _hit_timer: float
+
+# ===== Lifecycle =====                                ~40줄
+func _ready(): ...
+func _process(delta):
+    if _current_state == DEAD: return
+    if not ai_enabled: return
+    match _current_state:
+        IDLE:   _update_idle(delta)
+        ATTACK: _update_attack(delta)
+        EVADE:  _update_evade(delta)
+        HIT:    _update_hit(delta)
+
+# ===== Transition =====                               ~20줄
+func transition_to(next: EnemyState, reason := ""): ...
+func _enter_state(state: EnemyState): ...
+func _exit_state(state: EnemyState): ...
+
+# ===== IDLE =====                                     ~20줄
+func _update_idle(delta): ...
+func _reset_timers(): ...
+
+# ===== ATTACK =====                                   ~40줄
+func _update_attack(delta): ...
+func _start_attack(): ...
+func _emit_impact(): ...
+
+# ===== EVADE =====                                    ~15줄
+func _update_evade(delta): ...
+func _start_evade_tween(): ...
+
+# ===== HIT =====                                      ~20줄
+func _update_hit(delta): ...
+func take_damage(damage: float): ...
+
+# ===== DEAD =====                                     ~25줄
+func _start_ko(): ...
+
+# ===== Difficulty =====                               ~30줄
+func _apply_difficulty_stats(difficulty: String): ...
+
+# ===== External API =====                             ~10줄
+func is_evading() -> bool: ...
+func reset_for_respawn(): ...
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>제거되는 것들</h3>
+  <div class="pros-cons">
+    <div class="cons">
+      <h4>🗑️ 제거</h4>
+      <ul>
+        <li><code>_is_attacking</code> boolean flag</li>
+        <li><code>_is_evading</code> boolean flag</li>
+        <li><code>_is_dead</code> boolean flag</li>
+        <li><code>_hit_anim_ticket</code> (ticket 시스템)</li>
+        <li><code>_update_attack_pattern(delta)</code> (병렬 루프)</li>
+        <li><code>_update_evade_pattern(delta)</code> (병렬 루프)</li>
+        <li><code>_current_enemy_state_string</code> etc.</li>
+      </ul>
+    </div>
+    <div class="pros">
+      <h4>📄 유지 (재구성)</h4>
+      <ul>
+        <li>모든 export 변수 (@export)</li>
+        <li><code>take_damage(damage)</code> (내부만 변경)</li>
+        <li><code>_flash_hit()</code> VFX</li>
+        <li>모든 시그널 + 애니메이션 연결</li>
+        <li>난이도/스테이지 config 연동</li>
+        <li>Boss phase 처리</li>
+        <li>Training mode</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>진행 상황 요약</h3>
+  <div class="cards">
+    <div class="card">
+      <div class="card-body">
+        <h4>✅ Section 1: Core FSM</h4>
+        <p>EnemyState enum, transition_to, enter/exit lifecycle, _process dispatch</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h4>✅ Section 2: ATTACK Lifecycle</h4>
+        <p>STARTUP → ACTIVE → RECOVERY sub-phase, 난이도 연동 recovery</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h4>✅ Section 3: HIT State</h4>
+        <p>최우선 인터럽트, stagger timer, 콤보 재진입, _exit_state cleanup</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h4>✅ Section 4: Integration</h4>
+        <p>CombatDirector 최소 변경, Boss, StageConfig, Difficulty, DEBUG_FSM</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h4>✅ Section 5: Code Map</h4>
+        <p>enemy.gd 예상 구조, 제거/유지 목록</p>
+      </div>
+    </div>
+  </div>
+</div>

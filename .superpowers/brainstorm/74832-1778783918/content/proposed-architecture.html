@@ -1,0 +1,102 @@
+<h2>제안: 최소 FSM + Centralized Transition</h2>
+<p class="subtitle">"Predictable transitions" — 거대한 프레임워크 말고, 작고 단단하게</p>
+
+<div class="section">
+  <h3>핵심 구조</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+enum EnemyState {
+  IDLE,
+  ATTACK,
+  EVADE,
+  HIT,
+  DEAD
+}
+
+# 모든 전환은 한 곳에서
+func transition_to(next: EnemyState) -> void:
+    _exit_state(_current_state)
+    _current_state = next
+    _enter_state(_current_state)
+
+# _process가 현재 상태 하나만 본다
+func _process(delta: float) -> void:
+    match _current_state:
+        IDLE:   _update_idle(delta)
+        ATTACK: _update_attack(delta)
+        EVADE:  _update_evade(delta)
+        HIT:    _update_hit(delta)
+        DEAD:   return
+
+# timer ownership centralized
+# attack_timer, evade_timer는
+# 각 state가 enter/exit 시에만 관리
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>상태 전환 규칙</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+     ┌──────────────────────────────────────────┐
+     │                IDLE                      │
+     │  (중립 상태, 유일하게 타이머 누적)        │
+     └──┬──────────────┬──────────────┬─────────┘
+        │              │              │
+   idle≥attack_delay  idle≥evade     take_damage
+        │              │              │
+   ┌────▼────┐   ┌────▼────┐    ┌────▼────┐
+   │ ATTACK  │   │ EVADE   │    │  HIT    │◄──────────────┐
+   │         │   │         │    │(최우선   │               │
+   │ STARTUP │   │ 0.38s   │    │ 인터럽트)│               │
+   │ ACTIVE  │   │ 후 IDLE │    │         │               │
+   │ RECOVERY│   └─────────┘    │ stagger │               │
+   └────┬────┘                  │ recovery│               │
+        │                       └────┬────┘               │
+   attack_done                   stagger_end              │
+        │                       or take_damage            │
+        │                          (재진입)               │
+        └────────────┬──────────────┘                     │
+                     │  (attack/evade timer는             │
+                     │   IDLE에 들어올 때만 재설정)        │
+                     ▼                                    │
+              ┌──────────┐                                │
+              │   IDLE   ├────────────────────────────────┘
+              └──────────┘
+                     │
+                 HP &lt;= 0
+                     │
+              ┌──────▼──────┐
+              │ DEAD → KO   │
+              └─────────────┘
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>기존 대비 변경점</h3>
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>✅ 유지되는 것</h4>
+      <ul>
+        <li>모든 기존 난이도 스케일링 로직</li>
+        <li>Boss phase 시스템 (phase_changed 시그널)</li>
+        <li>StageConfig 기반 스탯</li>
+        <li>CombatDirector의 hit/miss 판정</li>
+        <li>애니메이션 리소스 (AnimatedSprite2D)</li>
+        <li>회피/공격 타이밍 값들 (delay min/max, duration 등)</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>🔄 바뀌는 것</h4>
+      <ul>
+        <li>boolean flags → enum state (1 current state)</li>
+        <li>병렬 _update_attack + _update_evade → match state</li>
+        <li>ticket 방식 HIT → 상태 진입/퇴장</li>
+        <li>ATTACK: 단일 상태 → STARTUP/ACTIVE/RECOVERY sub-phase</li>
+        <li>타이머: 각 상태 소유 → IDLE에서만 누적</li>
+      </ul>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,85 @@
+[gd_scene format=3 uid="uid://dlwymaupuyo4q"]
+
+[ext_resource type="Script" uid="uid://dbv1b6e5ixmna" path="res://scripts/ui/how_to_play_panel.gd" id="1_script"]
+
+[node name="HowToPlayPanel" type="Control" unique_id=1435877961]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=665032273]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.08, 0.1, 0.9)
+
+[node name="Panel" type="Panel" parent="." unique_id=1477884939]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -240.0
+offset_right = 320.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=1326976622]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Panel/VBox" unique_id=1621525310]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "← 메뉴로"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBox" unique_id=2007356776]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Content" type="RichTextLabel" parent="Panel/VBox/ScrollContainer" unique_id=742335545]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="NavRow" type="HBoxContainer" parent="Panel/VBox" unique_id=1980865641]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnPrev" type="Button" parent="Panel/VBox/NavRow" unique_id=824212092]
+layout_mode = 2
+text = "← 이전"
+
+[node name="PageLabel" type="Label" parent="Panel/VBox/NavRow" unique_id=517241548]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "1 / 5"
+horizontal_alignment = 1
+
+[node name="BtnNext" type="Button" parent="Panel/VBox/NavRow" unique_id=1894384013]
+layout_mode = 2
+text = "다음 →"

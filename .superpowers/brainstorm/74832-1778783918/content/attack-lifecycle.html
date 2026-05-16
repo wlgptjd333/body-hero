@@ -1,0 +1,143 @@
+<h2>상세 설계 — Section 2: ATTACK Lifecycle</h2>
+<p class="subtitle">STARTUP → ACTIVE → RECOVERY — ATTACK 내부 implementation detail</p>
+
+<div class="section">
+  <h3>AttackPhase enum (ATTACK 상태 내부 전용)</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+# EnemyState.ATTACK 내부에서만 사용
+enum AttackPhase {
+    STARTUP,   # 텔레그래프, 애니메이션 재생
+    ACTIVE,    # hit window (매우 짧음)
+    RECOVERY   # 후딜, 취약 시간
+}
+
+var _attack_phase: AttackPhase = AttackPhase.STARTUP
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>타이밍 구조</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+# 기존 값 거의 그대로 사용
+var attack_telegraph_duration := 0.7      # STARTUP 길이
+var attack_active_duration := 0.08        # ACTIVE hit window (매우 짧게)
+var attack_recovery_duration := 0.3       # RECOVERY 후딜
+var attack_impact_frame_index := 2        # ACTIVE 시작 프레임 (참고용)
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Enter → Update 흐름</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+func _enter_state(state: EnemyState) -> void:
+    match state:
+        ATTACK:
+            _attack_phase = AttackPhase.STARTUP
+            _attack_phase_timer = attack_telegraph_duration
+            _play_attack_animation()
+
+func _update_attack(delta: float) -> void:
+    _attack_phase_timer -= delta
+    match _attack_phase:
+        AttackPhase.STARTUP:
+            if _attack_phase_timer &lt;= 0.0:
+                _attack_phase = AttackPhase.ACTIVE
+                _attack_phase_timer = attack_active_duration
+                _emit_impact()  # CombatDirector로 시그널
+
+        AttackPhase.ACTIVE:
+            if _attack_phase_timer &lt;= 0.0:
+                _attack_phase = AttackPhase.RECOVERY
+                _attack_phase_timer = attack_recovery_duration
+
+        AttackPhase.RECOVERY:
+            if _attack_phase_timer &lt;= 0.0:
+                transition_to(EnemyState.IDLE, "attack complete")
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>ATTACK이 인터럽트될 때 (HIT)</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+func _exit_state(state: EnemyState) -> void:
+    match state:
+        ATTACK:
+            _stop_attack_animation()
+            # _attack_phase_timer는 다음 ATTACK 진입 시 초기화됨
+
+# HIT로 전환 시 처리 순서
+func take_damage(damage: float) -> void:
+    if _current_state == EnemyState.DEAD:
+        return
+    # 데미지 계산
+    # ...
+    if _current_state == EnemyState.ATTACK:
+        # ATTACK 중 hit → 애니메이션 중단 → HIT
+        _cancel_attack()
+    transition_to(EnemyState.HIT, "take_damage")
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>ATTACK phase 타이밍 다이어그램</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+time ──────────────────────────────────────────────▶
+
+    |←── STARTUP ──→|← ACTIVE →|←── RECOVERY ──→|
+    |    0.7s        |  0.08s   |    0.25s       |
+    |                |          |                 |
+    | telegraph      | hit      | 취약: 회피/공격 |
+    | animation 재생  | window   | 불가, 다음 대기 |
+    | interrupt 가능  | 데미지   | interrupt 가능 |
+    | (HIT)          | 판정     | (HIT)           |
+    |                |          |                 |
+    └────────────────┴──────────┴─────────────────┘
+                                |
+                       timer expires → IDLE
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>난이도 연동</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+# _apply_difficulty_stats()에서 recovery 조정
+match difficulty:
+    EASY:
+        recovery_mult = 1.5  # 긴 후딜 → 플레이어에게 유리
+    HARD:
+        recovery_mult = 0.7  # 짧은 후딜 → 빠른 재공격
+
+attack_recovery_duration = base_recovery * recovery_mult
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>EVADE 상태 — 비교적 단순</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+func _enter_state(state: EnemyState) -> void:
+    match state:
+        EVADE:
+            _start_evade_tween()
+
+func _update_evade(delta: float) -> void:
+    # tween이 끝나면 자동으로 callback
+    pass  # tween이 이동 처리
+
+func _on_evade_tween_finished() -> void:
+    transition_to(EnemyState.IDLE, "evade complete")
+    </pre>
+  </div>
+</div>

@@ -1,0 +1,153 @@
+<h2>상세 설계 — Section 1: Core FSM</h2>
+<p class="subtitle">"enemy.gd 내에서 시작, 프레임워크 분리 금지"</p>
+
+<div class="section">
+  <h3>EnemyState enum</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+enum EnemyState {
+    IDLE,    # 유일한 decision state
+    ATTACK,  # 내부에 STARTUP/ACTIVE/RECOVERY sub-phase
+    EVADE,   # 회피 이동
+    HIT,     # 최우선 인터럽트 (피격/경직)
+    DEAD     # KO 시퀀스, 종단 상태
+}
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>transition_to() — 모든 전환의 단일 창구</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+var _current_state: EnemyState = EnemyState.IDLE
+
+func transition_to(next: EnemyState) -> void:
+    if next == _current_state:
+        return
+    _exit_state(_current_state)
+    _current_state = next
+    _enter_state(_current_state)
+
+func _enter_state(state: EnemyState) -> void:
+    match state:
+        IDLE:
+            _reset_timers()      # attack/evade idle timer만 초기화
+            _select_next_action() # 바로 다음 행동 결정 가능
+        ATTACK:
+            _attack_phase = AttackPhase.STARTUP
+            _start_attack_telegraph()
+        EVADE:
+            _start_evade_tween()
+        HIT:
+            _cancel_attack()     # 진행 중인 attack 정리
+            _play_hit_animation()
+        DEAD:
+            _start_ko_sequence()
+
+func _exit_state(state: EnemyState) -> void:
+    match state:
+        ATTACK:
+            _cleanup_attack_timers()
+        EVADE:
+            _cleanup_evade_tween()
+        HIT:
+            # hit recovery 끝나면 자연스럽게
+    # IDLE/DEAD: no cleanup needed
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>_process(delta) — 단일 디스패치</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+func _process(delta: float) -> void:
+    if _current_state == EnemyState.DEAD:
+        return
+    if not ai_enabled:
+        return
+    match _current_state:
+        EnemyState.IDLE:
+            _update_idle(delta)
+        EnemyState.ATTACK:
+            _update_attack(delta)
+        EnemyState.EVADE:
+            _update_evade(delta)
+        EnemyState.HIT:
+            _update_hit(delta)
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>IDLE — 유일한 decision state</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+func _update_idle(delta: float) -> void:
+    _attack_idle_timer -= delta
+    _evade_idle_timer -= delta
+
+    if _attack_idle_timer &lt;= 0.0:
+        transition_to(EnemyState.ATTACK)
+        return
+    if _evade_idle_timer &lt;= 0.0:
+        transition_to(EnemyState.EVADE)
+        return
+    # 둘 다 준비 안 됐으면 대기
+
+# 타이머 리셋 시에만 난이도 스케일링 적용
+func _reset_timers() -> void:
+    _attack_idle_timer = randf_range(
+        attack_delay_min * _difficulty_mult,
+        attack_delay_max * _difficulty_mult
+    )
+    _evade_idle_timer = randf_range(
+        evade_idle_min * _difficulty_mult,
+        evade_idle_max * _difficulty_mult
+    )
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>전환 규칙 요약</h3>
+  <div class="cards">
+    <div class="card">
+      <div class="card-body">
+        <h4>IDLE → ATTACK</h4>
+        <p>attack idle timer 만료</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h4>IDLE → EVADE</h4>
+        <p>evade idle timer 만료</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h4>IDLE → HIT</h4>
+        <p>take_damage() 호출</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h4>ATTACK/EVADE/HIT → HIT</h4>
+        <p>take_damage()는 어느 상태에서도 HIT로 전환 (인터럽트)</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h4>ATTACK/EVADE/HIT → IDLE</h4>
+        <p>각 상태의 행동 완료 시</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <h4>* → DEAD</h4>
+        <p>HP ≤ 0, 종단 상태</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,143 @@
+<h2>상세 설계 — Section 3: HIT State</h2>
+<p class="subtitle">최우선 인터럽트 — "HIT는 상태다"</p>
+
+<div class="section">
+  <h3>HIT의 역할</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+HIT는:
+  - 어느 상태에서든 진입 가능 (IDLE/ATTACK/EVADE)
+  - stagger duration 동안 경직
+  - stagger 종료 후 항상 IDLE로 복귀
+  - HIT 중에도 HIT 재진입 가능 (연속타)
+
+HIT가 아닌 것:
+  - 행동 선택 안 함 (decision은 IDLE만)
+  - 타이머 누적 안 함
+  - 데미지/사망 판정은 take_damage()에서 처리
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>HIT timing</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+# stagger duration (hit 경직 시간)
+var hit_stagger_duration := 0.4
+var _hit_timer: float = 0.0
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>take_damage() — 진입점 단순화</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+func take_damage(damage: float) -> void:
+    # 1. DEAD는 최우선 — 어떤 상태든 사망이 우선
+    hp -= damage
+    if hp &lt;= 0.0:
+        if _current_state != EnemyState.DEAD:
+            transition_to(EnemyState.DEAD, "hp <= 0")
+        return
+
+    # 2. 이미 HIT 중이면 stagger 갱신 (연속타)
+    if _current_state == EnemyState.HIT:
+        _hit_timer = hit_stagger_duration  # stagger 리셋
+        return
+
+    # 3. 일반 hit — 어느 상태든 HIT로 전환
+    # _exit_state(ATTACK/EVADE/IDLE)가 cleanup 담당
+    transition_to(EnemyState.HIT, "take_damage")
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>HIT enter/update/exit</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+func _enter_state(state: EnemyState) -> void:
+    match state:
+        HIT:
+            _hit_timer = hit_stagger_duration
+            _play_hit_animation()
+            _flash_hit()  # VFX (기존 _flash_hit() 유지)
+            emit_signal("hit_received")
+
+func _update_hit(delta: float) -> void:
+    _hit_timer -= delta
+    if _hit_timer &lt;= 0.0:
+        transition_to(EnemyState.IDLE, "stagger end")
+
+func _exit_state(state: EnemyState) -> void:
+    match state:
+        HIT:
+            # _hit_timer는 재진입 시 _enter_state에서 리셋
+            pass
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>HIT 재진입 (연속타 콤보)</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+# 콤보 상황:
+# HIT enter (stagger: 0.4s)
+# → 0.15s 후 재타격
+# → take_damage()에서 _hit_timer = 0.4s (리셋)
+# → 총 stagger: 0.15 + 0.4 = 0.55s
+#
+# 즉, 플레이어가 연속으로 때리면
+# stagger가 계속 연장됨 → 콤보 자연스러움
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>CombatDirector와의 상호작용</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+# CombatDirector 쪽 변경 최소화
+# 기존: on_player_punch_impact → enemy.take_damage()
+# 동일 유지
+
+# 추가: enemy.is_evading() → enemy.get_current_state()로 대체
+func is_evading() -> bool:
+    return _current_state == EnemyState.EVADE
+
+func get_current_state() -> EnemyState:
+    return _current_state
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>HIT 진입 시 정리되는 것들</h3>
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>✅ _exit_state(ATTACK)가 cleanup</h4>
+      <ul>
+        <li>attack animation 중단</li>
+        <li>attack phase timer 해제</li>
+        <li>impact flag 리셋</li>
+      </ul>
+    </div>
+    <div class="pros">
+      <h4>✅ _exit_state(EVADE)가 cleanup</h4>
+      <ul>
+        <li>evade tween 중단 (KillTween())</li>
+        <li>위치 리셋 (필요시)</li>
+      </ul>
+    </div>
+    <div class="pros">
+      <h4>✅ take_damage()는 단순히 전환만</h4>
+      <ul>
+        <li>cleanup은 _exit_state에 위임</li>
+        <li>중복 cleanup 위험 없음</li>
+      </ul>
+    </div>
+  </div>
+</div>

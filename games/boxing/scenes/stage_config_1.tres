@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="StageConfig" format=3 uid="uid://2wlrvdk8lk0c"]
+
+[ext_resource type="Script" uid="uid://cud5c7g430wal" path="res://games/boxing/scripts/stage_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+scene_path = "res://games/boxing/scenes/stage_1.tscn"

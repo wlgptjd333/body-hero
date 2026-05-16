@@ -1,0 +1,639 @@
+[gd_scene format=3 uid="uid://20jhxs6568ky"]
+
+[ext_resource type="Script" uid="uid://dryjuqefx2aqc" path="res://scripts/ui/settings_panel.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_apply_btn"]
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.14, 0.52, 0.28, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.55, 0.95, 0.65, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 4
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_apply_btn_hover"]
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.18, 0.62, 0.34, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.75, 1, 0.82, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 5
+shadow_offset = Vector2(0, 2)
+
+[node name="SettingsPanel" type="Control" unique_id=1082701401]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=569235078]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.1, 0.12, 0.88)
+
+[node name="Panel" type="Panel" parent="." unique_id=1904328092]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -300.0
+offset_right = 260.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TabBar" type="HBoxContainer" parent="Panel" unique_id=658398847]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 48.0
+grow_horizontal = 2
+theme_override_constants/separation = 8
+
+[node name="Scroll" type="ScrollContainer" parent="Panel" unique_id=467349025]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 56.0
+offset_right = -12.0
+offset_bottom = -56.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Scroll" unique_id=505293585]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="ContentDisplay" type="VBoxContainer" parent="Panel/Scroll/VBox" unique_id=1270396401]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="WindowModeSection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentDisplay" unique_id=349120960]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentDisplay/WindowModeSection" unique_id=96796212]
+layout_mode = 2
+text = "화면 모드"
+
+[node name="WindowModeRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentDisplay/WindowModeSection" unique_id=1940018854]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentDisplay/WindowModeSection/WindowModeRow" unique_id=44846420]
+layout_mode = 2
+size_flags_vertical = 1
+text = "화면 모드"
+
+[node name="WindowModeOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentDisplay/WindowModeSection/WindowModeRow" unique_id=978963374]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ResolutionSection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentDisplay" unique_id=349120959]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection" unique_id=96796213]
+layout_mode = 2
+text = "해상도 설정"
+
+[node name="ResolutionRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection" unique_id=1940018855]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection/ResolutionRow" unique_id=44846421]
+layout_mode = 2
+size_flags_vertical = 1
+text = "해상도"
+
+[node name="OptionButton" type="OptionButton" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection/ResolutionRow" unique_id=978963375]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ContentAudio" type="VBoxContainer" parent="Panel/Scroll/VBox" unique_id=854972264]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="SoundSection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentAudio" unique_id=935574746]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection" unique_id=855669307]
+layout_mode = 2
+text = "소리 설정"
+
+[node name="MasterRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentAudio/SoundSection" unique_id=548424807]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MasterRow" unique_id=448943096]
+layout_mode = 2
+size_flags_vertical = 1
+text = "전체 볼륨"
+
+[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MasterRow" unique_id=854757912]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+value = 80.0
+
+[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MasterRow" unique_id=17716936]
+layout_mode = 2
+size_flags_vertical = 1
+text = "80%"
+
+[node name="GameRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentAudio/SoundSection" unique_id=1820644436]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/GameRow" unique_id=849150591]
+layout_mode = 2
+size_flags_vertical = 1
+text = "게임 볼륨"
+
+[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/GameRow" unique_id=812276201]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+value = 100.0
+
+[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/GameRow" unique_id=1591535348]
+layout_mode = 2
+size_flags_vertical = 1
+text = "100%"
+
+[node name="MusicRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentAudio/SoundSection" unique_id=1351185286]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MusicRow" unique_id=1321356395]
+layout_mode = 2
+size_flags_vertical = 1
+text = "음악 볼륨"
+
+[node name="HSlider" type="HSlider" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MusicRow" unique_id=2142321581]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+value = 100.0
+
+[node name="ValueLabel" type="Label" parent="Panel/Scroll/VBox/ContentAudio/SoundSection/MusicRow" unique_id=2017929771]
+layout_mode = 2
+size_flags_vertical = 1
+text = "100%"
+
+[node name="ContentUser" type="VBoxContainer" parent="Panel/Scroll/VBox" unique_id=1676763900]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="HealthSection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentUser" unique_id=242367787]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection" unique_id=1711539240]
+layout_mode = 2
+text = "사용자 정보"
+
+[node name="GenderRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/HealthSection" unique_id=1817741473]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection/GenderRow" unique_id=570689327]
+layout_mode = 2
+size_flags_vertical = 1
+text = "성별"
+
+[node name="GenderOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentUser/HealthSection/GenderRow" unique_id=1899102296]
+layout_mode = 2
+size_flags_horizontal = 3
+selected = 0
+item_count = 4
+popup/item_0/text = "미입력(기준값)"
+popup/item_0/id = 0
+popup/item_1/text = "남성"
+popup/item_1/id = 1
+popup/item_2/text = "여성"
+popup/item_2/id = 2
+popup/item_3/text = "기타"
+popup/item_3/id = 3
+
+[node name="AgeRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/HealthSection" unique_id=1180117310]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection/AgeRow" unique_id=871539861]
+layout_mode = 2
+size_flags_vertical = 1
+text = "나이"
+
+[node name="AgeSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/ContentUser/HealthSection/AgeRow" unique_id=349513014]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HeightRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/HealthSection" unique_id=1635321687]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection/HeightRow" unique_id=1188101819]
+layout_mode = 2
+size_flags_vertical = 1
+text = "키(cm)"
+
+[node name="HeightSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/ContentUser/HealthSection/HeightRow" unique_id=1229207629]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 220.0
+step = 0.5
+
+[node name="WeightRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/HealthSection" unique_id=1142528896]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection/WeightRow" unique_id=898696760]
+layout_mode = 2
+size_flags_vertical = 1
+text = "체중(kg)"
+
+[node name="WeightSpinBox" type="SpinBox" parent="Panel/Scroll/VBox/ContentUser/HealthSection/WeightRow" unique_id=158014637]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 180.0
+step = 0.5
+
+[node name="IntensityRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/HealthSection" unique_id=1481952853]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/HealthSection/IntensityRow" unique_id=1060609556]
+layout_mode = 2
+size_flags_vertical = 1
+text = "운동 강도 보정"
+
+[node name="IntensityOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentUser/HealthSection/IntensityRow" unique_id=1919596478]
+layout_mode = 2
+size_flags_horizontal = 3
+selected = 1
+item_count = 3
+popup/item_0/text = "완화 (0.9x)"
+popup/item_0/id = 0
+popup/item_1/text = "기본 (1.0x)"
+popup/item_1/id = 1
+popup/item_2/text = "강함 (1.1x)"
+popup/item_2/id = 2
+
+[node name="ResetSection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentUser" unique_id=349120961]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HSeparator" type="HSeparator" parent="Panel/Scroll/VBox/ContentUser/ResetSection" unique_id=96796214]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentUser/ResetSection" unique_id=96796215]
+layout_mode = 2
+text = "데이터 초기화"
+
+[node name="ResetRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentUser/ResetSection" unique_id=1940018856]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnResetData" type="Button" parent="Panel/Scroll/VBox/ContentUser/ResetSection/ResetRow" unique_id=978963376]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "사용자 정보 초기화"
+
+[node name="ResetConfirmDialog" type="AcceptDialog" parent="." unique_id=349120962]
+layout_mode = 1
+dialog_text = "모든 게임 데이터가 삭제됩니다.\n(펀치 횟수, 체중 기록, 스웨트, 업적, 상점, 스테이지 기록)\n계속하시겠습니까?"
+dialog_hide_on_ok = true
+
+[node name="ContentWebcam" type="VBoxContainer" parent="Panel/Scroll/VBox" unique_id=1233987576]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="WebcamSection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam" unique_id=988101767]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=258014016]
+layout_mode = 2
+text = "웹캠 (포즈 / ML 연동)"
+
+[node name="CameraHintLabel" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=1029650207]
+layout_mode = 2
+text = "외장 USB 웹캠을 쓴다면 번호를 바꿔보세요. 내장 카메라가 기본입니다."
+autowrap_mode = 3
+
+[node name="CameraRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=1268917227]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/CameraRow" unique_id=1311749842]
+layout_mode = 2
+size_flags_vertical = 1
+text = "카메라"
+
+[node name="CameraOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/CameraRow" unique_id=1413682064]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BackendRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=984752488]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/BackendRow" unique_id=1725837204]
+layout_mode = 2
+size_flags_vertical = 1
+text = "카메라 API"
+
+[node name="BackendOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/BackendRow" unique_id=311592361]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MlProfileRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=341133100]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/MlProfileRow" unique_id=1030184704]
+layout_mode = 2
+size_flags_vertical = 1
+text = "ML 속도 프로필"
+
+[node name="MlProfileOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/MlProfileRow" unique_id=1657870870]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RefreshRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=478140506]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnRefreshCameras" type="Button" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/RefreshRow" unique_id=1777309118]
+layout_mode = 2
+text = "목록 새로고침 (OpenCV)"
+
+[node name="WebcamMlRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=360186253]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnStartWebcamMl" type="Button" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/WebcamMlRow" unique_id=532580601]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "웹캠 ML 실행 (Python)"
+
+[node name="BtnStopWebcamMl" type="Button" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/WebcamMlRow" unique_id=887263876]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "웹캠 ML 종료"
+
+[node name="CollectPoseRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=1252685112]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnStartCollectPose" type="Button" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/CollectPoseRow" unique_id=2143651969]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "포즈 녹화 (학습 데이터 수집)"
+
+[node name="RoiRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=411779298]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/RoiRow" unique_id=1231942399]
+layout_mode = 2
+size_flags_vertical = 1
+text = "ROI 모드"
+
+[node name="RoiCheckBox" type="CheckBox" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/RoiRow" unique_id=130549357]
+layout_mode = 2
+text = "플레이어 주변만 크롭 (전시회용 간섭 방지)"
+
+[node name="ZoneRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=1654244965]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/ZoneRow" unique_id=608181036]
+layout_mode = 2
+size_flags_vertical = 1
+text = "중심 영역"
+
+[node name="ZoneSlider" type="HSlider" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/ZoneRow" unique_id=2138234552]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.05
+max_value = 0.45
+step = 0.05
+value = 0.3
+
+[node name="ZoneValueLabel" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/ZoneRow" unique_id=689698185]
+layout_mode = 2
+text = "30% ~ 70%"
+
+[node name="SkipGuardRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=1755471329]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/SkipGuardRow" unique_id=1159055508]
+layout_mode = 2
+size_flags_vertical = 1
+text = "단일가드모델 끄기"
+
+[node name="SkipGuardCheckBox" type="CheckBox" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/SkipGuardRow" unique_id=1997602725]
+layout_mode = 2
+text = "시퀀스 모델만으로 가드 판정 (단일폰백 비활성화)"
+
+[node name="FullBodySquatRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=21995531]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/FullBodySquatRow" unique_id=1348865994]
+layout_mode = 2
+size_flags_vertical = 1
+text = "전신 스쿼트 모드"
+
+[node name="FullBodySquatCheckBox" type="CheckBox" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/FullBodySquatRow" unique_id=441544497]
+layout_mode = 2
+text = "하체 visibility + 엉덩이 하강 체크 (좁은 공간 OFF 권장)"
+
+[node name="LblCollectPoseHint" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=2090838679]
+layout_mode = 2
+text = "선택한 카메라·백엔드로 포즈 데이터를 녹화합니다. Q를 눌러 저장 후 종료하세요."
+autowrap_mode = 3
+
+[node name="LblWebcamMlBridge" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=1733367360]
+layout_mode = 2
+text = "실행하면 카메라·ML 속도 설정으로 웹캠 기반 동작 인식을 시작합니다."
+autowrap_mode = 3
+
+[node name="ContentControls" type="VBoxContainer" parent="Panel/Scroll/VBox" unique_id=384761581]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="KeySection" type="VBoxContainer" parent="Panel/Scroll/VBox/ContentControls" unique_id=1944883355]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection" unique_id=1121809547]
+layout_mode = 2
+text = "키보드 설정"
+
+[node name="KeyRowPunchLeft" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection" unique_id=2040542987]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowPunchLeft" unique_id=38936916]
+layout_mode = 2
+size_flags_vertical = 1
+text = "왼손 펀치 (여러 키)"
+
+[node name="KeyBtnPunchLeft" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowPunchLeft" unique_id=430982172]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "A"
+
+[node name="KeyRowPunchRight" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection" unique_id=1348618614]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowPunchRight" unique_id=246343124]
+layout_mode = 2
+size_flags_vertical = 1
+text = "오른손 펀치 (여러 키)"
+
+[node name="KeyBtnPunchRight" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowPunchRight" unique_id=803615155]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "D"
+
+[node name="KeyRowUpperLeft" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection" unique_id=1687261238]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowUpperLeft" unique_id=1665790947]
+layout_mode = 2
+size_flags_vertical = 1
+text = "왼쪽 어퍼컷"
+
+[node name="KeyBtnUpperLeft" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowUpperLeft" unique_id=1555937481]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Q"
+
+[node name="KeyRowUpperRight" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection" unique_id=1343467638]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowUpperRight" unique_id=13537711]
+layout_mode = 2
+size_flags_vertical = 1
+text = "오른쪽 어퍼컷"
+
+[node name="KeyBtnUpperRight" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowUpperRight" unique_id=1049278853]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "E"
+
+[node name="KeyRowGuard" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection" unique_id=986575924]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowGuard" unique_id=1171151959]
+layout_mode = 2
+size_flags_vertical = 1
+text = "가드"
+
+[node name="KeyBtnGuard" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowGuard" unique_id=511806168]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Space"
+
+[node name="KeyRowSquat" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentControls/KeySection" unique_id=140189368]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowSquat" unique_id=1906123929]
+layout_mode = 2
+size_flags_vertical = 1
+text = "스쿼트"
+
+[node name="KeyBtnSquat" type="Button" parent="Panel/Scroll/VBox/ContentControls/KeySection/KeyRowSquat" unique_id=33955108]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "S"
+
+[node name="BottomBar" type="HBoxContainer" parent="Panel" unique_id=968624360]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -52.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Panel/BottomBar" unique_id=616528240]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "← 뒤로"
+
+[node name="Spacer" type="Control" parent="Panel/BottomBar" unique_id=293597936]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ApplyButton" type="Button" parent="Panel/BottomBar" unique_id=300058159]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_colors/font_color = Color(0.98, 1, 0.96, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.95, 0.9, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_apply_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_apply_btn_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_apply_btn_hover")
+text = "적용"

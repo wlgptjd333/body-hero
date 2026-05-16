@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StageConfig" format=3 uid="uid://byximayssnjhc"]
+
+[ext_resource type="Script" uid="uid://cud5c7g430wal" path="res://games/boxing/scripts/stage_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+stage_id = "stage_2"
+monster_name = "COLA MONSTER"
+scene_path = "res://games/boxing/scenes/stage_2.tscn"
+enemy_max_hp = 120.0
+enemy_attack_damage = 35.0
+enemy_attack_delay_min = 1.2
+enemy_attack_delay_max = 2.1
+enemy_evade_idle_min = 0.3
+enemy_evade_idle_max = 0.9

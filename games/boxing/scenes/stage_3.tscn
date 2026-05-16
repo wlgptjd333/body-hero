@@ -1,0 +1,618 @@
+[gd_scene format=3 uid="uid://cskr7qhh5vdkm"]
+
+[ext_resource type="Script" uid="uid://ccnn2msmp5r38" path="res://games/boxing/scripts/stage.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://d05ifnr4s4ngl" path="res://games/boxing/scripts/player.gd" id="2_player"]
+[ext_resource type="Script" uid="uid://clkrypd4h0gr4" path="res://games/boxing/scripts/enemy.gd" id="3_enemy"]
+[ext_resource type="Texture2D" uid="uid://efavurlawhtq" path="res://assets/textures/bg/bg_stage3_fries.png" id="4_bg"]
+[ext_resource type="Texture2D" uid="uid://o40n87m6c3r3" path="res://assets/textures/characters/player/left_glove.png" id="5_left_glove"]
+[ext_resource type="Texture2D" uid="uid://brkuhdqyv2yk5" path="res://assets/textures/characters/player/right_glove.png" id="6_right_glove"]
+[ext_resource type="AudioStream" uid="uid://bdde7gq6tn0t5" path="res://assets/audio/sfx/sfx_punch_hit.wav" id="7_hit"]
+[ext_resource type="Script" uid="uid://yiphslwybtui" path="res://games/boxing/scripts/ui/pause_layer.gd" id="8_pause_layer"]
+[ext_resource type="Script" uid="uid://db40peru1owwd" path="res://games/boxing/scripts/ui/ui_director.gd" id="9_ui_director"]
+[ext_resource type="Script" uid="uid://b3vqqd3k437m3" path="res://games/boxing/scripts/combat_director.gd" id="10_combat_director"]
+[ext_resource type="Script" uid="uid://bvvwgsuqqo2ws" path="res://games/boxing/scripts/stage_manager.gd" id="11_stage_manager"]
+[ext_resource type="Resource" path="res://games/boxing/scenes/stage_config_3.tres" id="12_config"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(80, 100)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_glove"]
+size = Vector2(24, 24)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_frame"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.06, 0.04, 0.06, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9, 0.25, 0.3, 0.85)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_size = 8
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_fill"]
+bg_color = Color(0.92, 0.18, 0.22, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.5, 0.45, 0.6)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0.6, 0.06, 0.08, 0.5)
+shadow_size = 4
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_hp_frame"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.06, 0.06, 0.07, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.25, 0.7, 0.4, 0.85)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
+bg_color = Color(0.22, 0.85, 0.42, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 1, 0.65, 0.55)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0.08, 0.4, 0.18, 0.45)
+shadow_size = 4
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stamina_frame"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.06, 0.06, 0.06, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.55, 0.2, 0.85)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stamina_fill"]
+bg_color = Color(1, 0.68, 0.15, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.88, 0.5, 0.55)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0.5, 0.3, 0.03, 0.45)
+shadow_size = 4
+shadow_offset = Vector2(0, 2)
+
+[node name="Main" type="Node2D" unique_id=90095192]
+script = ExtResource("1_main")
+stage_config = ExtResource("12_config")
+
+[node name="UIDirector" type="Node" parent="." unique_id=920265987]
+script = ExtResource("9_ui_director")
+stage_id = "stage_3"
+
+[node name="CombatDirector" type="Node" parent="." unique_id=1369282196]
+script = ExtResource("10_combat_director")
+stage_id = "stage_3"
+
+[node name="StageManager" type="Node" parent="." unique_id=849002508]
+script = ExtResource("11_stage_manager")
+
+[node name="Background" type="Sprite2D" parent="." unique_id=639393290]
+position = Vector2(576, 324)
+texture = ExtResource("4_bg")
+
+[node name="Enemy" type="Node2D" parent="." unique_id=1204726762]
+position = Vector2(576, 280)
+script = ExtResource("3_enemy")
+idle_texture_base = "res://assets/textures/characters/enemies/fries/fries_idle_"
+attack_texture_base = "res://assets/textures/characters/enemies/fries/fries_punch_l_"
+hit_texture_base = "res://assets/textures/characters/enemies/fries/fries_hit_"
+ko_texture_base = "res://assets/textures/characters/enemies/fries/fries_ko_"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Enemy" unique_id=2025083540]
+scale = Vector2(1.02, 1.02)
+
+[node name="HitSound" type="AudioStreamPlayer" parent="Enemy" unique_id=352363043]
+stream = ExtResource("7_hit")
+
+[node name="Hitbox" type="Area2D" parent="Enemy" unique_id=796911898]
+position = Vector2(0, 20)
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy/Hitbox" unique_id=1841558224]
+shape = SubResource("RectangleShape2D_hitbox")
+
+[node name="ComboLabel" type="Label" parent="Enemy" unique_id=927718984]
+z_index = 12
+anchors_preset = 0
+offset_left = 0.0
+offset_top = 0.0
+theme_override_colors/font_color = Color(1, 0.92, 0.35, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.06, 0.02, 1)
+theme_override_constants/outline_size = 7
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Player" type="Node2D" parent="." unique_id=1137990174]
+position = Vector2(576, 500)
+script = ExtResource("2_player")
+
+[node name="BodySprite" type="AnimatedSprite2D" parent="Player" unique_id=1441163759]
+z_index = -2
+position = Vector2(0, -88)
+scale = Vector2(0.6, 0.6)
+
+[node name="LeftGlove" type="Area2D" parent="Player" unique_id=844628895]
+position = Vector2(-80, 0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/LeftGlove" unique_id=1792995912]
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("5_left_glove")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/LeftGlove" unique_id=978287309]
+shape = SubResource("RectangleShape2D_glove")
+
+[node name="RightGlove" type="Area2D" parent="Player" unique_id=321707249]
+position = Vector2(80, 0)
+collision_layer = 2
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/RightGlove" unique_id=1544005646]
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("6_right_glove")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/RightGlove" unique_id=1682066305]
+shape = SubResource("RectangleShape2D_glove")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=701533025]
+
+[node name="PlayTimeCorner" type="Label" parent="HUD" unique_id=665882234]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 160.0
+offset_bottom = 36.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.8, 0.82, 0.9, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.05, 0.08, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "0.0s"
+
+[node name="TrainingKillLabel" type="Label" parent="HUD" unique_id=2138341766]
+visible = false
+offset_left = 14.0
+offset_top = 44.0
+offset_right = 220.0
+offset_bottom = 66.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.88, 0.9, 0.95, 1)
+theme_override_colors/font_outline_color = Color(0.06, 0.06, 0.1, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 13
+text = "처치 횟수: 0"
+
+[node name="TrainingAttackLabel" type="Label" parent="HUD" unique_id=1766865286]
+visible = false
+offset_left = 14.0
+offset_top = 70.0
+offset_right = 220.0
+offset_bottom = 196.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.88, 0.9, 0.95, 1)
+theme_override_colors/font_outline_color = Color(0.06, 0.06, 0.1, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "펀치L: 0
+펀치R: 0
+어퍼L: 0
+어퍼R: 0
+가드: 0
+스쿼트: 0"
+
+[node name="TopBar" type="Control" parent="HUD" unique_id=622282074]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 60.0
+offset_top = 20.0
+offset_right = -60.0
+offset_bottom = 76.0
+grow_horizontal = 2
+
+[node name="EnemyHPLabel" type="Label" parent="HUD/TopBar" unique_id=389136382]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 28.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.98, 0.95, 0.9, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.05, 0.05, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EnemyHPBar" type="ProgressBar" parent="HUD/TopBar" unique_id=1074090388]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.15
+anchor_right = 0.85
+offset_top = 34.0
+offset_bottom = 58.0
+grow_horizontal = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_enemy_frame")
+theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_fill")
+value = 100.0
+show_percentage = false
+
+[node name="BottomBars" type="Control" parent="HUD" unique_id=279620972]
+layout_mode = 3
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_top = -56.0
+offset_right = -60.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="PlayerHPLabel" type="Label" parent="HUD/BottomBars" unique_id=535070490]
+layout_mode = 1
+offset_right = 60.0
+offset_bottom = 22.0
+theme_override_colors/font_color = Color(0.45, 0.95, 0.6, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.12, 0.06, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 15
+text = "HP"
+vertical_alignment = 1
+
+[node name="PlayerHPBar" type="ProgressBar" parent="HUD/BottomBars" unique_id=87889815]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.48
+offset_left = 72.0
+offset_bottom = 22.0
+grow_horizontal = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_player_hp_frame")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+value = 100.0
+show_percentage = false
+
+[node name="StaminaLabel" type="Label" parent="HUD/BottomBars" unique_id=1959690294]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.52
+anchor_right = 0.52
+offset_right = 60.0
+offset_bottom = 22.0
+theme_override_colors/font_color = Color(1, 0.75, 0.35, 1)
+theme_override_colors/font_outline_color = Color(0.15, 0.08, 0.02, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 15
+text = "STAMINA"
+vertical_alignment = 1
+
+[node name="PlayerStaminaBar" type="ProgressBar" parent="HUD/BottomBars" unique_id=986676651]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.52
+anchor_right = 1.0
+offset_left = 72.0
+offset_right = -8.0
+offset_bottom = 22.0
+grow_horizontal = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_stamina_frame")
+theme_override_styles/fill = SubResource("StyleBoxFlat_stamina_fill")
+value = 100.0
+show_percentage = false
+
+[node name="BtnPauseIcon" type="Button" parent="HUD" unique_id=1332050231]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -56.0
+offset_top = 20.0
+offset_right = -16.0
+offset_bottom = 56.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_font_sizes/font_size = 20
+text = "⏸"
+flat = true
+
+[node name="BGM" type="AudioStreamPlayer" parent="." unique_id=1617377564]
+volume_db = -6.0
+
+[node name="PauseLayer" type="CanvasLayer" parent="." unique_id=1958034003]
+process_mode = 3
+visible = false
+script = ExtResource("8_pause_layer")
+
+[node name="PauseOverlay" type="ColorRect" parent="PauseLayer" unique_id=853361487]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.04, 0.04, 0.06, 0.82)
+
+[node name="PauseVBox" type="VBoxContainer" parent="PauseLayer" unique_id=1446496072]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -140.0
+offset_top = -110.0
+offset_right = 140.0
+offset_bottom = 110.0
+theme_override_constants/separation = 14
+
+[node name="PauseLabel" type="Label" parent="PauseLayer/PauseVBox" unique_id=560141918]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.78, 0.75, 1)
+theme_override_colors/font_outline_color = Color(0.03, 0.06, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 26
+text = "일시정지"
+horizontal_alignment = 1
+
+[node name="BtnPauseResume" type="Button" parent="PauseLayer/PauseVBox" unique_id=1600650755]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "계속하기"
+
+[node name="BtnPauseSettings" type="Button" parent="PauseLayer/PauseVBox" unique_id=1857214235]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "설정"
+
+[node name="BtnPauseQuit" type="Button" parent="PauseLayer/PauseVBox" unique_id=358965284]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "나가기"
+
+[node name="GameOverLayer" type="CanvasLayer" parent="." unique_id=885417268]
+process_mode = 3
+visible = false
+
+[node name="GameOverOverlay" type="ColorRect" parent="GameOverLayer" unique_id=1859833961]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.06, 0.03, 0.03, 0.92)
+
+[node name="GameOverVBox" type="VBoxContainer" parent="GameOverLayer" unique_id=819628422]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -140.0
+offset_right = 220.0
+offset_bottom = 140.0
+theme_override_constants/separation = 14
+
+[node name="GameOverLabel" type="Label" parent="GameOverLayer/GameOverVBox" unique_id=1418072264]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.3, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.02, 0.02, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 44
+text = "패배"
+horizontal_alignment = 1
+
+[node name="GameOverDivider" type="HSeparator" parent="GameOverLayer/GameOverVBox" unique_id=312602590]
+layout_mode = 2
+
+[node name="GameOverCaloriesLabel" type="Label" parent="GameOverLayer/GameOverVBox" unique_id=444937539]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.92, 0.86, 1)
+theme_override_font_sizes/font_size = 18
+text = "소모 칼로리: 0.0 kcal"
+horizontal_alignment = 1
+
+[node name="GameOverDailyCaloriesLabel" type="Label" parent="GameOverLayer/GameOverVBox" unique_id=1617654895]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.8, 1)
+theme_override_font_sizes/font_size = 15
+text = "오늘 누적: 0.0 kcal"
+horizontal_alignment = 1
+
+[node name="GameOverButtons" type="VBoxContainer" parent="GameOverLayer/GameOverVBox" unique_id=9217955]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnGameOverRestart" type="Button" parent="GameOverLayer/GameOverVBox/GameOverButtons" unique_id=1670534169]
+custom_minimum_size = Vector2(180, 44)
+layout_mode = 2
+text = "다시하기"
+
+[node name="BtnGameOverBack" type="Button" parent="GameOverLayer/GameOverVBox/GameOverButtons" unique_id=58410812]
+custom_minimum_size = Vector2(180, 44)
+layout_mode = 2
+text = "나가기"
+
+[node name="KoIntroLayer" type="CanvasLayer" parent="." unique_id=1171858893]
+process_mode = 3
+visible = false
+
+[node name="KoIntroOverlay" type="ColorRect" parent="KoIntroLayer" unique_id=1441317868]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.08, 0.02, 0.04, 0.88)
+
+[node name="KoIntroLabel" type="Label" parent="KoIntroLayer" unique_id=711771912]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -140.0
+offset_right = 400.0
+offset_bottom = 20.0
+theme_override_colors/font_color = Color(1, 0.88, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0.15, 0.04, 0.04, 1)
+theme_override_constants/outline_size = 12
+theme_override_font_sizes/font_size = 140
+text = "KO!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="KoIntroSubLabel" type="Label" parent="KoIntroLayer" unique_id=801643420]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = 30.0
+offset_right = 200.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(0.9, 0.85, 0.6, 1)
+theme_override_colors/font_outline_color = Color(0.08, 0.03, 0.03, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 28
+text = "FLAWLESS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WinLayer" type="CanvasLayer" parent="." unique_id=306464239]
+process_mode = 3
+visible = false
+
+[node name="WinOverlay" type="ColorRect" parent="WinLayer" unique_id=1062929119]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.04, 0.06, 0.04, 0.92)
+
+[node name="WinVBox" type="VBoxContainer" parent="WinLayer" unique_id=221161156]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -175.0
+offset_right = 220.0
+offset_bottom = 175.0
+theme_override_constants/separation = 12
+
+[node name="WinLabel" type="Label" parent="WinLayer/WinVBox" unique_id=285411905]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 0.5, 1)
+theme_override_colors/font_outline_color = Color(0.03, 0.1, 0.04, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 44
+text = "승리!"
+horizontal_alignment = 1
+
+[node name="WinDivider" type="HSeparator" parent="WinLayer/WinVBox" unique_id=1766722716]
+layout_mode = 2
+
+[node name="WinCaloriesLabel" type="Label" parent="WinLayer/WinVBox" unique_id=1533588660]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.92, 0.86, 1)
+theme_override_font_sizes/font_size = 20
+text = "소모 칼로리: 0.0 kcal"
+horizontal_alignment = 1
+
+[node name="WinDailyCaloriesLabel" type="Label" parent="WinLayer/WinVBox" unique_id=58945562]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.8, 1)
+theme_override_font_sizes/font_size = 15
+text = "오늘 누적: 0.0 kcal"
+horizontal_alignment = 1
+
+[node name="WinClearTimeLabel" type="Label" parent="WinLayer/WinVBox" unique_id=1832316152]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 16
+text = "클리어 시간: —"
+horizontal_alignment = 1
+
+[node name="WinStarsLabel" type="Label" parent="WinLayer/WinVBox" unique_id=2071728954]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0.2, 0.1, 0.02, 0.6)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 36
+text = "☆☆☆"
+horizontal_alignment = 1
+
+[node name="WinButtons" type="VBoxContainer" parent="WinLayer/WinVBox" unique_id=601172391]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnWinNext" type="Button" parent="WinLayer/WinVBox/WinButtons" unique_id=1224554462]
+custom_minimum_size = Vector2(180, 44)
+layout_mode = 2
+text = "다음 스테이지"
+
+[node name="BtnWinRestart" type="Button" parent="WinLayer/WinVBox/WinButtons" unique_id=2110461421]
+custom_minimum_size = Vector2(180, 44)
+layout_mode = 2
+text = "다시하기"
+
+[node name="BtnWinBack" type="Button" parent="WinLayer/WinVBox/WinButtons" unique_id=1712933061]
+custom_minimum_size = Vector2(180, 44)
+layout_mode = 2
+text = "나가기"

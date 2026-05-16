@@ -1,0 +1,17 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Windows export 바이너리(용량 큼, 필요 시 이 줄들 지우고 커밋)
+Body Hero.exe
+Body Hero.console.exe
+Body Hero.pck
+
+# Python
+venv/
+tools/venv_ml/
+*.pyc
+__pycache__/
+
+# pose_data.json / pose_recordings_meta.json 은 GitHub에 포함 가능(학습 재현용).
+# 단일 파일 100MB 초과 시 GitHub가 거부하므로 그 경우 Git LFS 또는 분할을 검토하세요.

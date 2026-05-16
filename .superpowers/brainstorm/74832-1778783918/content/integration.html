@@ -1,0 +1,171 @@
+<h2>상세 설계 — Section 4: Integration</h2>
+<p class="subtitle">기존 시스템과의 연결 — "interaction surface 최소화"</p>
+
+<div class="section">
+  <h3>1. CombatDirector — 최소 변경</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+# 기존 contract 유지
+# Enemy.gd에 추가:
+func is_evading() -> bool:
+    return _current_state == EnemyState.EVADE
+
+# CombatDirector는 그대로 호출:
+_on_player_punch_impact(damage, punch_type):
+    if _enemy.is_evading():
+        # miss
+        return
+    _enemy.take_damage(damage * combo_mult)
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2. Boss 시스템 — 기존 시그널 그대로</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+# 기존: boss_manager.gd (변경 없음)
+#   - phase counter
+#   - buff selection
+
+# Enemy.gd take_damage() 내부:
+if hp &lt;= 0.0:
+    if is_boss and boss_phase &lt; max_phases:
+        hp = max_hp  # HP 회복
+        boss_phase += 1
+        emit_signal("phase_changed", boss_phase)
+        transition_to(EnemyState.IDLE, "boss phase up")
+        return  # 사망 아님
+    transition_to(EnemyState.DEAD, "hp <= 0")
+
+# Boss buff는 _apply_difficulty_stats()에서 처리
+# (기존 로직 유지)
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3. Stage Config — 동일하게 유지</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+# StageConfig Resource (변경 없음)
+# 기존 필드 유지 + RECOVERY 관련 필드 추가 가능
+
+extends Resource
+class_name StageConfig
+
+# 기존 유지
+@export var enemy_max_hp: float = 100.0
+@export var enemy_attack_damage: float = 30.0
+@export var enemy_attack_delay_min: float = 1.4
+@export var enemy_attack_delay_max: float = 2.45
+@export var enemy_evade_idle_min: float = 0.35
+@export var enemy_evade_idle_max: float = 1.1
+@export var enemy_evade_duration: float = 0.38
+
+# 새 필드 (옵션 — 없으면 기본값 사용)
+@export var enemy_recovery_mult: float = 1.0
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>4. 난이도 스케일링 — _apply_difficulty_stats()</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+func _apply_difficulty_stats(difficulty: String) -> void:
+    var mult: float
+    match difficulty:
+        "EASY":
+            mult = 0.75
+            recovery_mult = 1.5
+        "NORMAL":
+            mult = 1.0
+            recovery_mult = 1.0
+        "HARD":
+            mult = 1.6
+            recovery_mult = 0.7
+
+    hp *= mult
+    attack_damage *= mult
+    recovery_mult = clamp(recovery_mult, 0.5, 2.0)
+
+    # 나머지 delay 값들은 기존 방식 유지
+    attack_delay_min *= (1.0 if difficulty == "NORMAL" else ...)
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>5. Training 모드</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+# 기존: ai_enabled = false
+# FSM에서도 동일하게 처리
+
+func _process(delta: float) -> void:
+    if _current_state == EnemyState.DEAD:
+        return
+    if not ai_enabled:
+        # IDLE에 멈춤 (행동 안 함)
+        return
+    match _current_state:
+        # ...
+
+# reset_for_respawn() — 기존 유지
+# HP 리필 + transition_to(IDLE)
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>6. DEBUG_FSM 로깅</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+const DEBUG_FSM := true
+
+func transition_to(next: EnemyState, reason := "") -> void:
+    if next == _current_state:
+        if DEBUG_FSM:
+            push_warning("transition_to(%s) but already in %s" % [next, _current_state])
+        return
+    if DEBUG_FSM:
+        print("[FSM] %s -> %s (%s)" % [
+            EnemyState.keys()[_current_state],
+            EnemyState.keys()[next],
+            reason
+        ])
+    _exit_state(_current_state)
+    _current_state = next
+    _state_enter_time = Time.get_ticks_msec()
+    _enter_state(_current_state)
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>변경 요약: Enemy.gd 인터페이스</h3>
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>유지 (변경 없음)</h4>
+      <ul>
+        <li>take_damage(damage) — 시그니처 동일</li>
+        <li>is_evading() → bool (내부 구현만 변경)</li>
+        <li>hit_received / died / enemy_attack / phase_changed 시그널</li>
+        <li>_apply_difficulty_stats() 호출 방식</li>
+        <li>ai_enabled / reset_for_respawn()</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>변경</h4>
+      <ul>
+        <li>boolean flags → EnemyState enum</li>
+        <li>_process() dispatch 방식</li>
+        <li>HIT 처리 — ticket → state lifecycle</li>
+        <li>타이머 — IDLE exclusive ownership</li>
+        <li>+ transition_to(), _enter_state(), _exit_state()</li>
+        <li>+ AttackPhase sub-enum (내부 전용)</li>
+      </ul>
+    </div>
+  </div>
+</div>

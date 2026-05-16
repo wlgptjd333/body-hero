@@ -1,0 +1,72 @@
+[gd_scene format=3 uid="uid://d3wbodhe6nhfv"]
+
+[ext_resource type="Script" uid="uid://co2cqm1q1ib1q" path="res://scripts/ui/game_records_panel.gd" id="1_script"]
+
+[node name="GameRecordsPanel" type="Control" unique_id=1300911857]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1965157122]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.08, 0.1, 0.9)
+
+[node name="Panel" type="Panel" parent="." unique_id=1805771979]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.05
+anchor_top = 0.5
+anchor_right = 0.95
+anchor_bottom = 0.5
+offset_top = -310.0
+offset_bottom = 310.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=1060900874]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Panel/VBox" unique_id=123606410]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "← 뒤로"
+
+[node name="TitleLabel" type="Label" parent="Panel/VBox" unique_id=1864829903]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "게임 기록"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/VBox" unique_id=1705732209]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ScrollInner" type="VBoxContainer" parent="Panel/VBox/Scroll" unique_id=1859858265]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="RecordsList" type="VBoxContainer" parent="Panel/VBox/Scroll/ScrollInner" unique_id=685434264]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8

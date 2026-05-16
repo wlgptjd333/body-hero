@@ -1,0 +1,17 @@
+# 스프라이트 배경 제거 + 512x512 정규화 (sanitize_sprites.py)
+# ML용 venv와 분리 권장 (protobuf/numpy/DLL 충돌 방지):
+#   python -m venv .venv_sprites
+#   .venv_sprites\Scripts\activate
+#   pip install -r tools/requirements_sprites.txt
+#
+# rembg 등이 opencv-python-headless를 같이 설치하면, 같은 venv에서 udp_send_webcam_ml.py
+# 미리보기 창(imshow)이 동작하지 않을 수 있음. 분리하려면 venv를 두 개 쓰거나, 스프라이트용
+# 설치 후: pip uninstall opencv-python-headless -y && pip install opencv-python
+# VideoCapture 없음 오류 시(패키지 꼬임): 같은 venv에서
+#   pip uninstall opencv-python opencv-python-headless opencv-contrib-python -y
+#   pip install --force-reinstall "opencv-python>=4.9,<5"
+rembg>=2.0.0
+onnxruntime>=1.16.0
+pillow>=10.0.0
+tqdm>=4.66.0
+numpy>=1.24.0

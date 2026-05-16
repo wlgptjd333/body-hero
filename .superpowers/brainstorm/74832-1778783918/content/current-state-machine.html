@@ -1,0 +1,84 @@
+<h2>현재 Enemy 시스템 — "상태머신"의 현주소</h2>
+<p class="subtitle">boolean 플래그 + 병렬 타이머 기반, 764줄 단일 파일</p>
+
+<div class="section">
+  <h3>실제 전환 흐름</h3>
+  <div class="mockup" style="font-family: monospace; line-height: 1.8; font-size: 14px;">
+    <pre style="text-align: left; display: inline-block;">
+                    ┌─────────────────────────────────────┐
+                    │              IDLE                    │
+                    │  (타이머가 각자 누적 중)              │
+                    └──────┬──────────────────┬────────────┘
+                           │                  │
+                  attack   │                  │  evade
+                  idle≥delay                idle≥delay
+                           │                  │
+                    ┌──────▼────────┐   ┌─────▼──────┐
+                    │  ATTACK       │   │   EVADE    │
+                    │  (텔레그래프)  │   │  (0.38초)   │
+                    │  0.7초        │   │             │
+                    └──────┬────────┘   └─────┬──────┘
+                           │                  │
+                  impact   │                  │  duration
+                  frame(2) │                  │  expired
+                           │                  │
+                    ┌──────▼────────┐         │
+                    │  IMPACT       │         │
+                    │  데미지 처리   │         │
+                    └──────┬────────┘         │
+                           │                  │
+                  anim_end │                  │
+                           │                  │
+                           └──────┬───────────┘
+                                  │
+                                  ▼
+                          ┌───────────────┐
+                          │     IDLE      │◄────────────┐
+                          └───────┬───────┘             │
+                                  │                     │
+                          take_damage                   │
+                                  │                     │
+                          ┌───────▼───────┐             │
+                          │  HIT_STAGGER  │─────────────┘
+                          │  (ticket 방식) │  anim_end
+                          └───────┬───────┘
+                                  │
+                              HP<=0
+                                  │
+                          ┌───────▼───────┐
+                          │   KO → DEAD   │
+                          └───────────────┘
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <h3>⚠️ 문제점</h3>
+  <div class="pros-cons">
+    <div class="cons">
+      <h4>1. boolean 플래그 + if 게이트</h4>
+      <ul>
+        <li><code>if _is_evading: return</code> 으로 공격 차단</li>
+        <li><code>if _is_attacking: return</code> 으로 회피 차단</li>
+        <li>두 타이머가 <strong>독립적으로</strong> 누적됨</li>
+        <li>Attack 도중 Evade 타이머는 계속 흐름 (순서 깨짐)</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>2. HIT가 "상태"가 아님</h4>
+      <ul>
+        <li>콜백(ticket 번호)으로 처리</li>
+        <li>히트 후 공격 재시작 로직이 꼬임 (line 683-687)</li>
+        <li>애니메이션 전환 시점이 불명확</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>3. Attack과 Evade의 상호작용</h4>
+      <ul>
+        <li>회피 중에도 Attack 타이머 누적 → 회피 끝나자마자 바로 공격</li>
+        <li>자연스러운 "공격 후 경직 → 회피" 흐름이 없음</li>
+        <li>하나의 _process()에서 두 update()를 병렬 호출</li>
+      </ul>
+    </div>
+  </div>
+</div>
