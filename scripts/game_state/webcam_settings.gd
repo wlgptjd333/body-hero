@@ -51,11 +51,6 @@ func get_skip_guard_single() -> bool:
 func get_full_body_squat() -> bool:
 	return _full_body_squat
 
-func get_backend_values() -> Array:
-	return BACKEND_VALUES.duplicate()
-
-func get_profile_values() -> Array[String]:
-	return PROFILE_VALUES.duplicate()
 
 
 # --- Window ---

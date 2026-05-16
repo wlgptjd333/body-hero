@@ -49,14 +49,6 @@ var is_guarding: bool = false
 var _has_guard_mastery: bool = false
 var _demo_mode: bool = false
 
-# 칼로리 추정치 (게임 내 상대 지표)
-const KCAL_PUNCH := 0.42
-const KCAL_UPPERCUT := 0.55
-const KCAL_DODGE := 0.30
-const KCAL_GUARD_PER_SEC := 0.06
-const DEFAULT_WEIGHT_KG := 70.0
-const DEFAULT_HEIGHT_CM := 170.0
-const DEFAULT_AGE := 30
 const GENDER_MALE := "male"
 const GENDER_FEMALE := "female"
 const GENDER_OTHER := "other"
@@ -164,9 +156,7 @@ func record_guard() -> void:
 		_daily.bump_for_kind("guards")
 		save_stats()
 
-func reset_punch_counts() -> void:
-	# 게임 시작 시 현재 세션만 리셋하지 않고, 누적 통계는 유지 (통계 패널에서만 누적 표시)
-	pass
+
 
 
 ## 스테이지 클리어(KO) 시 호출. 짧을수록 좋은 기록으로 최고 기록 갱신

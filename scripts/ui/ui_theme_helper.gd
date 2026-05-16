@@ -222,11 +222,7 @@ func style_progress_bar_stamina(bar: ProgressBar) -> void:
 	bar.add_theme_stylebox_override("fill", fill)
 
 
-# ── ScrollContainer / 배경 ──
 
-func apply_dark_bg(_node: Control) -> void:
-	# 이 메서드는 더 이상 배경 이미지를 런타임에 그리지 않습니다. (tscn 내부에 직접 연결됨)
-	pass
 
 
 ## =========================================================================

@@ -2,8 +2,6 @@ extends RefCounted
 ## Internal seam: manages the webcam ML Python process lifecycle.
 ## GameState owns an instance and delegates to it.
 
-const CAMERA_BACKEND_VALUES := ["auto", "dshow", "msmf", "default"]
-const ML_SPEED_PROFILE_VALUES: Array[String] = ["balanced", "fast_react", "fast_combo", "max_speed"]
 
 var bridge_pid: int = -1
 var launched_camera: int = -999
@@ -116,17 +114,4 @@ func _is_process_running_safe(pid: int) -> bool:
 	return OS.is_process_running(pid)
 
 
-static func sanitize_ml_speed_profile(s: String) -> String:
-	var t := s.strip_edges()
-	for v: String in ML_SPEED_PROFILE_VALUES:
-		if t == v:
-			return t
-	return "balanced"
 
-
-static func sanitize_camera_backend(s: String) -> String:
-	var t := s.strip_edges().to_lower()
-	for v: String in CAMERA_BACKEND_VALUES:
-		if t == v:
-			return t
-	return "auto"

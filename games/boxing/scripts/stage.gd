@@ -47,7 +47,6 @@ func _ready() -> void:
 		_pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS as Node.ProcessMode
 		_pause_layer.visible = false
 	_load_input_config_safe()
-	GameState.reset_punch_counts()
 	GameState.player_hp = GameState.player_max_hp
 	GameState.stamina = GameState.stamina_max
 	GameState.set_has_guard_mastery(false)

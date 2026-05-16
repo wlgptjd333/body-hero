@@ -5,7 +5,7 @@ extends RefCounted
 # Calorie estimation constants (approximate, not medical advice)
 const KCAL_PUNCH := 0.42
 const KCAL_UPPERCUT := 0.55
-const KCAL_SQUAT := 0.30
+const KCAL_SQUAT := 0.30  # 이전 명칭: KCAL_DODGE
 const KCAL_GUARD_PER_SEC := 0.06
 const DEFAULT_WEIGHT_KG := 70.0
 const DEFAULT_HEIGHT_CM := 170.0
@@ -99,9 +99,6 @@ func end_session() -> float:
 	_add_today_calories(_last_session_calories)
 	return _last_session_calories
 
-
-func is_session_active() -> bool:
-	return _session_active
 
 
 func get_last_session_calories() -> float:

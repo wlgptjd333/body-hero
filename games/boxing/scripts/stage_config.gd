@@ -11,7 +11,6 @@ class_name StageConfig extends Resource
 @export var enemy_evade_idle_min: float = 0.35
 @export var enemy_evade_idle_max: float = 1.1
 @export var enemy_evade_duration: float = 0.38
-@export var enemy_recovery_mult: float = 1.0
 
 @export var bgm_paths: Array[String] = [
 	"res://assets/audio/bgm/Retro_Ring_Rush.ogg",
