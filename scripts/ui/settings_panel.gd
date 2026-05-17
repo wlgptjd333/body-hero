@@ -140,11 +140,11 @@ func _setup_tabs() -> void:
 		"ContentControls",
 	]
 	for content_name: String in content_names:
-		var node: VBoxContainer = get_node_or_null("%s/%s" % [contents_path, name])
+		var node: VBoxContainer = get_node_or_null("%s/%s" % [contents_path, content_name])
 		if node:
 			_tab_panels.append(node)
 		else:
-			push_warning("SettingsPanel: 탭 콘텐츠를 찾을 수 없음: %s" % name)
+			push_warning("SettingsPanel: 탭 콘텐츠를 찾을 수 없음: %s" % content_name)
 
 
 func _on_tab_pressed(index: int) -> void:

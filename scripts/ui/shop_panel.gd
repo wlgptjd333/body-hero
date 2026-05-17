@@ -8,8 +8,6 @@ signal back_pressed
 @onready var _btn_close: Button = $Dim/Panel/Margin/VBox/BtnClose
 @onready var _equip_label: Label = $Dim/Panel/Margin/VBox/EquipLabel
 
-var _item_rows: Dictionary = {}
-
 func _ready() -> void:
 	UIThemeHelper.format_glass_popup(self)
 	_btn_close.pressed.connect(_on_close)
@@ -46,7 +44,6 @@ func _refresh() -> void:
 			_equip_label.text = "착용 중인 글러브: %s" % skin_name
 	for child in _list.get_children():
 		child.queue_free()
-	_item_rows.clear()
 	_add_default_glove_row()
 	_refresh_glove_items()
 	_refresh_effect_items()
@@ -89,8 +86,6 @@ func _add_shop_row(item_id: String, def: Dictionary, price: int, equip_text: Str
 		btn.disabled = GameState.get_sweat() < price
 	row.add_child(btn)
 	_list.add_child(row)
-	if kind == "glove_skin" or kind == "hit_effect":
-		_item_rows[item_id] = {"buy_btn": btn}
 	var sep := HSeparator.new()
 	_list.add_child(sep)
 
