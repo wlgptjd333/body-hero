@@ -38,20 +38,13 @@ const PUNCH_TRANS := Tween.TRANS_QUINT
 ## 웹캠(UDP) 펀치만 트윈 길이에 곱함. 1보다 작을수록 임팩트까지 시간 단축(키보드 타이밍은 유지).
 const UDP_PUNCH_TIME_SCALE := 0.42
 
-const PUNCH_L_BODY_TEX_BASE := "res://assets/textures/characters/enemies/burger/burger_punch_l_"
-const PUNCH_L_BODY_FRAME_MAX := 8
-## SpriteFrames frame duration = relative weight; real seconds = sum_rel / fps.
-const PUNCH_L_BODY_REL1 := 0.026
-const PUNCH_L_BODY_REL2 := 0.022
-const PUNCH_L_BODY_REL3 := 0.022
-const PUNCH_L_BODY_REL4 := 0.078
+## PUNCH_L_BODY_* constants removed — body sprite unused.
 
 const HIT_LAYER_BIT := 2  # collision_layer 2 = 글러브
 
 @onready var left_glove: Area2D = $LeftGlove
 @onready var right_glove: Area2D = $RightGlove
-## 왼손 잽 몸통 연출(BodySprite 노드 없으면 글러브만 동작).
-@onready var _body_sprite: AnimatedSprite2D = get_node_or_null("BodySprite") as AnimatedSprite2D
+
 
 var _guard_spark: CPUParticles2D
 var _guard_flash: CPUParticles2D
@@ -97,7 +90,6 @@ func _ready() -> void:
 	_set_glove_hit(left_glove, false)
 	_set_glove_hit(right_glove, false)
 	_setup_combat_feedback()
-	_setup_punch_l_body_sprite()
 	_apply_glove_skin()
 
 func _apply_glove_skin() -> void:
@@ -115,91 +107,6 @@ func _apply_glove_skin() -> void:
 		var spr: Node = g.get_node_or_null("Sprite2D")
 		if spr is Sprite2D:
 			(spr as Sprite2D).modulate = color
-
-
-func _setup_punch_l_body_sprite() -> void:
-	if _body_sprite == null:
-		return
-	var sf := SpriteFrames.new()
-	sf.add_animation("idle")
-	sf.set_animation_loop("idle", true)
-	var idle_tex: Texture2D = null
-	var p1: String = "%s%02d.png" % [PUNCH_L_BODY_TEX_BASE, 1]
-	if ResourceLoader.exists(p1):
-		idle_tex = ResourceLoader.load(
-			p1, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
-		) as Texture2D
-	if idle_tex:
-		sf.add_frame("idle", idle_tex, 1.0)
-	sf.set_animation_speed("idle", 2.0)
-	sf.add_animation("punch_l")
-	sf.set_animation_loop("punch_l", false)
-	var rels: Array[float] = [
-		PUNCH_L_BODY_REL1,
-		PUNCH_L_BODY_REL2,
-		PUNCH_L_BODY_REL3,
-		PUNCH_L_BODY_REL4,
-	]
-	var sum_rel: float = 0.0
-	for r: float in rels:
-		sum_rel += r
-	# Real clip length = sum_rel / animation_fps (SpriteFrames docs).
-	var punch_total_sec: float = (
-		PUNCH_WINDUP_DURATION + PUNCH_STRIKE_DURATION + 0.016 + PUNCH_RETURN_DURATION
-	)
-	for idx: int in range(1, PUNCH_L_BODY_FRAME_MAX + 1):
-		var path: String = "%s%02d.png" % [PUNCH_L_BODY_TEX_BASE, idx]
-		if not ResourceLoader.exists(path):
-			continue
-		var tex: Texture2D = ResourceLoader.load(
-			path, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
-		) as Texture2D
-		if tex == null:
-			continue
-		var fi: int = idx - 1
-		var rel: float = rels[fi] if fi < rels.size() else rels[rels.size() - 1]
-		sf.add_frame("punch_l", tex, rel)
-	if sf.get_frame_count("punch_l") < 1:
-		_body_sprite.visible = false
-		return
-	if sum_rel > 0.0 and punch_total_sec > 0.0:
-		sf.set_animation_speed("punch_l", sum_rel / punch_total_sec)
-	_body_sprite.sprite_frames = sf
-	_body_sprite.speed_scale = 1.0
-	_body_sprite.visible = true
-	if sf.get_frame_count("idle") > 0:
-		_body_sprite.play(&"idle", 1.0)
-	else:
-		_body_sprite.animation = &"punch_l"
-		_body_sprite.set_frame_and_progress(0, 0.0)
-		_body_sprite.play(&"punch_l", 1.0)
-	if not _body_sprite.animation_finished.is_connected(_on_punch_body_animation_finished):
-		_body_sprite.animation_finished.connect(_on_punch_body_animation_finished)
-
-
-func _on_punch_body_animation_finished() -> void:
-	if _body_sprite == null or _body_sprite.sprite_frames == null:
-		return
-	_body_sprite.speed_scale = 1.0
-	if _body_sprite.animation == &"punch_l" and _body_sprite.sprite_frames.has_animation("idle"):
-		_body_sprite.play(&"idle", 1.0)
-
-
-func _play_punch_l_body_motion(glove_time_scale: float = 1.0) -> void:
-	if _body_sprite == null or not _body_sprite.visible:
-		return
-	if _body_sprite.sprite_frames == null:
-		return
-	if not _body_sprite.sprite_frames.has_animation("punch_l"):
-		return
-	# 글러브 트윈이 UDP에서 짧아지면 몸통 클립도 같은 비율로 빠르게(싱크 유지).
-	var body_scale: float = 1.0 / glove_time_scale if glove_time_scale > 0.001 else 1.0
-	_body_sprite.speed_scale = body_scale
-	# End of non-loop anim pauses on last frame; reset before replay.
-	_body_sprite.stop()
-	_body_sprite.animation = &"punch_l"
-	_body_sprite.set_frame_and_progress(0, 0.0)
-	_body_sprite.play(&"punch_l", 1.0)
 
 
 func _setup_combat_feedback() -> void:
