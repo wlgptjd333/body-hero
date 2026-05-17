@@ -36,7 +36,7 @@ const GUARD_MIN_DURATION := 0.12
 const GUARD_MAX_DURATION := 3.0
 const PUNCH_TRANS := Tween.TRANS_QUINT
 ## 웹캠(UDP) 펀치만 트윈 길이에 곱함. 1보다 작을수록 임팩트까지 시간 단축(키보드 타이밍은 유지).
-const UDP_PUNCH_TIME_SCALE := 0.42
+const UDP_PUNCH_TIME_SCALE := 0.30  # 웹캠 입력 애니메이션 3.3x 가속 (0.42→0.30)
 
 ## PUNCH_L_BODY_* constants removed — body sprite unused.
 
@@ -457,7 +457,6 @@ func _play_punch(
 	tween.set_parallel(false)
 	tween.tween_callback(func() -> void: punch_impact.emit(DAMAGE_PUNCH, action))
 	tween.tween_callback(func() -> void: _release_hand_busy_after_impact(action))
-	tween.tween_interval(0.016 * ts)
 	tween.set_parallel(true)
 	tween.tween_property(glove, "position", default_pos, PUNCH_RETURN_DURATION * ts).set_trans(Tween.TRANS_QUAD)
 	tween.tween_property(glove, "scale", default_scale, PUNCH_RETURN_DURATION * ts).set_trans(Tween.TRANS_QUAD)

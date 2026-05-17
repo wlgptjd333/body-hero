@@ -273,7 +273,7 @@ func _process(_delta: float) -> void:
 		return
 	_server.poll()
 	var processed: int = 0
-	const MAX_UDP_PER_FRAME: int = 10
+	const MAX_UDP_PER_FRAME: int = 20
 	while _server.is_connection_available() and processed < MAX_UDP_PER_FRAME:
 		processed += 1
 		var peer: PacketPeerUDP = _server.take_connection()
