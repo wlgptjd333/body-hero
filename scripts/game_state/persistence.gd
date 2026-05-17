@@ -110,15 +110,28 @@ static func load_all(stats_keys: Array) -> Dictionary:
 		return {}
 
 	var data: Dictionary = {}
+	_load_stats(cfg, stats_keys, data)
+	_load_workout_profile(cfg, data)
+	_load_daily_challenges(cfg, data)
+	_load_time_attack(cfg, data)
+	_load_upgrades(cfg, data)
+	_load_difficulty(cfg, data)
+	_load_stage_progress(cfg, data)
+	_load_achievements(cfg, data)
+	_load_shop(cfg, data)
+	_load_boss(cfg, data)
+	return data
 
-	# stats
+
+static func _load_stats(cfg: ConfigFile, stats_keys: Array, data: Dictionary) -> void:
 	var punch_counts: Dictionary = {}
 	for k: String in stats_keys:
 		if cfg.has_section_key("stats", k):
 			punch_counts[k] = cfg.get_value("stats", k, 0)
 	data["punch_counts"] = punch_counts
 
-	# workout/profile
+
+static func _load_workout_profile(cfg: ConfigFile, data: Dictionary) -> void:
 	var wd: Dictionary = {}
 	if cfg.has_section_key("workout", "last_session_calories"):
 		wd["last_session_calories"] = float(cfg.get_value("workout", "last_session_calories", 0.0))
@@ -146,7 +159,8 @@ static func load_all(stats_keys: Array) -> Dictionary:
 	wd["daily_weight_log"] = daily_wt
 	data["workout"] = wd
 
-	# daily challenges
+
+static func _load_daily_challenges(cfg: ConfigFile, data: Dictionary) -> void:
 	var cd: Dictionary = {}
 	var ch_date: String = ""
 	if cfg.has_section_key("daily_challenges", "date"):
@@ -172,7 +186,8 @@ static func load_all(stats_keys: Array) -> Dictionary:
 		cd["picks_invalid"] = loaded_picks.size() != 3
 	data["challenges"] = cd
 
-	# time attack
+
+static func _load_time_attack(cfg: ConfigFile, data: Dictionary) -> void:
 	var spd: Dictionary = {}
 	if cfg.has_section_key("time_attack", "best_sec"):
 		spd["best_sec"] = float(cfg.get_value("time_attack", "best_sec", -1.0))
@@ -191,7 +206,8 @@ static func load_all(stats_keys: Array) -> Dictionary:
 	spd["history"] = history
 	data["stage_progress"] = spd
 
-	# meta/upgrades
+
+static func _load_upgrades(cfg: ConfigFile, data: Dictionary) -> void:
 	var ud: Dictionary = {}
 	if cfg.has_section_key("meta", "sweat"):
 		ud["sweat"] = maxi(0, int(cfg.get_value("meta", "sweat", 0)))
@@ -203,11 +219,14 @@ static func load_all(stats_keys: Array) -> Dictionary:
 		ud["up_recover"] = clampi(int(cfg.get_value("meta", "up_rec", 0)), 0, 20)
 	data["upgrade"] = ud
 
-	# difficulty
+
+static func _load_difficulty(cfg: ConfigFile, data: Dictionary) -> void:
 	if cfg.has_section_key("progress", "difficulty"):
 		data["difficulty"] = str(cfg.get_value("progress", "difficulty", "normal"))
 
-	# stage stars/records/last_played
+
+static func _load_stage_progress(cfg: ConfigFile, data: Dictionary) -> void:
+	var spd: Dictionary = data.get("stage_progress", {})
 	if cfg.has_section("stage_stars"):
 		var stars: Dictionary = {}
 		for sid: String in cfg.get_section_keys("stage_stars"):
@@ -234,8 +253,10 @@ static func load_all(stats_keys: Array) -> Dictionary:
 					records[sid] = {}
 				records[sid]["least_dmg"] = float(cfg.get_value("stage_records", key, -1.0))
 		spd["records"] = records
+	data["stage_progress"] = spd
 
-	# achievements
+
+static func _load_achievements(cfg: ConfigFile, data: Dictionary) -> void:
 	var ad: Dictionary = {}
 	var ach_unlocked: Dictionary = {}
 	if cfg.has_section("achievements_unlocked"):
@@ -249,7 +270,8 @@ static func load_all(stats_keys: Array) -> Dictionary:
 	ad["progress"] = ach_progress
 	data["achievements"] = ad
 
-	# shop
+
+static func _load_shop(cfg: ConfigFile, data: Dictionary) -> void:
 	var sdata: Dictionary = {}
 	var shop_owned: Dictionary = {}
 	if cfg.has_section("shop_owned"):
@@ -267,13 +289,12 @@ static func load_all(stats_keys: Array) -> Dictionary:
 		sdata["equipped_hit_effect"] = str(cfg.get_value("shop", "equipped_hit_effect", ""))
 	data["shop"] = sdata
 
-	# boss
+
+static func _load_boss(cfg: ConfigFile, data: Dictionary) -> void:
 	var bd: Dictionary = {}
 	if cfg.has_section_key("boss", "phase"):
 		bd["phase"] = int(cfg.get_value("boss", "phase", 0))
 	data["boss"] = bd
-
-	return data
 
 
 static func _today_key_static() -> String:
