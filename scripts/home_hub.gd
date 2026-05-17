@@ -30,7 +30,6 @@ func _ready() -> void:
 	_beautify_ui()
 
 func _beautify_ui() -> void:
-	var root: Control = $Root
 	var bg: ColorRect = $Root/Bg
 	if bg:
 		bg.color = UIThemeHelper.C_BG

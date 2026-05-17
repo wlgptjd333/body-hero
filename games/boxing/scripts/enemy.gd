@@ -23,7 +23,7 @@ var current_hp: float
 @export var is_boss: bool = false
 @export var boss_phases: int = 1
 var _current_phase: int = 1
-var _phase_hp_thresholds: Array[float] = []
+# var _phase_hp_thresholds: Array[float] = []  # 미사용 (보스 페이즈는 단순 카운터)
 
 ## 회피: 대기(랜덤) 후 evade_duration 동안 회피.
 @export var evade_duration := 0.38
@@ -498,9 +498,6 @@ func _burst_hit_particles(punch_type: String) -> void:
 
 	var shake_intensity: float = 30.0 if up else 10.0
 	var hitstop_dur_ms: int = 12 if up else 6
-	var flash_color: Color = theme.get("flash_color", Color(1, 1, 1))
-	var flash_alpha: float = 0.3 if up else 0.15
-
 	HitImpactSystem.trigger_shake(shake_intensity, 0.15)
 	HitImpactSystem.trigger_hitstop(hitstop_dur_ms)
 

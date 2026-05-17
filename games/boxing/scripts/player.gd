@@ -366,7 +366,7 @@ func _flash_gloves_damage() -> void:
 		tw.tween_property(c, "modulate", Color.WHITE, 0.16)
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	# 가드 타임아웃: 3초 이상 가드 유지 시 강제 해제 (UDP 끊김 방어)
 	if _guarding:
 		var guard_elapsed: float = Time.get_ticks_msec() / 1000.0 - _guard_enter_time

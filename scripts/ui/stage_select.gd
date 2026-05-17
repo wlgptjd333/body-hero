@@ -255,16 +255,16 @@ func _build_carousel() -> void:
 	for i: int in range(defs.size()):
 		var def: Dictionary = defs[i]
 		var img_path: String = str(def.get("monster_image", ""))
-		var tr := TextureRect.new()
-		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED as TextureRect.StretchMode
-		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
+		var tex_rect := TextureRect.new()
+		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED as TextureRect.StretchMode
+		tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE as Control.MouseFilter
 		if not img_path.is_empty() and ResourceLoader.exists(img_path):
-			tr.texture = load(img_path) as Texture2D
-		tr.size = Vector2(140, 140)
-		tr.modulate = Color(0.2, 0.2, 0.25, 0.25)
-		tr.visible = false
-		_carousel_stack.add_child(tr)
-		_carousel_rects.append(tr)
+			tex_rect.texture = load(img_path) as Texture2D
+		tex_rect.size = Vector2(140, 140)
+		tex_rect.modulate = Color(0.2, 0.2, 0.25, 0.25)
+		tex_rect.visible = false
+		_carousel_stack.add_child(tex_rect)
+		_carousel_rects.append(tex_rect)
 
 
 func _animate_carousel(selected_index: int) -> void:
@@ -273,19 +273,19 @@ func _animate_carousel(selected_index: int) -> void:
 	var cw: float = _carousel_stack.size.x if _carousel_stack.size.x > 10 else 300.0
 	var cy: float = _carousel_stack.size.y if _carousel_stack.size.y > 10 else 160.0
 	for i: int in range(_carousel_rects.size()):
-		var tr: TextureRect = _carousel_rects[i]
-		tr.visible = true
-		var tween: Tween = tr.create_tween()
+		var carousel_tr: TextureRect = _carousel_rects[i]
+		carousel_tr.visible = true
+		var tween: Tween = carousel_tr.create_tween()
 		tween.set_parallel(true)
 		if i == selected_index:
-			tween.tween_property(tr, "position", Vector2(cw / 2 - 80, cy / 2 - 80), 0.3).set_trans(Tween.TRANS_QUAD)
-			tween.tween_property(tr, "size", Vector2(160, 160), 0.3).set_trans(Tween.TRANS_QUAD)
-			tween.tween_property(tr, "modulate", Color(0.5, 0.5, 0.48, 0.95), 0.3)
+			tween.tween_property(carousel_tr, "position", Vector2(cw / 2 - 80, cy / 2 - 80), 0.3).set_trans(Tween.TRANS_QUAD)
+			tween.tween_property(carousel_tr, "size", Vector2(160, 160), 0.3).set_trans(Tween.TRANS_QUAD)
+			tween.tween_property(carousel_tr, "modulate", Color(0.5, 0.5, 0.48, 0.95), 0.3)
 		else:
 			var offset: float = (i - selected_index) * 55.0
-			tween.tween_property(tr, "position", Vector2(cw / 2 - 50 + offset, cy / 2 - 50), 0.3).set_trans(Tween.TRANS_QUAD)
-			tween.tween_property(tr, "size", Vector2(100, 100), 0.3).set_trans(Tween.TRANS_QUAD)
-			tween.tween_property(tr, "modulate", Color(0.15, 0.15, 0.2, 0.2), 0.3)
+			tween.tween_property(carousel_tr, "position", Vector2(cw / 2 - 50 + offset, cy / 2 - 50), 0.3).set_trans(Tween.TRANS_QUAD)
+			tween.tween_property(carousel_tr, "size", Vector2(100, 100), 0.3).set_trans(Tween.TRANS_QUAD)
+			tween.tween_property(carousel_tr, "modulate", Color(0.15, 0.15, 0.2, 0.2), 0.3)
 
 
 func _on_start() -> void:

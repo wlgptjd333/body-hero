@@ -42,8 +42,8 @@ func _refresh() -> void:
 		if skin == "":
 			_equip_label.text = "착용 중인 글러브: 기본"
 		else:
-			var name: String = GameState.get_shop_items().get(skin, {}).get("name", skin)
-			_equip_label.text = "착용 중인 글러브: %s" % name
+			var skin_name: String = GameState.get_shop_items().get(skin, {}).get("name", skin)
+			_equip_label.text = "착용 중인 글러브: %s" % skin_name
 	for child in _list.get_children():
 		child.queue_free()
 	_item_rows.clear()

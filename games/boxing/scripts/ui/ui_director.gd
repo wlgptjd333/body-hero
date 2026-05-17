@@ -103,8 +103,8 @@ func update_combo(count: int) -> void:
 		_combo_prev_count = count
 		return
 	_combo_label.visible = true
-	var prev_milestone: int = _combo_prev_count / 5
-	var cur_milestone: int = count / 5
+	var prev_milestone: int = int(_combo_prev_count / 5.0)
+	var cur_milestone: int = int(count / 5.0)
 	var first_show: bool = _combo_prev_count < 2
 	if (first_show or cur_milestone != prev_milestone) and _combo_positions.size() > 0:
 		_combo_label.position = _combo_positions[randi() % _combo_positions.size()]
@@ -118,7 +118,7 @@ func update_combo(count: int) -> void:
 	else:
 		_combo_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.35))
 	_combo_label.text = "%d COMBO" % count
-	var milestone: int = count / 5
+	var milestone: int = int(count / 5.0)
 	var base_scale: float = 1.0 + float(milestone) * 0.12
 	base_scale = minf(base_scale, 2.0)
 	_combo_label.scale = Vector2(base_scale * 1.5, base_scale * 1.5)

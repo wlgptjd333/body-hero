@@ -3,7 +3,6 @@ extends Control
 
 signal back_pressed
 
-@onready var _scroll: ScrollContainer = $Dim/Panel/Margin/VBox/Scroll
 @onready var _list: VBoxContainer = $Dim/Panel/Margin/VBox/Scroll/List
 @onready var _btn_close: Button = $Dim/Panel/Margin/VBox/BtnClose
 @onready var _summary: Label = $Dim/Panel/Margin/VBox/SummaryLabel

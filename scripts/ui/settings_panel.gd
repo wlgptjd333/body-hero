@@ -139,7 +139,7 @@ func _setup_tabs() -> void:
 		"ContentWebcam",
 		"ContentControls",
 	]
-	for name: String in content_names:
+	for content_name: String in content_names:
 		var node: VBoxContainer = get_node_or_null("%s/%s" % [contents_path, name])
 		if node:
 			_tab_panels.append(node)
