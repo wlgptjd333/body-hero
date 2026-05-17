@@ -449,7 +449,8 @@ func _execute_strike(kind: String, side: String, stamina_cost: int, punch_scale:
 			action_name, _noop_busy, punch_scale
 		)
 	else:
-		_play_punch_l_body_motion(punch_scale)
+		if is_left:
+			_play_punch_l_body_motion(punch_scale)
 		_play_punch(
 			left_glove if is_left else right_glove,
 			_left_default_pos if is_left else _right_default_pos,
