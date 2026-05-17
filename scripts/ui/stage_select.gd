@@ -48,7 +48,7 @@ func _ready() -> void:
 		if str(def.get("id", "")) == default_id:
 			var idx: int = _find_stage_index(default_id)
 			if idx >= 0:
-				_page_index = idx / STAGES_PER_PAGE
+				_page_index = int(float(idx) / float(STAGES_PER_PAGE))
 				_populate_current_page()
 				_update_pagination_ui()
 			_on_stage_selected(default_id)
