@@ -44,125 +44,72 @@ func _refresh() -> void:
 		else:
 			var name: String = GameState.get_shop_items().get(skin, {}).get("name", skin)
 			_equip_label.text = "착용 중인 글러브: %s" % name
-	
 	for child in _list.get_children():
 		child.queue_free()
 	_item_rows.clear()
-
-	# 기본 글러브 해제 row
 	_add_default_glove_row()
+	_refresh_glove_items()
+	_refresh_effect_items()
 
-	var items: Dictionary = GameState.get_shop_items()
-	for item_id: String in items.keys():
-		var def: Dictionary = items[item_id]
-		var kind: String = def.get("kind", "")
-		var price: int = int(def.get("price", 0))
-		var owned: bool = GameState.is_item_owned(item_id)
-		var count: int = GameState.get_item_inventory_count(item_id)
 
-		var row := HBoxContainer.new()
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-		var info := VBoxContainer.new()
-		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-		var title := Label.new()
-		title.text = "%s (%d 스웨트)" % [str(def.get("name", item_id)), price]
-		title.add_theme_font_size_override("font_size", 15)
-		info.add_child(title)
-
-		var desc := Label.new()
-		var desc_text: String = str(def.get("desc", ""))
-		if kind == "consumable":
-			desc_text += " [보유: %d]" % count
-		elif kind == "glove_skin" and owned:
-			desc_text += " [보유함]"
-		desc.text = desc_text
-		desc.add_theme_font_size_override("font_size", 12)
-		desc.add_theme_color_override("font_color", Color(0.75, 0.75, 0.8))
-		info.add_child(desc)
-		row.add_child(info)
-
-		var btn := Button.new()
-		var is_equipped: bool = GameState.get_equipped_glove_skin() == item_id
-
-		if kind == "glove_skin" and owned:
-			if is_equipped:
-				btn.text = "착용 중"
-				btn.disabled = true
-			else:
-				btn.text = "착용"
-				btn.pressed.connect(_on_equip.bind(item_id))
-		elif kind == "glove_skin" and not owned:
-			btn.text = "구매"
-			btn.pressed.connect(_on_buy.bind(item_id))
-			btn.disabled = GameState.get_sweat() < price
-		elif kind == "consumable":
-			btn.text = "구매"
-			btn.pressed.connect(_on_buy.bind(item_id))
-			btn.disabled = GameState.get_sweat() < price
-		else:
-			btn.text = "구매"
-			btn.pressed.connect(_on_buy.bind(item_id))
-			btn.disabled = GameState.get_sweat() < price
-
-		row.add_child(btn)
-		_list.add_child(row)
+func _add_shop_row(item_id: String, def: Dictionary, price: int, equip_text: String, equipped_text: String, on_equip: Callable) -> void:
+	var owned: bool = GameState.is_item_owned(item_id)
+	var count: int = GameState.get_item_inventory_count(item_id)
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var title := Label.new()
+	title.text = "%s (%d 스웨트)" % [str(def.get("name", item_id)), price]
+	title.add_theme_font_size_override("font_size", 15)
+	info.add_child(title)
+	var desc := Label.new()
+	var desc_text: String = str(def.get("desc", ""))
+	var kind: String = def.get("kind", "")
+	if kind == "consumable":
+		desc_text += " [보유: %d]" % count
+	elif kind in ["glove_skin", "hit_effect"] and owned:
+		desc_text += " [보유함]"
+	desc.text = desc_text
+	desc.add_theme_font_size_override("font_size", 12)
+	desc.add_theme_color_override("font_color", Color(0.75, 0.75, 0.8))
+	info.add_child(desc)
+	row.add_child(info)
+	var btn := Button.new()
+	var is_equipped: bool = GameState.get_equipped_glove_skin() == item_id or GameState.get_equipped_hit_effect() == item_id
+	if owned and is_equipped:
+		btn.text = equipped_text
+		btn.disabled = true
+	elif owned:
+		btn.text = equip_text
+		btn.pressed.connect(on_equip.bind(item_id))
+	else:
+		btn.text = "구매"
+		btn.pressed.connect(_on_buy.bind(item_id))
+		btn.disabled = GameState.get_sweat() < price
+	row.add_child(btn)
+	_list.add_child(row)
+	if kind == "glove_skin" or kind == "hit_effect":
 		_item_rows[item_id] = {"buy_btn": btn}
+	var sep := HSeparator.new()
+	_list.add_child(sep)
 
-		var sep := HSeparator.new()
-		_list.add_child(sep)
 
+func _refresh_glove_items() -> void:
+	for item_id: String in GameState.get_shop_items().keys():
+		var def: Dictionary = GameState.get_shop_items()[item_id]
+		_add_shop_row(item_id, def, int(def.get("price", 0)), "착용", "착용 중", _on_equip)
+
+
+func _refresh_effect_items() -> void:
 	var effect_header := Label.new()
 	effect_header.text = "━━ 히트 이펙트 ━━"
 	effect_header.add_theme_font_size_override("font_size", 14)
 	effect_header.add_theme_color_override("font_color", UIThemeHelper.C_ACCENT)
 	_list.add_child(effect_header)
-
-	var themes: Dictionary = GameState.get_hit_effect_themes()
-	for item_id: String in themes.keys():
-		var def: Dictionary = themes[item_id]
-		var price: int = int(def.get("price", 0))
-		var owned: bool = GameState.is_item_owned(item_id)
-
-		var row := HBoxContainer.new()
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-		var info := VBoxContainer.new()
-		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-		var title := Label.new()
-		title.text = "%s (%d 스웨트)" % [str(def.get("name", item_id)), price]
-		title.add_theme_font_size_override("font_size", 15)
-		info.add_child(title)
-
-		var desc := Label.new()
-		desc.text = str(def.get("desc", ""))
-		desc.add_theme_font_size_override("font_size", 12)
-		desc.add_theme_color_override("font_color", Color(0.75, 0.75, 0.8))
-		info.add_child(desc)
-		row.add_child(info)
-
-		var btn := Button.new()
-		var is_equipped: bool = GameState.get_equipped_hit_effect() == item_id
-
-		if owned:
-			if is_equipped:
-				btn.text = "장착 중"
-				btn.disabled = true
-			else:
-				btn.text = "장착"
-				btn.pressed.connect(_on_equip_hit_effect.bind(item_id))
-		else:
-			btn.text = "구매"
-			btn.pressed.connect(_on_buy.bind(item_id))
-			btn.disabled = GameState.get_sweat() < price
-
-		row.add_child(btn)
-		_list.add_child(row)
-
-		var sep2 := HSeparator.new()
-		_list.add_child(sep2)
+	for item_id: String in GameState.get_hit_effect_themes().keys():
+		var def: Dictionary = GameState.get_hit_effect_themes()[item_id]
+		_add_shop_row(item_id, def, int(def.get("price", 0)), "장착", "장착 중", _on_equip_hit_effect)
 
 func _add_default_glove_row() -> void:
 	var row := HBoxContainer.new()

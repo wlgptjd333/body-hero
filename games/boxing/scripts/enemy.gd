@@ -155,23 +155,39 @@ func _setup_idle_sprite_frames() -> void:
 	if sprite == null:
 		return
 	var sf := SpriteFrames.new()
-	sf.add_animation("idle")
-	sf.set_animation_loop("idle", true)
-	# 로컬 작업/에셋 정리 중에 프레임 번호가 중간에 비거나 01이 빠져도 동작하도록:
-	# "없으면 종료"가 아니라 "없으면 건너뛰기"로 로드한다.
-	for idx: int in range(1, IDLE_FRAME_PATH_MAX + 1):
-		var p: String = "%s%02d.png" % [idle_texture_base, idx]
+	_load_idle_frames(sf)
+	if sf.get_frame_count("idle") < 1:
+		return
+	_load_ko_frames(sf)
+	_load_attack_frames(sf)
+	_load_hit_frames(sf)
+	sprite.sprite_frames = sf
+	sprite.play("idle")
+
+
+func _load_textures(base_path: String, max_idx: int, label: String) -> Array[Texture2D]:
+	var result: Array[Texture2D] = []
+	for idx: int in range(1, max_idx + 1):
+		var p: String = "%s%02d.png" % [base_path, idx]
 		if not ResourceLoader.exists(p):
 			continue
 		var tex: Texture2D = ResourceLoader.load(
 			p, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
 		) as Texture2D
 		if tex == null:
-			push_warning("Enemy: IDLE 텍스처 로드 실패: %s" % p)
+			push_warning("Enemy: %s 텍스처 로드 실패: %s" % [label, p])
 			continue
-		sf.add_frame("idle", tex, IDLE_FRAME_DURATION_SEC)
+		result.append(tex)
+	return result
+
+
+func _load_idle_frames(sf: SpriteFrames) -> void:
+	sf.add_animation("idle")
+	sf.set_animation_loop("idle", true)
+	var texs := _load_textures(idle_texture_base, IDLE_FRAME_PATH_MAX, "IDLE")
+	for t: Texture2D in texs:
+		sf.add_frame("idle", t, IDLE_FRAME_DURATION_SEC)
 	if sf.get_frame_count("idle") < 1:
-		# 최후의 안전장치: 프레임이 없으면 placeholder라도 보여준다(적이 '안 뜬' 상태 방지)
 		var fallback_tex: Texture2D = null
 		if ResourceLoader.exists(FALLBACK_ENEMY_TEXTURE):
 			fallback_tex = load(FALLBACK_ENEMY_TEXTURE) as Texture2D
@@ -179,62 +195,37 @@ func _setup_idle_sprite_frames() -> void:
 			sf.add_frame("idle", fallback_tex, 1.0)
 		else:
 			push_error("Enemy: IDLE 프레임이 없고 fallback 텍스처도 없습니다. %s" % FALLBACK_ENEMY_TEXTURE)
-			return
+
+
+func _load_ko_frames(sf: SpriteFrames) -> void:
 	sf.add_animation("ko")
 	sf.set_animation_loop("ko", false)
-	for kidx: int in range(1, KO_FRAME_PATH_MAX + 1):
-		var kp: String = "%s%02d.png" % [ko_texture_base, kidx]
-		if not ResourceLoader.exists(kp):
-			continue
-		var ktex: Texture2D = ResourceLoader.load(
-			kp, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
-		) as Texture2D
-		if ktex == null:
-			push_warning("Enemy: KO 텍스처 로드 실패: %s" % kp)
-			continue
-		sf.add_frame("ko", ktex, KO_FRAME_DURATION_SEC)
-	# 공격: burger_punch_l_01 … _04 (없으면 기존 위치 트윈만 사용)
-	var attack_textures: Array[Texture2D] = []
-	for aidx: int in range(1, ATTACK_FRAME_PATH_MAX + 1):
-		var ap: String = "%s%02d.png" % [attack_texture_base, aidx]
-		if not ResourceLoader.exists(ap):
-			continue
-		var atex: Texture2D = ResourceLoader.load(
-			ap, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
-		) as Texture2D
-		if atex == null:
-			push_warning("Enemy: ATTACK 텍스처 로드 실패: %s" % ap)
-			continue
-		attack_textures.append(atex)
-	if attack_textures.size() >= 1:
-		sf.add_animation("attack")
-		sf.set_animation_loop("attack", false)
-		for atex: Texture2D in attack_textures:
-			# 상대 duration 1.0 = 동일 길이 프레임. 실제 초는 set_animation_speed로 맞춤.
-			sf.add_frame("attack", atex, 1.0)
-		var sec_per_frame: float = maxf(attack_frame_duration_sec, 0.001)
-		sf.set_animation_speed("attack", 1.0 / sec_per_frame)
-	# 피격(단일/다중 프레임 지원): burger_hit_01 ... _NN
-	var hit_textures: Array[Texture2D] = []
-	for hidx: int in range(1, HIT_FRAME_PATH_MAX + 1):
-		var hp: String = "%s%02d.png" % [hit_texture_base, hidx]
-		if not ResourceLoader.exists(hp):
-			continue
-		var htex: Texture2D = ResourceLoader.load(
-			hp, "", ResourceLoader.CACHE_MODE_REPLACE as ResourceLoader.CacheMode
-		) as Texture2D
-		if htex == null:
-			push_warning("Enemy: HIT 텍스처 로드 실패: %s" % hp)
-			continue
-		hit_textures.append(htex)
-	if hit_textures.size() >= 1:
-		sf.add_animation("hit")
-		sf.set_animation_loop("hit", false)
-		for htex: Texture2D in hit_textures:
-			sf.add_frame("hit", htex, 1.0)
-		sf.set_animation_speed("hit", 1.0 / maxf(HIT_FRAME_DURATION_SEC, 0.001))
-	sprite.sprite_frames = sf
-	sprite.play("idle")
+	var texs := _load_textures(ko_texture_base, KO_FRAME_PATH_MAX, "KO")
+	for t: Texture2D in texs:
+		sf.add_frame("ko", t, KO_FRAME_DURATION_SEC)
+
+
+func _load_attack_frames(sf: SpriteFrames) -> void:
+	var texs := _load_textures(attack_texture_base, ATTACK_FRAME_PATH_MAX, "ATTACK")
+	if texs.is_empty():
+		return
+	sf.add_animation("attack")
+	sf.set_animation_loop("attack", false)
+	for t: Texture2D in texs:
+		sf.add_frame("attack", t, 1.0)
+	var sec_per_frame: float = maxf(attack_frame_duration_sec, 0.001)
+	sf.set_animation_speed("attack", 1.0 / sec_per_frame)
+
+
+func _load_hit_frames(sf: SpriteFrames) -> void:
+	var texs := _load_textures(hit_texture_base, HIT_FRAME_PATH_MAX, "HIT")
+	if texs.is_empty():
+		return
+	sf.add_animation("hit")
+	sf.set_animation_loop("hit", false)
+	for t: Texture2D in texs:
+		sf.add_frame("hit", t, 1.0)
+	sf.set_animation_speed("hit", 1.0 / maxf(HIT_FRAME_DURATION_SEC, 0.001))
 
 
 func _setup_hit_particles() -> void:

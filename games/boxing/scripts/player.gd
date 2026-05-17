@@ -403,8 +403,6 @@ func _process(delta: float) -> void:
 
 
 func play_action(action: String, via_udp: bool = false) -> bool:
-	# 연타 체감 개선: 왼손/오른손 동작은 각각의 글러브 busy만 막고, 반대손은 허용.
-	# guard/squat 등 전신 동작은 global busy로 막음.
 	if _busy_global and action != "guard_end" and action != "squat":
 		return false
 	if action in ["punch_l", "upper_l"] and _busy_left:
@@ -414,82 +412,92 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 	var punch_scale: float = UDP_PUNCH_TIME_SCALE if via_udp else 1.0
 	match action:
 		"punch_l":
-			if not GameState.consume_stamina(GameState.STAMINA_PUNCH):
-				return false
-			_busy_left = true
-			GameState.record_action_for_calorie("punch_l")
-			action_performed.emit("punch_l")
-			_play_punch_l_body_motion(punch_scale)
-			_play_punch(left_glove, _left_default_pos, _left_default_scale, "punch_l", _noop_busy, punch_scale)
-			return true
+			return _execute_strike("punch", "l", GameState.STAMINA_PUNCH, punch_scale)
 		"punch_r":
-			if not GameState.consume_stamina(GameState.STAMINA_PUNCH):
-				return false
-			_busy_right = true
-			GameState.record_action_for_calorie("punch_r")
-			action_performed.emit("punch_r")
-			_play_punch(
-				right_glove, _right_default_pos, _right_default_scale, "punch_r", _noop_busy, punch_scale
-			)
-			return true
+			return _execute_strike("punch", "r", GameState.STAMINA_PUNCH, punch_scale)
 		"upper_l":
-			if not GameState.consume_stamina(GameState.STAMINA_UPPERCUT):
-				return false
-			_busy_left = true
-			GameState.record_action_for_calorie("upper_l")
-			action_performed.emit("upper_l")
-			_play_uppercut(
-				left_glove, _left_default_pos, _left_default_scale, "upper_l", _noop_busy, punch_scale
-			)
-			return true
+			return _execute_strike("upper", "l", GameState.STAMINA_UPPERCUT, punch_scale)
 		"upper_r":
-			if not GameState.consume_stamina(GameState.STAMINA_UPPERCUT):
-				return false
-			_busy_right = true
-			GameState.record_action_for_calorie("upper_r")
-			action_performed.emit("upper_r")
-			_play_uppercut(
-				right_glove, _right_default_pos, _right_default_scale, "upper_r", _noop_busy, punch_scale
-			)
-			return true
+			return _execute_strike("upper", "r", GameState.STAMINA_UPPERCUT, punch_scale)
 		"squat":
-			if not GameState.consume_stamina(GameState.STAMINA_SQUAT):
-				return false
-			_busy_global = true
-			GameState.record_action_for_calorie("squat")
-			GameState.add_punch_count("squat")
-			GameState.apply_squat_heal(0.10)
-			action_performed.emit("squat")
-			_play_squat(_next_squat_left, func(): _busy_global = false)
-			_next_squat_left = not _next_squat_left
-			return true
+			return _execute_squat()
 		"guard":
-			if _guarding:
-				return false
-			_guard_via_udp = via_udp
-			_guarding = true
-			GameState.record_action_for_calorie("guard")
-			action_performed.emit("guard")
-			GameState.set_guarding(true)
-			_guard_enter_time = Time.get_ticks_msec() / 1000.0
-			GameState.record_guard()
-			_play_guard_enter()
-			return true
+			return _execute_guard(via_udp)
 		"guard_end":
-			if not _guarding:
-				return false
-			# 가드 최소 유지 시간 지나야 해제 가능 (짧게 누르면 무시)
-			var elapsed: float = Time.get_ticks_msec() / 1000.0 - _guard_enter_time
-			if elapsed < GUARD_MIN_DURATION:
-				return false
-			_guard_via_udp = false
-			_guarding = false
-			GameState.set_guarding(false)
-			_busy_global = true
-			_play_guard_exit(func() -> void: _busy_global = false)
-			return true
+			return _execute_guard_end()
 		_:
 			return false
+
+
+func _execute_strike(kind: String, side: String, stamina_cost: int, punch_scale: float) -> bool:
+	if not GameState.consume_stamina(stamina_cost):
+		return false
+	var is_left: bool = side == "l"
+	var is_upper: bool = kind == "upper"
+	if is_left:
+		_busy_left = true
+	else:
+		_busy_right = true
+	var action_name: String = "%s_%s" % [kind, side]
+	GameState.record_action_for_calorie(action_name)
+	action_performed.emit(action_name)
+	if is_upper:
+		_play_uppercut(
+			left_glove if is_left else right_glove,
+			_left_default_pos if is_left else _right_default_pos,
+			_left_default_scale if is_left else _right_default_scale,
+			action_name, _noop_busy, punch_scale
+		)
+	else:
+		_play_punch_l_body_motion(punch_scale)
+		_play_punch(
+			left_glove if is_left else right_glove,
+			_left_default_pos if is_left else _right_default_pos,
+			_left_default_scale if is_left else _right_default_scale,
+			action_name, _noop_busy, punch_scale
+		)
+	return true
+
+
+func _execute_squat() -> bool:
+	if not GameState.consume_stamina(GameState.STAMINA_SQUAT):
+		return false
+	_busy_global = true
+	GameState.record_action_for_calorie("squat")
+	GameState.add_punch_count("squat")
+	GameState.apply_squat_heal(0.10)
+	action_performed.emit("squat")
+	_play_squat(_next_squat_left, func(): _busy_global = false)
+	_next_squat_left = not _next_squat_left
+	return true
+
+
+func _execute_guard(via_udp: bool) -> bool:
+	if _guarding:
+		return false
+	_guard_via_udp = via_udp
+	_guarding = true
+	GameState.record_action_for_calorie("guard")
+	action_performed.emit("guard")
+	GameState.set_guarding(true)
+	_guard_enter_time = Time.get_ticks_msec() / 1000.0
+	GameState.record_guard()
+	_play_guard_enter()
+	return true
+
+
+func _execute_guard_end() -> bool:
+	if not _guarding:
+		return false
+	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _guard_enter_time
+	if elapsed < GUARD_MIN_DURATION:
+		return false
+	_guard_via_udp = false
+	_guarding = false
+	GameState.set_guarding(false)
+	_busy_global = true
+	_play_guard_exit(func() -> void: _busy_global = false)
+	return true
 
 
 func _set_glove_hit(glove: Area2D, enabled: bool) -> void:
