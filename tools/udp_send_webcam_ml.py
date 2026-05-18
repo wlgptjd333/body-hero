@@ -259,12 +259,19 @@ def _predict_local(
         idxs = _np.argsort(pred_vec)[-k:][::-1]
         topk_list = [(CLASS_NAMES[int(i)], float(pred_vec[int(i)])) for i in idxs]
 
-    if _model_single is not None and not _skip_guard_single:
+    if _model_single is not None:
         single_pred = _model_single.predict(last_frame, verbose=0)[0]
         single_idx = int(_np.argmax(single_pred))
         single_conf = float(single_pred[single_idx])
-        if single_idx == GUARD_INDEX and single_conf >= GUARD_FALLBACK_THRESHOLD:
-            return "guard", single_conf, topk_list
+        single_label = CLASS_NAMES[single_idx]
+        if single_label in ("upper_l", "upper_r"):
+            single_need = UPPER_CONFIDENCE_THRESHOLD
+        elif single_label in ("punch_l", "punch_r"):
+            single_need = _punch_confidence_override if _punch_confidence_override is not None else PUNCH_CONFIDENCE_THRESHOLD
+        else:
+            single_need = CONFIDENCE_THRESHOLD
+        if single_conf >= single_need:
+            return single_label, single_conf, topk_list
 
     if pred_vec is None:
         X = _np.array(sequence, dtype=_np.float32).reshape(1, SEQ_LEN, -1)
