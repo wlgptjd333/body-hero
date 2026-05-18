@@ -11,7 +11,7 @@ var _camera_backend: String = "auto"
 var _ml_speed_profile: String = "max_speed"
 var _roi_mode: bool = false
 var _center_zone_margin: float = 0.3
-var _skip_guard_single: bool = false
+var _skip_guard_single: bool = true  # 기본 시퀀스 가드
 var _full_body_squat: bool = false
 var _use_gpu: bool = false
 var _window_mode: int = 0  # 0=windowed, 1=fullscreen, 2=borderless
