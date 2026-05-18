@@ -710,7 +710,7 @@ def main():
             running_mode=RunningMode.VIDEO,
             num_poses=3,
             min_pose_detection_confidence=0.55,
-            min_tracking_confidence=0.5,
+            min_tracking_confidence=0.7,
             min_pose_presence_confidence=0.5,
         )
 
@@ -783,7 +783,7 @@ def main():
                 running_mode=RunningMode.VIDEO,
                 num_poses=3,
                 min_pose_detection_confidence=0.55,
-                min_tracking_confidence=0.5,
+            min_tracking_confidence=0.7,
                 min_pose_presence_confidence=0.5,
             )
             landmarker_holder = {"lm": None, "err": None}

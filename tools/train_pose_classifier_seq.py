@@ -269,10 +269,26 @@ def main():
 
     if args.augment > 0:
         rng = np.random.RandomState(43)
-        X_noise = X_train + rng.normal(0, args.augment, X_train.shape).astype(np.float32)
-        X_train = np.concatenate([X_train, X_noise], axis=0)
+        n = len(X_train)
+        X_aug = X_train.copy()
+        # 1) Gaussian noise (기존)
+        X_aug += rng.normal(0, args.augment, X_aug.shape).astype(np.float32)
+        # 2) Random scaling (±10%): 사용자-웹캠 거리 변동 시뮬레이션
+        scales = rng.uniform(0.9, 1.1, (n, 1, 1)).astype(np.float32)  # 1 scale per sequence
+        X_aug[..., :2] *= scales  # scale x,y only (z is depth)
+        # 3) Random rotation (±3°): 상체 기울임 시뮬레이션 (5° 이상은 자세 왜곡)
+        angles = rng.uniform(-0.052, 0.052, (n, 1, 1)).astype(np.float32)  # ±3° in radians
+        cos_a, sin_a = np.cos(angles), np.sin(angles)
+        xy = X_aug[..., :2].copy()
+        X_aug[..., 0] = xy[..., 0] * cos_a[..., 0] - xy[..., 1] * sin_a[..., 0]
+        X_aug[..., 1] = xy[..., 0] * sin_a[..., 0] + xy[..., 1] * cos_a[..., 0]
+        # 4) Random translation (±5%): 화면 내 위치 변동 시뮬레이션
+        shifts = rng.uniform(-0.05, 0.05, (n, 1, 2)).astype(np.float32)
+        X_aug[..., :2] += shifts
+        # Concatenate
+        X_train = np.concatenate([X_train, X_aug], axis=0)
         y_train = np.concatenate([y_train, y_train], axis=0)
-        print(f"증강(노이즈 std={args.augment}): 학습 시퀀스 {len(X_train)}")
+        print(f"증강(노이즈+스케일±10%+회전±5°+이동±5%): 학습 시퀀스 {len(X_train)}")
 
     classes = np.unique(y_train)
     weights = compute_class_weight("balanced", classes=classes, y=y_train)
