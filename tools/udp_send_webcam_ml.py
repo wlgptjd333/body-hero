@@ -49,12 +49,23 @@ from pose_class_names import GUARD_INDEX, POSE_CLASS_NAMES
 from cv_capture import open_cv_video_capture
 
 # 로컬 추론용 (pose_server와 동일). 시퀀스 길이는 로드한 모델 입력(time)에서 자동 설정.
-# 기본은 seq_len=4 모델을 우선 사용(콤보 우선; 없을 때만 len8 폴백).
+# seq_len=2 → 4 → 8 순으로 우선 사용 (짧을수록 저지연).
+_MODEL_SEQ_2 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len2.keras")
 _MODEL_SEQ_4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
 _MODEL_SEQ_8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
-MODEL_SEQ_PATH = _MODEL_SEQ_4 if os.path.isfile(_MODEL_SEQ_4) else _MODEL_SEQ_8
+if os.path.exists(_MODEL_SEQ_2):
+    MODEL_SEQ_PATH = _MODEL_SEQ_2
+    SEQ_LEN = 2
+elif os.path.exists(_MODEL_SEQ_4):
+    MODEL_SEQ_PATH = _MODEL_SEQ_4
+    SEQ_LEN = 4
+elif os.path.exists(_MODEL_SEQ_8):
+    MODEL_SEQ_PATH = _MODEL_SEQ_8
+    SEQ_LEN = 8
+else:
+    MODEL_SEQ_PATH = _MODEL_SEQ_4  # 없으면 기본 경로 유지(학습 전)
+    SEQ_LEN = 4
 MODEL_SINGLE_PATH = os.path.join(SCRIPT_DIR, "pose_classifier.keras")
-SEQ_LEN = 4 if MODEL_SEQ_PATH == _MODEL_SEQ_4 else 8
 CLASS_NAMES = list(POSE_CLASS_NAMES)
 # ML·UDP 라벨 = POSE_CLASS_NAMES (punch_l/r …)
 # 시퀀스 모델: 1등 클래스 확률이 이 값 미만이면 none. (기본은 balanced에 맞춤; --profile 로 덮어씀)
