@@ -250,32 +250,13 @@ def _predict_local(
     sequence = list(sequence)
     last_frame = _np.array(sequence[-1], dtype=_np.float32).reshape(1, -1)
 
-    pred_vec: Any = None
-    topk_list: Optional[List[Tuple[str, float]]] = None
+    X = _np.array(sequence, dtype=_np.float32).reshape(1, SEQ_LEN, -1)
+    pred_vec = _model_seq.predict(X, verbose=0)[0]
+    topk_list = None
     if seq_topk > 0:
-        X0 = _np.array(sequence, dtype=_np.float32).reshape(1, SEQ_LEN, -1)
-        pred_vec = _model_seq.predict(X0, verbose=0)[0]
         k = min(seq_topk, len(CLASS_NAMES))
         idxs = _np.argsort(pred_vec)[-k:][::-1]
         topk_list = [(CLASS_NAMES[int(i)], float(pred_vec[int(i)])) for i in idxs]
-
-    if _model_single is not None:
-        single_pred = _model_single.predict(last_frame, verbose=0)[0]
-        single_idx = int(_np.argmax(single_pred))
-        single_conf = float(single_pred[single_idx])
-        single_label = CLASS_NAMES[single_idx]
-        if single_label in ("upper_l", "upper_r"):
-            single_need = UPPER_CONFIDENCE_THRESHOLD
-        elif single_label in ("punch_l", "punch_r"):
-            single_need = _punch_confidence_override if _punch_confidence_override is not None else PUNCH_CONFIDENCE_THRESHOLD
-        else:
-            single_need = CONFIDENCE_THRESHOLD
-        if single_conf >= single_need:
-            return single_label, single_conf, topk_list
-
-    if pred_vec is None:
-        X = _np.array(sequence, dtype=_np.float32).reshape(1, SEQ_LEN, -1)
-        pred_vec = _model_seq.predict(X, verbose=0)[0]
 
     idx = int(_np.argmax(pred_vec))
     conf = float(pred_vec[idx])
