@@ -141,6 +141,11 @@ _model_seq = None
 _model_single = None
 _use_local_inference = False
 
+# EMA logit smoothing state (α=0.7)
+_ema_logits = None
+# Hysteresis state (active action index, held until confidence drops below 0.35)
+_active_state = None
+
 try:
     import numpy as _np
 except ImportError:
@@ -239,6 +244,9 @@ def _predict_local(
     """가드 단일(선택) → 시퀀스 softmax. (표시 라벨, 확신도, seq_topk>0일 때 상위k (이름,확률)).
 
     seq_topk>0이면 가드로 단축되기 전에도 시퀀스를 한 번 돌려 상위 확률을 돌려준다(원인 조사용).
+
+    EMA smoothing: raw softmax를 EMA(α=0.7)로 smoothing한 후 threshold 적용.
+    Hysteresis: 현재 active state의 exit threshold가 enter보다 낮아 flicker 방지.
     """
     none3: Tuple[Optional[str], float, Optional[List[Tuple[str, float]]]] = (None, 0.0, None)
     if _model_seq is None or _np is None or not sequence or len(sequence) != SEQ_LEN:
@@ -254,8 +262,17 @@ def _predict_local(
         idxs = _np.argsort(pred_vec)[-k:][::-1]
         topk_list = [(CLASS_NAMES[int(i)], float(pred_vec[int(i)])) for i in idxs]
 
-    idx = int(_np.argmax(pred_vec))
-    conf = float(pred_vec[idx])
+    # EMA logit smoothing (α=0.7)
+    # 순간 confidence dip을 필터링해 flicker 방지
+    global _ema_logits
+    if _ema_logits is None:
+        _ema_logits = pred_vec.copy()
+    else:
+        _ema_logits = 0.7 * pred_vec + 0.3 * _ema_logits
+    smoothed = _ema_logits
+
+    idx = int(_np.argmax(smoothed))
+    conf = float(smoothed[idx])
     label = CLASS_NAMES[idx]
     if label in ("upper_l", "upper_r"):
         need = UPPER_CONFIDENCE_THRESHOLD
@@ -267,8 +284,33 @@ def _predict_local(
         )
     else:
         need = CONFIDENCE_THRESHOLD
-    if conf < need:
-        label = "none"
+
+    # Hysteresis: active state 유지 (enter threshold보다 낮은 exit threshold)
+    # 한번 들어간 action은 confidence가 크게 떨어질 때만 해제
+    global _active_state
+    HYST_EXIT = 0.35
+
+    if label == "none":
+        if _active_state is not None:
+            active_conf = float(smoothed[_active_state])
+            if active_conf >= HYST_EXIT:
+                label = CLASS_NAMES[_active_state]
+                conf = active_conf
+            else:
+                _active_state = None
+        else:
+            _active_state = None
+    else:
+        if _active_state is None:
+            _active_state = idx
+        elif _active_state != idx:
+            current_conf = float(smoothed[_active_state])
+            if conf > current_conf + 0.05:
+                _active_state = idx
+
+    if label == "none":
+        _active_state = None
+        return label, conf, topk_list
     return label, conf, topk_list
 
 MODEL_PATH = os.path.join(SCRIPT_DIR, "pose_landmarker.task")
@@ -585,47 +627,47 @@ def main():
     if args.profile == "balanced":
         COOLDOWN_SEC = 0.22
         MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.22
-        # 직선 잽: 어퍼보다 적은 연속 프레임으로 반응. softmax는 어퍼와 동일(너무 높이면 잽 누락).
-        OTHER_PUNCH_CONFIRM_FRAMES = 3
-        UPPER_PUNCH_CONFIRM_FRAMES = 3
-        PUNCH_CONFIRM_FRAMES = 2
-        CONFIDENCE_THRESHOLD = 0.93
-        UPPER_CONFIDENCE_THRESHOLD = 0.88
-        PUNCH_CONFIDENCE_THRESHOLD = UPPER_CONFIDENCE_THRESHOLD
+        # 모델 정확도 99.94% → confirmation 1프레임이면 충분 (faster response)
+        OTHER_PUNCH_CONFIRM_FRAMES = 1
+        UPPER_PUNCH_CONFIRM_FRAMES = 1
+        PUNCH_CONFIRM_FRAMES = 1
+        CONFIDENCE_THRESHOLD = 0.90
+        UPPER_CONFIDENCE_THRESHOLD = 0.85
+        PUNCH_CONFIDENCE_THRESHOLD = 0.80
         UPPER_MOTION_MEAN_ABS_MIN = 0.0015
         UPPER_L_MOTION_RELAX = 0.6
     elif args.profile == "fast_react":
-        COOLDOWN_SEC = 0.22
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.22
-        OTHER_PUNCH_CONFIRM_FRAMES = 2
-        UPPER_PUNCH_CONFIRM_FRAMES = 2
-        PUNCH_CONFIRM_FRAMES = 2
-        CONFIDENCE_THRESHOLD = 0.93
-        UPPER_CONFIDENCE_THRESHOLD = 0.88
-        PUNCH_CONFIDENCE_THRESHOLD = UPPER_CONFIDENCE_THRESHOLD
+        COOLDOWN_SEC = 0.20
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.20
+        OTHER_PUNCH_CONFIRM_FRAMES = 1
+        UPPER_PUNCH_CONFIRM_FRAMES = 1
+        PUNCH_CONFIRM_FRAMES = 1
+        CONFIDENCE_THRESHOLD = 0.88
+        UPPER_CONFIDENCE_THRESHOLD = 0.82
+        PUNCH_CONFIDENCE_THRESHOLD = 0.78
         UPPER_MOTION_MEAN_ABS_MIN = 0.0012
         UPPER_L_MOTION_RELAX = 0.55
     elif args.profile == "fast_combo":
-        COOLDOWN_SEC = 0.17
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.17
-        OTHER_PUNCH_CONFIRM_FRAMES = 3
-        UPPER_PUNCH_CONFIRM_FRAMES = 3
-        PUNCH_CONFIRM_FRAMES = 2
-        CONFIDENCE_THRESHOLD = 0.95
-        UPPER_CONFIDENCE_THRESHOLD = 0.90
-        PUNCH_CONFIDENCE_THRESHOLD = UPPER_CONFIDENCE_THRESHOLD
-        UPPER_MOTION_MEAN_ABS_MIN = 0.0015
-        UPPER_L_MOTION_RELAX = 0.6
+        COOLDOWN_SEC = 0.15
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.15
+        OTHER_PUNCH_CONFIRM_FRAMES = 1
+        UPPER_PUNCH_CONFIRM_FRAMES = 1
+        PUNCH_CONFIRM_FRAMES = 1
+        CONFIDENCE_THRESHOLD = 0.88
+        UPPER_CONFIDENCE_THRESHOLD = 0.82
+        PUNCH_CONFIDENCE_THRESHOLD = 0.75
+        UPPER_MOTION_MEAN_ABS_MIN = 0.0012
+        UPPER_L_MOTION_RELAX = 0.55
     elif args.profile == "max_speed":
         # 콤보 우선: 오인식 리스크를 감수하고 반응·연타 지연 최소화
-        COOLDOWN_SEC = 0.08
+        COOLDOWN_SEC = 0.05
         MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.02
         OTHER_PUNCH_CONFIRM_FRAMES = 1
         UPPER_PUNCH_CONFIRM_FRAMES = 1
         PUNCH_CONFIRM_FRAMES = 1
-        CONFIDENCE_THRESHOLD = 0.82
-        UPPER_CONFIDENCE_THRESHOLD = 0.76
-        PUNCH_CONFIDENCE_THRESHOLD = UPPER_CONFIDENCE_THRESHOLD
+        CONFIDENCE_THRESHOLD = 0.80
+        UPPER_CONFIDENCE_THRESHOLD = 0.72
+        PUNCH_CONFIDENCE_THRESHOLD = 0.65
         UPPER_MOTION_MEAN_ABS_MIN = 0.0008
         UPPER_L_MOTION_RELAX = 0.5
 
