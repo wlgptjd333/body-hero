@@ -103,7 +103,7 @@ _skip_guard_single: bool = False
 _punch_confidence_override: Optional[float] = None
 
 # 속도/정확도 프리셋 (런타임에서 상수들을 덮어씀)
-SPEED_PROFILES = ("balanced", "fast_react", "fast_combo", "max_speed")
+SPEED_PROFILES = ("precise", "balanced", "rapid", "max_speed")
 
 class RemappedLandmark:
     __slots__ = ("x", "y", "z", "visibility")
@@ -526,19 +526,19 @@ def main():
         "--profile",
         choices=list(SPEED_PROFILES),
         default="balanced",
-        help="속도/정확도 프리셋 (balanced|fast_react|fast_combo|max_speed), 기본 balanced",
+        help="프로필: precise(정확도최우선) | balanced(기본) | rapid(빠른연타) | max_speed(최대속도), 기본 balanced",
     )
     parser.add_argument(
         "--react",
         type=float,
         default=None,
-        help="첫 반응 속도(0~1). 높을수록 확정 프레임/임계값이 공격적으로 바뀜. --profile 위에 추가로 적용",
+        help="반응 속도(0~1). 높을수록 임계값 하향 + 쿨다운 단축. --profile 위에 추가 조정",
     )
     parser.add_argument(
         "--combo",
         type=float,
         default=None,
-        help="연타 속도(0~1). 높을수록 COOLDOWN/MIN_GAP이 짧아짐. --profile 위에 추가로 적용",
+        help="연타 속도(0~1). 높을수록 COOLDOWN/MIN_GAP을 profile 기준 최대 60%%까지 단축",
     )
     parser.add_argument(
         "--debug-topk",
@@ -624,73 +624,71 @@ def main():
     if args.seq_model:
         MODEL_SEQ_PATH = args.seq_model
 
-    if args.profile == "balanced":
-        COOLDOWN_SEC = 0.22
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.22
-        # 모델 정확도 99.94% → confirmation 1프레임이면 충분 (faster response)
+    if args.profile == "precise":
+        # 정확도 최우선: 2프레임 확인, 높은 임계값, 긴 쿨다운
+        PUNCH_CONFIRM_FRAMES = 2
+        OTHER_PUNCH_CONFIRM_FRAMES = 2
+        UPPER_PUNCH_CONFIRM_FRAMES = 2
+        SQUAT_CONFIRM_FRAMES = 3
+        COOLDOWN_SEC = 0.30
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.30
+        CONFIDENCE_THRESHOLD = 0.95
+        UPPER_CONFIDENCE_THRESHOLD = 0.90
+        PUNCH_CONFIDENCE_THRESHOLD = 0.88
+        UPPER_MOTION_MEAN_ABS_MIN = 0.0020
+        UPPER_L_MOTION_RELAX = 0.65
+    elif args.profile == "balanced":
+        # 기본: 1프레임 확인, 중간 임계값 (99.94% 모델에 최적)
+        PUNCH_CONFIRM_FRAMES = 1
         OTHER_PUNCH_CONFIRM_FRAMES = 1
         UPPER_PUNCH_CONFIRM_FRAMES = 1
-        PUNCH_CONFIRM_FRAMES = 1
+        SQUAT_CONFIRM_FRAMES = 2
+        COOLDOWN_SEC = 0.22
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.22
         CONFIDENCE_THRESHOLD = 0.90
         UPPER_CONFIDENCE_THRESHOLD = 0.85
         PUNCH_CONFIDENCE_THRESHOLD = 0.80
         UPPER_MOTION_MEAN_ABS_MIN = 0.0015
-        UPPER_L_MOTION_RELAX = 0.6
-    elif args.profile == "fast_react":
-        COOLDOWN_SEC = 0.20
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.20
+        UPPER_L_MOTION_RELAX = 0.55
+    elif args.profile == "rapid":
+        # 빠른 연타: 1프레임 확인, 낮은 임계값, 짧은 쿨다운
+        PUNCH_CONFIRM_FRAMES = 1
         OTHER_PUNCH_CONFIRM_FRAMES = 1
         UPPER_PUNCH_CONFIRM_FRAMES = 1
-        PUNCH_CONFIRM_FRAMES = 1
-        CONFIDENCE_THRESHOLD = 0.88
-        UPPER_CONFIDENCE_THRESHOLD = 0.82
-        PUNCH_CONFIDENCE_THRESHOLD = 0.78
-        UPPER_MOTION_MEAN_ABS_MIN = 0.0012
-        UPPER_L_MOTION_RELAX = 0.55
-    elif args.profile == "fast_combo":
-        COOLDOWN_SEC = 0.15
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.15
-        OTHER_PUNCH_CONFIRM_FRAMES = 1
-        UPPER_PUNCH_CONFIRM_FRAMES = 1
-        PUNCH_CONFIRM_FRAMES = 1
-        CONFIDENCE_THRESHOLD = 0.88
-        UPPER_CONFIDENCE_THRESHOLD = 0.82
-        PUNCH_CONFIDENCE_THRESHOLD = 0.75
-        UPPER_MOTION_MEAN_ABS_MIN = 0.0012
-        UPPER_L_MOTION_RELAX = 0.55
+        SQUAT_CONFIRM_FRAMES = 1
+        COOLDOWN_SEC = 0.10
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.10
+        CONFIDENCE_THRESHOLD = 0.85
+        UPPER_CONFIDENCE_THRESHOLD = 0.78
+        PUNCH_CONFIDENCE_THRESHOLD = 0.70
+        UPPER_MOTION_MEAN_ABS_MIN = 0.0010
+        UPPER_L_MOTION_RELAX = 0.50
     elif args.profile == "max_speed":
-        # 콤보 우선: 오인식 리스크를 감수하고 반응·연타 지연 최소화
+        # 최대 속도: 오인식 감수, 최저 임계값, 최단 쿨다운
+        PUNCH_CONFIRM_FRAMES = 1
+        OTHER_PUNCH_CONFIRM_FRAMES = 1
+        UPPER_PUNCH_CONFIRM_FRAMES = 1
+        SQUAT_CONFIRM_FRAMES = 1
         COOLDOWN_SEC = 0.05
         MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.02
-        OTHER_PUNCH_CONFIRM_FRAMES = 1
-        UPPER_PUNCH_CONFIRM_FRAMES = 1
-        PUNCH_CONFIRM_FRAMES = 1
-        CONFIDENCE_THRESHOLD = 0.80
-        UPPER_CONFIDENCE_THRESHOLD = 0.72
-        PUNCH_CONFIDENCE_THRESHOLD = 0.65
-        UPPER_MOTION_MEAN_ABS_MIN = 0.0008
-        UPPER_L_MOTION_RELAX = 0.5
-
-    if args.combo is not None:
-        c = max(0.0, min(1.0, float(args.combo)))
-        gap = 0.26 - 0.12 * c  # 0.26 -> 0.14 (연타 한계 소폭 완화)
-        COOLDOWN_SEC = min(COOLDOWN_SEC, gap)
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = min(MIN_GAP_BETWEEN_ANY_PUNCH_SEC, gap)
+        CONFIDENCE_THRESHOLD = 0.75
+        UPPER_CONFIDENCE_THRESHOLD = 0.65
+        PUNCH_CONFIDENCE_THRESHOLD = 0.55
+        UPPER_MOTION_MEAN_ABS_MIN = 0.0005
+        UPPER_L_MOTION_RELAX = 0.40
 
     if args.react is not None:
         r = max(0.0, min(1.0, float(args.react)))
-        if r >= 0.75:
-            OTHER_PUNCH_CONFIRM_FRAMES = min(OTHER_PUNCH_CONFIRM_FRAMES, 2)
-            UPPER_PUNCH_CONFIRM_FRAMES = min(UPPER_PUNCH_CONFIRM_FRAMES, 2)
-            PUNCH_CONFIRM_FRAMES = min(PUNCH_CONFIRM_FRAMES, 2)
-        elif r >= 0.7:
-            OTHER_PUNCH_CONFIRM_FRAMES = min(OTHER_PUNCH_CONFIRM_FRAMES, 2)
-            UPPER_PUNCH_CONFIRM_FRAMES = min(UPPER_PUNCH_CONFIRM_FRAMES, 2)
-            PUNCH_CONFIRM_FRAMES = min(PUNCH_CONFIRM_FRAMES, 3)
-        CONFIDENCE_THRESHOLD = min(CONFIDENCE_THRESHOLD, 0.95 - 0.03 * r)
-        UPPER_CONFIDENCE_THRESHOLD = min(UPPER_CONFIDENCE_THRESHOLD, 0.90 - 0.04 * r)
-        PUNCH_CONFIDENCE_THRESHOLD = min(PUNCH_CONFIDENCE_THRESHOLD, 0.94 - 0.05 * r)
-        UPPER_MOTION_MEAN_ABS_MIN = min(UPPER_MOTION_MEAN_ABS_MIN, 0.0015 - 0.0005 * r)
+        COOLDOWN_SEC *= (1.1 - 0.5 * r)
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC *= (1.1 - 0.5 * r)
+        CONFIDENCE_THRESHOLD *= (1.0 - 0.15 * r)
+        UPPER_CONFIDENCE_THRESHOLD *= (1.0 - 0.20 * r)
+        PUNCH_CONFIDENCE_THRESHOLD *= (1.0 - 0.25 * r)
+
+    if args.combo is not None:
+        c = max(0.0, min(1.0, float(args.combo)))
+        COOLDOWN_SEC *= (1.0 - 0.6 * c)
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC *= (1.0 - 0.6 * c)
     process_w = PROCESS_W if args.process_w is None else max(64, args.process_w)
     process_h = PROCESS_H if args.process_h is None else max(64, args.process_h)
     upper_windup_margin = UPPER_WINDUP_WRIST_BELOW_SHOULDER_DEFAULT
