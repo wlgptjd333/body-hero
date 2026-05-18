@@ -8,7 +8,7 @@ const DISPLAY_MIN_H := 360
 
 var _camera_index: int = 0
 var _camera_backend: String = "auto"
-var _ml_speed_profile: String = "max_speed"
+var _ml_speed_profile: String = "precise"
 var _roi_mode: bool = false
 var _center_zone_margin: float = 0.3
 var _skip_guard_single: bool = true  # 기본 시퀀스 가드
