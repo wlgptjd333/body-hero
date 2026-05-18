@@ -1,7 +1,7 @@
 """
 웹캠 → Pose 랜드마크 → ML 추론(로컬 또는 pose_server) → Godot에 UDP로 액션 전송.
 
-- 기본: pose_classifier_seq_len4.keras(4프레임, 콤보 우선) → 없으면 pose_classifier_seq.keras(8프레임 폴백) + pose_classifier.keras(가드 폴백). pose_server 불필요.
+- 기본: pose_classifier_seq_len4.keras(4프레임 우선, ADR-0002) → seq.keras(8프레임 폴백) + pose_classifier.keras(가드 폴백). pose_server 불필요.
 - 시퀀스 모델이 없으면 HTTP로 pose_server에 요청. 서버가 없으면 pose_server.py를 자동으로 띄움 (--no-auto-server 로 끌 수 있음).
 
 사용 순서:
@@ -49,22 +49,18 @@ from pose_class_names import GUARD_INDEX, POSE_CLASS_NAMES
 from cv_capture import open_cv_video_capture
 
 # 로컬 추론용 (pose_server와 동일). 시퀀스 길이는 로드한 모델 입력(time)에서 자동 설정.
-# seq_len=2 → 4 → 8 순. 데이터는 각 동작만 녹화(준비/회수 없음)라 2프레임이 최적.
-_MODEL_SEQ_2 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len2.keras")
+# 우선순위: seq_len=4 → 8 (ADR-0002).
 _MODEL_SEQ_4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
 _MODEL_SEQ_8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
-if os.path.exists(_MODEL_SEQ_2):
-    MODEL_SEQ_PATH = _MODEL_SEQ_2
-    SEQ_LEN = 2
-elif os.path.exists(_MODEL_SEQ_4):
+if os.path.exists(_MODEL_SEQ_4):
     MODEL_SEQ_PATH = _MODEL_SEQ_4
     SEQ_LEN = 4
 elif os.path.exists(_MODEL_SEQ_8):
     MODEL_SEQ_PATH = _MODEL_SEQ_8
     SEQ_LEN = 8
 else:
-    MODEL_SEQ_PATH = _MODEL_SEQ_2  # 없으면 기본 경로 유지(학습 전)
-    SEQ_LEN = 2
+    MODEL_SEQ_PATH = _MODEL_SEQ_4  # 없으면 기본 경로 유지(학습 전)
+    SEQ_LEN = 4
 MODEL_SINGLE_PATH = os.path.join(SCRIPT_DIR, "pose_classifier.keras")
 CLASS_NAMES = list(POSE_CLASS_NAMES)
 # ML·UDP 라벨 = POSE_CLASS_NAMES (punch_l/r …)

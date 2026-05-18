@@ -1,6 +1,6 @@
 """
-학습된 시퀀스 포즈 분류 모델로 웹캠 실시간 테스트.
-연속 시퀀스 버퍼로 예측. 뼈대 + 현재 동작 표시 (none=하얀색, 그 외=초록색).
+학습된 시퀀스 포즈 분류 모델(Conv1D+GAP, seq_len=4, ADR-0002)로 웹캠 실시간 테스트.
+우선순위: pose_classifier_seq_len4.keras → seq.keras.
 
 실행: cd tools → python test_pose_live.py [--camera-index 1] [--camera-backend dshow]
 종료: Q

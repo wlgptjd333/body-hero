@@ -1,6 +1,6 @@
-# 시퀀스 길이(seq_len) 비교 결과
+# 시퀀스 길이(seq_len) 비교 결과 (참고용)
 
-**현재 학습·게임 모두 기본 시퀀스 길이는 4프레임입니다.** (`train_pose_classifier_seq.py` 인자 없이 실행 → `pose_classifier_seq_len4.keras` 학습. `udp_send_webcam_ml.py`, `pose_server.py`, `test_pose_live.py` 모두 같은 파일을 우선 로드.) 아래 비교는 참고용이며, 정확도·반응 속도 선택 시 4/12/16 실험 결과입니다.
+**최종 결정: seq_len=2 우선.** (ADR-0002 참고. `pose_classifier_seq_len2.keras`가 있으면 `udp_send_webcam_ml.py`가 우선 로드. 이유: 단일프레임보다 노이즈 적고, seq_len을 늘려도 녹화가 단일동작이라 정보 이득 없음.) 아래 비교는 이전 seq_len=4/12/16 실험 결과로, 참고용입니다.
 
 동일 데이터·동일 하이퍼파라미터로 seq_len 4, 12, 16을 각각 학습한 검증 세트 결과 비교입니다.
 

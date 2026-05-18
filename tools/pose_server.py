@@ -1,11 +1,6 @@
 """
-포즈 분류 추론 서버: 시퀀스(기본 4프레임, 모델 입력에 맞춤) + 가드만 단일 프레임 폴백.
-- 가드는 "유지" 동작이라 시퀀스에서 잘 안 잡힘 → 시퀀스의 마지막 프레임으로 단일 프레임 모델을 돌려
-  guard면 guard 반환 (빠른 인식·유지 가능).
-- 나머지 동작은 시퀀스 모델로만 판정.
-
-필요: pose_classifier_seq_len4.keras 또는 pose_classifier_seq.keras (필수), pose_classifier.keras (가드 폴백용, 있으면 사용)
-가드 폴백 모델이 없으면 시퀀스만 사용. 단일 프레임 모델은 train_pose_classifier.py 로 생성.
+포즈 분류 추론 서버: 시퀀스(기본 4프레임, Conv1D+GAP, ADR-0002) + 가드 단일 프레임 폴백.
+우선순위: pose_classifier_seq_len4.keras → seq.keras.
 
 실행: cd tools → python pose_server.py
 """

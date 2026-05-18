@@ -31,7 +31,7 @@ def build_model(seq_len, num_classes):
         tf.keras.layers.Conv1D(64, 3, activation="relu", padding="same"),
         tf.keras.layers.BatchNormalization(),
         tf.keras.layers.Dropout(0.25),
-        tf.keras.layers.LSTM(64, return_sequences=False),
+        tf.keras.layers.GlobalAveragePooling1D(),
         tf.keras.layers.Dropout(0.3),
         tf.keras.layers.Dense(num_classes, activation="softmax"),
     ])
