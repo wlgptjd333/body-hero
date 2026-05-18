@@ -49,7 +49,7 @@ func ensure(
 			and launched_full_body_squat == full_body_squat
 		):
 			print(
-				"웹캠 ML 브리지 유지 (PID=%d, index=%d, backend=%s, profile=%s, roi=%s, zone=%.2f, skip_guard=%s, full_body=%s)"
+				"웹캠 ML 브리지 유지 (PID=%d, index=%d, backend=%s, profile=%s, gpu=%s, roi=%s, zone=%.2f, skip_guard=%s, full_body=%s)"
 				% [bridge_pid, camera_index, camera_backend, ml_speed_profile, str(roi_mode), center_zone_margin, str(skip_guard_single), str(full_body_squat)]
 			)
 			return
@@ -76,7 +76,7 @@ func ensure(
 		args.append("--full-body-squat")
 	if use_gpu:
 		args.append("--gpu")
-	print("웹캠 ML 실행 시도: python=", python_exe, " script=", script_path, " profile=", ml_speed_profile, " roi=", roi_mode, " zone=", center_zone_margin, " skip_guard=", skip_guard_single, " full_body=", full_body_squat)
+	print("웹캠 ML 실행 시도: python=", python_exe, " script=", script_path, " profile=", ml_speed_profile, " gpu=", use_gpu, " roi=", roi_mode, " zone=", center_zone_margin, " skip_guard=", skip_guard_single, " full_body=", full_body_squat)
 	bridge_pid = OS.create_process(python_exe, args, false)
 	if bridge_pid <= 0:
 		push_warning("웹캠 ML 브리지 시작 실패(OS.create_process).")
@@ -89,7 +89,7 @@ func ensure(
 		launched_zone = center_zone_margin
 		launched_skip_guard = skip_guard_single
 		launched_full_body_squat = full_body_squat
-		print("웹캠 ML 브리지 시작 PID=", bridge_pid, " index=", camera_index, " backend=", camera_backend, " profile=", ml_speed_profile, " roi=", roi_mode, " zone=", center_zone_margin, " skip_guard=", skip_guard_single, " full_body=", full_body_squat)
+		print("웹캠 ML 브리지 시작 PID=", bridge_pid, " index=", camera_index, " backend=", camera_backend, " profile=", ml_speed_profile, " gpu=", use_gpu, " roi=", roi_mode, " zone=", center_zone_margin, " skip_guard=", skip_guard_single, " full_body=", full_body_squat)
 
 
 func shutdown() -> void:
