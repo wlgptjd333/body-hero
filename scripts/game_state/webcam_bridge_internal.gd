@@ -30,6 +30,7 @@ func ensure(
 	center_zone_margin: float,
 	skip_guard_single: bool,
 	full_body_squat: bool,
+	use_gpu: bool,
 	python_exe: String,
 	script_path: String,
 ) -> void:
@@ -73,6 +74,8 @@ func ensure(
 		args.append("--skip-guard-single")
 	if full_body_squat:
 		args.append("--full-body-squat")
+	if use_gpu:
+		args.append("--gpu")
 	print("웹캠 ML 실행 시도: python=", python_exe, " script=", script_path, " profile=", ml_speed_profile, " roi=", roi_mode, " zone=", center_zone_margin, " skip_guard=", skip_guard_single, " full_body=", full_body_squat)
 	bridge_pid = OS.create_process(python_exe, args, false)
 	if bridge_pid <= 0:

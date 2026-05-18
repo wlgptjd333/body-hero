@@ -114,6 +114,7 @@ func _ready() -> void:
 	_setup_zone_slider()
 	_setup_skip_guard_checkbox()
 	_setup_full_body_squat_checkbox()
+	_setup_webcam_gpu_checkbox()
 	_setup_reset_button()
 	_setup_demo_mode()
 	_show_tab(0)
@@ -253,6 +254,25 @@ func _setup_full_body_squat_checkbox() -> void:
 	if not _full_body_squat_checkbox:
 		return
 	_full_body_squat_checkbox.button_pressed = GameState.get_full_body_squat()
+
+
+var _webcam_gpu_checkbox: CheckBox = null
+
+func _setup_webcam_gpu_checkbox() -> void:
+	var parent := get_node_or_null("Panel/Scroll/VBox/ContentWebcam/WebcamSection")
+	if not parent:
+		return
+	var row := HBoxContainer.new()
+	row.name = "GpuAccelRow"
+	var check := CheckBox.new()
+	check.name = "GpuAccelCheckBox"
+	check.button_pressed = GameState.get_use_gpu_ml()
+	row.add_child(check)
+	var label := Label.new()
+	label.text = "GPU 가속 (MediaPipe)"
+	row.add_child(label)
+	parent.add_child(row)
+	_webcam_gpu_checkbox = check
 
 
 func _fill_camera_option_default() -> void:
@@ -633,6 +653,9 @@ func _save_webcam_and_window_from_ui() -> void:
 	var full_body: bool = false
 	if _full_body_squat_checkbox:
 		full_body = _full_body_squat_checkbox.button_pressed
+	var use_gpu: bool = false
+	if _webcam_gpu_checkbox:
+		use_gpu = _webcam_gpu_checkbox.button_pressed
 	GameState.save_display_settings(
 		sz.x,
 		sz.y,
@@ -643,6 +666,7 @@ func _save_webcam_and_window_from_ui() -> void:
 		zone,
 		skip_guard,
 		full_body,
+		use_gpu,
 	)
 
 

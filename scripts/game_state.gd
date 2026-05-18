@@ -485,8 +485,9 @@ func save_display_settings(
 	center_zone_margin: float = 0.3,
 	skip_guard_single: bool = false,
 	full_body_squat: bool = false,
+	use_gpu: bool = false,
 ) -> void:
-	_webcam_settings.save_to_disk(width, height, camera_index, camera_backend, ml_speed_profile, roi_mode, center_zone_margin, skip_guard_single, full_body_squat)
+	_webcam_settings.save_to_disk(width, height, camera_index, camera_backend, ml_speed_profile, roi_mode, center_zone_margin, skip_guard_single, full_body_squat, use_gpu)
 
 
 func get_camera_index() -> int:
@@ -509,6 +510,11 @@ func get_skip_guard_single() -> bool:
 
 func get_full_body_squat() -> bool:
 	return _webcam_settings.get_full_body_squat()
+
+
+func get_use_gpu_ml() -> bool:
+	return _webcam_settings.get_use_gpu()
+
 
 func get_window_mode() -> int:
 	return _webcam_settings.get_window_mode()
@@ -534,6 +540,7 @@ func ensure_webcam_ml_bridge(auto_launch: bool) -> void:
 		get_center_zone_margin(),
 		get_skip_guard_single(),
 		get_full_body_squat(),
+		get_use_gpu_ml(),
 		resolve_python_executable_for_ml(),
 		get_udp_send_webcam_ml_script_path(),
 	)

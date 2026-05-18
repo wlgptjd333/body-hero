@@ -487,6 +487,11 @@ def main():
         help="TensorFlow가 GPU/CUDA를 탐색하게 함. 기본은 CPU만 사용해 첫 임포트가 더 빠른 경우가 많음.",
     )
     parser.add_argument(
+        "--gpu",
+        action="store_true",
+        help="MediaPipe GPU delegate 사용 (OpenGL ES). 기본은 CPU.",
+    )
+    parser.add_argument(
         "--seq-model",
         default=None,
         help="시퀀스 모델 경로(기본 tools/pose_classifier_seq.keras). seq_len4/6/8 모델을 바꿔 끼워 첫 반응 속도 튜닝 가능",
@@ -705,8 +710,13 @@ def main():
         PoseLandmarker = vision.PoseLandmarker
         PoseLandmarkerOptions = vision.PoseLandmarkerOptions
         RunningMode = vision.RunningMode
+        if args.gpu:
+            _gpu_delegate = BaseOptions.Delegate.GPU
+            print("[설정] MediaPipe GPU delegate 사용", flush=True)
+        else:
+            _gpu_delegate = BaseOptions.Delegate.CPU
         options = PoseLandmarkerOptions(
-            base_options=BaseOptions(model_asset_path=MODEL_PATH),
+            base_options=BaseOptions(model_asset_path=MODEL_PATH, delegate=_gpu_delegate),
             running_mode=RunningMode.VIDEO,
             num_poses=3,
             min_pose_detection_confidence=0.55,
