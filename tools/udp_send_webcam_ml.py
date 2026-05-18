@@ -49,7 +49,7 @@ from pose_class_names import GUARD_INDEX, POSE_CLASS_NAMES
 from cv_capture import open_cv_video_capture
 
 # 로컬 추론용 (pose_server와 동일). 시퀀스 길이는 로드한 모델 입력(time)에서 자동 설정.
-# seq_len=4 → 2 → 8 순으로 우선 사용 (4프레임이 정확도와 반응속도 균형 최적).
+# seq_len=4 → 2 → 8 순. 학습 데이터는 각 동작만 녹화(준비/회수 없음)라 시퀀스 길이가 길수록 신호가 희석될 수 있음.
 _MODEL_SEQ_4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
 _MODEL_SEQ_2 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len2.keras")
 _MODEL_SEQ_8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")

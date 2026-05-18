@@ -77,7 +77,7 @@ python udp_send_webcam.py
 
 ## 시퀀스 길이 (학습·실행 모두 기본 4프레임)
 
-학습·서버·클라이언트 모두 **시퀀스 길이 4프레임**이 기본입니다. 4프레임은 약 0.13초 분량의 동작을 보고 분류하므로 반응이 빠릅니다.
+학습·서버·클라이언트 모두 **시퀀스 길이 4프레임**이 기본입니다. 학습 데이터는 각 동작만 녹화(준비·회수 없음, 모든 프레임이 해당 동작)이므로, 시퀀스가 길수록 오히려 신호가 희석될 수 있습니다. 4프레임이 반응 속도와 정확도의 균형이 가장 좋습니다.
 
 - 학습: `train_pose_classifier_seq.py` 인자 없이 실행하면 **4프레임 모델**을 학습해 `pose_classifier_seq_len4.keras` 로 저장.
 - 게임/추론: `udp_send_webcam_ml.py`, `pose_server.py`, `test_pose_live.py` 모두 `pose_classifier_seq_len4.keras` 가 있으면 그것을 우선 로드하고, 없을 때만 `pose_classifier_seq.keras`(8프레임)로 폴백.
