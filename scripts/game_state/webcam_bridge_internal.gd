@@ -50,7 +50,7 @@ func ensure(
 		):
 			print(
 				"웹캠 ML 브리지 유지 (PID=%d, index=%d, backend=%s, profile=%s, gpu=%s, roi=%s, zone=%.2f, skip_guard=%s, full_body=%s)"
-				% [bridge_pid, camera_index, camera_backend, ml_speed_profile, str(roi_mode), center_zone_margin, str(skip_guard_single), str(full_body_squat)]
+				% [bridge_pid, camera_index, camera_backend, ml_speed_profile, str(use_gpu), str(roi_mode), center_zone_margin, str(skip_guard_single), str(full_body_squat)]
 			)
 			return
 		var kerr: Error = OS.kill(bridge_pid)
