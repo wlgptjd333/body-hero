@@ -625,51 +625,47 @@ def main():
         MODEL_SEQ_PATH = args.seq_model
 
     if args.profile == "precise":
-        # 정확도 최우선: 2프레임 확인, 높은 임계값, 긴 쿨다운
         PUNCH_CONFIRM_FRAMES = 2
         OTHER_PUNCH_CONFIRM_FRAMES = 2
         UPPER_PUNCH_CONFIRM_FRAMES = 2
         SQUAT_CONFIRM_FRAMES = 3
-        COOLDOWN_SEC = 0.30
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.30
+        COOLDOWN_SEC = 0.15
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.12
         CONFIDENCE_THRESHOLD = 0.95
         UPPER_CONFIDENCE_THRESHOLD = 0.90
         PUNCH_CONFIDENCE_THRESHOLD = 0.88
         UPPER_MOTION_MEAN_ABS_MIN = 0.0020
         UPPER_L_MOTION_RELAX = 0.65
     elif args.profile == "balanced":
-        # 기본: 1프레임 확인, 중간 임계값 (99.94% 모델에 최적)
         PUNCH_CONFIRM_FRAMES = 1
         OTHER_PUNCH_CONFIRM_FRAMES = 1
         UPPER_PUNCH_CONFIRM_FRAMES = 1
         SQUAT_CONFIRM_FRAMES = 2
-        COOLDOWN_SEC = 0.22
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.22
+        COOLDOWN_SEC = 0.12
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.10
         CONFIDENCE_THRESHOLD = 0.90
         UPPER_CONFIDENCE_THRESHOLD = 0.85
         PUNCH_CONFIDENCE_THRESHOLD = 0.80
         UPPER_MOTION_MEAN_ABS_MIN = 0.0015
         UPPER_L_MOTION_RELAX = 0.55
     elif args.profile == "rapid":
-        # 빠른 연타: 1프레임 확인, 낮은 임계값, 짧은 쿨다운
         PUNCH_CONFIRM_FRAMES = 1
         OTHER_PUNCH_CONFIRM_FRAMES = 1
         UPPER_PUNCH_CONFIRM_FRAMES = 1
         SQUAT_CONFIRM_FRAMES = 1
-        COOLDOWN_SEC = 0.10
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.10
+        COOLDOWN_SEC = 0.08
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.06
         CONFIDENCE_THRESHOLD = 0.85
         UPPER_CONFIDENCE_THRESHOLD = 0.78
         PUNCH_CONFIDENCE_THRESHOLD = 0.70
         UPPER_MOTION_MEAN_ABS_MIN = 0.0010
         UPPER_L_MOTION_RELAX = 0.50
     elif args.profile == "max_speed":
-        # 최대 속도: 오인식 감수, 최저 임계값, 최단 쿨다운
         PUNCH_CONFIRM_FRAMES = 1
         OTHER_PUNCH_CONFIRM_FRAMES = 1
         UPPER_PUNCH_CONFIRM_FRAMES = 1
         SQUAT_CONFIRM_FRAMES = 1
-        COOLDOWN_SEC = 0.05
+        COOLDOWN_SEC = 0.04
         MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.02
         CONFIDENCE_THRESHOLD = 0.75
         UPPER_CONFIDENCE_THRESHOLD = 0.65
