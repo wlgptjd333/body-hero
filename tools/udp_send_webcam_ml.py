@@ -710,11 +710,13 @@ def main():
         PoseLandmarker = vision.PoseLandmarker
         PoseLandmarkerOptions = vision.PoseLandmarkerOptions
         RunningMode = vision.RunningMode
+        _gpu_delegate = BaseOptions.Delegate.CPU
         if args.gpu:
-            _gpu_delegate = BaseOptions.Delegate.GPU
-            print("[설정] MediaPipe GPU delegate 사용", flush=True)
-        else:
-            _gpu_delegate = BaseOptions.Delegate.CPU
+            try:
+                _gpu_delegate = BaseOptions.Delegate.GPU
+                print("[설정] MediaPipe GPU delegate 사용 중...", flush=True)
+            except AttributeError:
+                print("[경고] 이 MediaPipe 버전이 GPU delegate를 지원하지 않음, CPU 사용", flush=True)
         options = PoseLandmarkerOptions(
             base_options=BaseOptions(model_asset_path=MODEL_PATH, delegate=_gpu_delegate),
             running_mode=RunningMode.VIDEO,
@@ -785,6 +787,21 @@ def main():
                 last_console_ping = time.time()
 
         mp_th.join()
+        if landmarker_holder["err"] is not None and _gpu_delegate != BaseOptions.Delegate.CPU:
+            print("[GPU] GPU delegate 실패, CPU로 폴백", flush=True)
+            _gpu_delegate = BaseOptions.Delegate.CPU
+            options = PoseLandmarkerOptions(
+                base_options=BaseOptions(model_asset_path=MODEL_PATH, delegate=BaseOptions.Delegate.CPU),
+                running_mode=RunningMode.VIDEO,
+                num_poses=3,
+                min_pose_detection_confidence=0.55,
+                min_tracking_confidence=0.5,
+                min_pose_presence_confidence=0.5,
+            )
+            landmarker_holder = {"lm": None, "err": None}
+            mp_th = threading.Thread(target=_mp_init_worker, daemon=True, name="mediapipe_pose_init")
+            mp_th.start()
+            mp_th.join()
         if landmarker_holder["err"] is not None:
             raise landmarker_holder["err"]
         landmarker = landmarker_holder["lm"]
