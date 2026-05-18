@@ -74,8 +74,8 @@ UPPER_CONFIDENCE_THRESHOLD = 0.88
 # 직선 펀치 softmax 하한. 기본은 어퍼와 동일(0.88) — 너무 높으면 잽이 잘 안 나감. --punch-confidence 로 덮어씀.
 PUNCH_CONFIDENCE_THRESHOLD = 0.88
 GUARD_FALLBACK_THRESHOLD = 0.65
-COOLDOWN_SEC = 0.10  # 연속 입력 chatter 방지
-MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.10
+COOLDOWN_SEC = 0.08  # 같은 손 연속 방지 (per-side, 0.08s면 약 2~3프레임)
+MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.04  # 최소 간격만 (교차펀치 L→R→L 용, 거의 차단 없음)
 GUARD_EXIT_FRAMES = 2  # 가드 해제 감지: 2프레임(약 66ms) 연속 not guard면 guard_end 전송
 FPS_TARGET = 30
 # 처리 해상도: 높을수록 좌우(펀치) 구분·포즈 안정에 유리, CPU 부하 증가 (렉 시 320x240 또는 --process-w/h로 낮춤)
@@ -634,8 +634,8 @@ def main():
         UPPER_L_MOTION_RELAX = 0.6
     elif args.profile == "max_speed":
         # 콤보 우선: 오인식 리스크를 감수하고 반응·연타 지연 최소화
-        COOLDOWN_SEC = 0.10
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.10
+        COOLDOWN_SEC = 0.08
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.02
         OTHER_PUNCH_CONFIRM_FRAMES = 1
         UPPER_PUNCH_CONFIRM_FRAMES = 1
         PUNCH_CONFIRM_FRAMES = 1
@@ -851,6 +851,8 @@ def main():
 
         last_action_time = 0.0
         last_any_punch_send_time = -999.0
+        last_punch_l_send_time = -999.0
+        last_punch_r_send_time = -999.0
         guarding = False
         guard_exit_count = 0
         punch_l_count = 0
@@ -1341,7 +1343,9 @@ def main():
                     action = None
 
                 if action and action in PUNCH_LABELS:
-                    if (now - last_any_punch_send_time) < MIN_GAP_BETWEEN_ANY_PUNCH_SEC:
+                    # 같은 손 연속 방지: L→L 또는 R→R만 막음 (L→R→L 콤보 허용)
+                    side_time = last_punch_l_send_time if "l" in action else last_punch_r_send_time
+                    if (now - side_time) < COOLDOWN_SEC:
                         action = None
                         punch_l_count = 0
                         punch_r_count = 0
@@ -1360,6 +1364,10 @@ def main():
                     last_action_time = time.time()
                     if action in PUNCH_LABELS:
                         last_any_punch_send_time = time.time()
+                        if "l" in action:
+                            last_punch_l_send_time = time.time()
+                        elif "r" in action:
+                            last_punch_r_send_time = time.time()
                         if action == "upper_l":
                             last_upper_sent_side = "l"
                             upper_block_other_until_frame = (
