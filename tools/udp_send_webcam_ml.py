@@ -262,21 +262,26 @@ def _predict_local(
         idxs = _np.argsort(pred_vec)[-k:][::-1]
         topk_list = [(CLASS_NAMES[int(i)], float(pred_vec[int(i)])) for i in idxs]
 
-    # EMA logit smoothing (α=0.7)
-    # 순간 confidence dip을 필터링해 flicker 방지
-    global _ema_logits
+    # EMA logit smoothing for state maintenance (α=0.7)
+    # raw → argmax (instant onset), EMA → hysteresis (smooth state)
+    global _ema_logits, _active_state
     if _ema_logits is None:
         _ema_logits = pred_vec.copy()
     else:
         _ema_logits = 0.7 * pred_vec + 0.3 * _ema_logits
-    smoothed = _ema_logits
 
-    idx = int(_np.argmax(smoothed))
-    conf = float(smoothed[idx])
-    label = CLASS_NAMES[idx]
-    if label in ("upper_l", "upper_r"):
+    # Raw logits for action label (no latency)
+    raw_idx = int(_np.argmax(pred_vec))
+    raw_conf = float(pred_vec[raw_idx])
+    raw_label = CLASS_NAMES[raw_idx]
+
+    # EMA-smoothed for stability check
+    ema_conf = float(_ema_logits[_active_state]) if _active_state is not None else 0.0
+
+    # Determine action label
+    if raw_label in ("upper_l", "upper_r"):
         need = UPPER_CONFIDENCE_THRESHOLD
-    elif label in ("punch_l", "punch_r"):
+    elif raw_label in ("punch_l", "punch_r"):
         need = (
             _punch_confidence_override
             if _punch_confidence_override is not None
@@ -285,32 +290,30 @@ def _predict_local(
     else:
         need = CONFIDENCE_THRESHOLD
 
-    # Hysteresis: active state 유지 (enter threshold보다 낮은 exit threshold)
-    # 한번 들어간 action은 confidence가 크게 떨어질 때만 해제
-    global _active_state
-    HYST_EXIT = 0.35
+    if raw_conf < need:
+        raw_label = "none"
 
-    if label == "none":
-        if _active_state is not None:
-            active_conf = float(smoothed[_active_state])
-            if active_conf >= HYST_EXIT:
-                label = CLASS_NAMES[_active_state]
-                conf = active_conf
-            else:
-                _active_state = None
+    # Hysteresis: maintain active state via EMA confidence
+    HYST_EXIT = 0.35
+    if raw_label == "none":
+        if _active_state is not None and ema_conf >= HYST_EXIT:
+            label = CLASS_NAMES[_active_state]
+            conf = ema_conf
         else:
+            label = "none"
+            conf = raw_conf
             _active_state = None
     else:
+        label = raw_label
+        conf = raw_conf
         if _active_state is None:
-            _active_state = idx
-        elif _active_state != idx:
-            current_conf = float(smoothed[_active_state])
-            if conf > current_conf + 0.05:
-                _active_state = idx
+            _active_state = raw_idx
+        elif _active_state != raw_idx:
+            current_ema_conf = float(_ema_logits[_active_state])
+            new_raw_conf = float(pred_vec[raw_idx])
+            if new_raw_conf > current_ema_conf + 0.05:
+                _active_state = raw_idx
 
-    if label == "none":
-        _active_state = None
-        return label, conf, topk_list
     return label, conf, topk_list
 
 MODEL_PATH = os.path.join(SCRIPT_DIR, "pose_landmarker.task")
