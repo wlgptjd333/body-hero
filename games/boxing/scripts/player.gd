@@ -32,7 +32,7 @@ const GUARD_SCALE := Vector2(1.4, 1.4)
 const GUARD_DURATION_IN := 0.05
 const GUARD_DURATION_OUT := 0.06
 # 가드 최소 유지 시간(초). 이 시간 지나야 guard_end로 해제 가능
-const GUARD_MIN_DURATION := 0.12
+const GUARD_MIN_DURATION := 0.06
 const GUARD_MAX_DURATION := 3.0
 const PUNCH_TRANS := Tween.TRANS_QUINT
 ## 웹캠(UDP) 펀치만 트윈 길이에 곱함. 1보다 작을수록 임팩트까지 시간 단축(키보드 타이밍은 유지).
@@ -63,6 +63,7 @@ var _busy_global := false  # guard/squat 등 전신 동작
 var _next_squat_left: bool = true
 var _guarding := false
 var _guard_enter_time: float = -999.0
+var _guard_tween: Tween = null
 ## 웹캠(UDP)으로 가드 들어간 경우: 키를 안 눌러도 유지, guard_end(UDP)까지 유지
 var _guard_via_udp: bool = false
 
@@ -317,6 +318,8 @@ func play_action(action: String, via_udp: bool = false) -> bool:
 	if action in ["punch_r", "upper_r"] and _busy_right:
 		return false
 	var punch_scale: float = UDP_PUNCH_TIME_SCALE if via_udp else 1.0
+	if _guarding and action in ["punch_l", "punch_r", "upper_l", "upper_r"]:
+		_cancel_guard()
 	match action:
 		"punch_l":
 			return _execute_strike("punch", "l", GameState.STAMINA_PUNCH, punch_scale)
@@ -390,6 +393,17 @@ func _execute_guard(via_udp: bool) -> bool:
 	GameState.record_guard()
 	_play_guard_enter()
 	return true
+
+
+func _cancel_guard() -> void:
+	if _guard_tween and _guard_tween.is_valid():
+		_guard_tween.kill()
+		_guard_tween = null
+	left_glove.scale = _left_default_scale
+	right_glove.scale = _right_default_scale
+	_guarding = false
+	_guard_via_udp = false
+	GameState.set_guarding(false)
 
 
 func _execute_guard_end() -> bool:
@@ -516,22 +530,26 @@ func _play_guard_enter() -> void:
 	right_glove.position = _right_default_pos
 	_set_glove_hit(left_glove, false)
 	_set_glove_hit(right_glove, false)
-	var tween := create_tween()
-	tween.set_ease(Tween.EASE_OUT)
-	tween.set_parallel(true)
-	tween.tween_property(left_glove, "scale", GUARD_SCALE, GUARD_DURATION_IN).set_trans(Tween.TRANS_QUAD)
-	tween.tween_property(right_glove, "scale", GUARD_SCALE, GUARD_DURATION_IN).set_trans(Tween.TRANS_QUAD)
-	tween.set_parallel(false)
+	if _guard_tween and _guard_tween.is_valid():
+		_guard_tween.kill()
+	_guard_tween = create_tween()
+	_guard_tween.set_ease(Tween.EASE_OUT)
+	_guard_tween.set_parallel(true)
+	_guard_tween.tween_property(left_glove, "scale", GUARD_SCALE, GUARD_DURATION_IN).set_trans(Tween.TRANS_QUAD)
+	_guard_tween.tween_property(right_glove, "scale", GUARD_SCALE, GUARD_DURATION_IN).set_trans(Tween.TRANS_QUAD)
+	_guard_tween.set_parallel(false)
 
 
 func _play_guard_exit(on_finished: Callable) -> void:
-	var tween := create_tween()
-	tween.set_ease(Tween.EASE_OUT)
-	tween.set_parallel(true)
-	tween.tween_property(left_glove, "scale", _left_default_scale, GUARD_DURATION_OUT).set_trans(Tween.TRANS_QUAD)
-	tween.tween_property(right_glove, "scale", _right_default_scale, GUARD_DURATION_OUT).set_trans(Tween.TRANS_QUAD)
-	tween.set_parallel(false)
-	tween.tween_callback(on_finished)
+	if _guard_tween and _guard_tween.is_valid():
+		_guard_tween.kill()
+	_guard_tween = create_tween()
+	_guard_tween.set_ease(Tween.EASE_OUT)
+	_guard_tween.set_parallel(true)
+	_guard_tween.tween_property(left_glove, "scale", _left_default_scale, GUARD_DURATION_OUT).set_trans(Tween.TRANS_QUAD)
+	_guard_tween.tween_property(right_glove, "scale", _right_default_scale, GUARD_DURATION_OUT).set_trans(Tween.TRANS_QUAD)
+	_guard_tween.set_parallel(false)
+	_guard_tween.tween_callback(on_finished)
 
 
 func _play_squat(is_left: bool, on_finished: Callable) -> void:
