@@ -43,7 +43,7 @@ const DIFFICULTY_HARD := "hard"
 const GENDER_MALE := "male"
 const GENDER_FEMALE := "female"
 const GENDER_OTHER := "other"
-const ML_SPEED_PROFILE_VALUES: Array[String] = ["balanced", "fast_react", "fast_combo", "max_speed"]
+const ML_SPEED_PROFILE_VALUES: Array[String] = ["precise", "balanced", "rapid", "max_speed"]
 const CAMERA_BACKEND_VALUES := ["auto", "dshow", "msmf", "default"]
 const STATS_KEYS := ["guard", "squat", "punch_l", "punch_r", "upper_l", "upper_r"]
 

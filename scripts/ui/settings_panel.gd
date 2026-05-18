@@ -17,9 +17,9 @@ const DEFAULT_PUNCH_LEFT_AUX: int = KEY_Z
 const DEFAULT_PUNCH_RIGHT_AUX: int = KEY_C
 ## GameState.ML_SPEED_PROFILE_VALUES 와 같은 순서.
 const ML_PROFILE_UI_LABELS: Array[String] = [
+	"정밀 (precise)",
 	"균형 (balanced)",
-	"빠른 반응 (fast_react)",
-	"연타 (fast_combo)",
+	"신속 (rapid)",
 	"최고 속도 (max_speed)",
 ]
 
