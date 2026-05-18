@@ -597,7 +597,7 @@ def main():
         type=float,
         default=0.2,
         metavar="M",
-        help="중심 영역 마진 (0.0~0.5). M=0.2 → 화면 20~80%% 구역만 전송. M=0.35 → 35~65%%(좁게). 기본 0.2.",
+        help="가로 중심 영역 margin (0.0~0.5). 세로는 항상 전체. M=0.2 → 가로 20~80%%. 기본 0.2.",
     )
     args = parser.parse_args()
     if args.allow_tf_gpu:
@@ -699,7 +699,7 @@ def main():
     roi_mode: bool = bool(args.roi)
     zone_margin: float = max(0.0, min(0.5, float(args.center_zone)))
     CENTER_ZONE_X = (zone_margin, 1.0 - zone_margin)
-    CENTER_ZONE_Y = (zone_margin, 1.0 - zone_margin)
+    CENTER_ZONE_Y = (0.0, 1.0)  # 세로는 항상 전체 — 스쿼트 인식 방해 방지
     spawned_server = None
     cap = None
     landmarker = None
