@@ -59,3 +59,16 @@ pose_classifier_seq_len4.keras  →  SEQ_LEN=4 (우선, ADR-0002)
 pose_classifier_seq.keras       →  SEQ_LEN=8 (폴백)
 pose_classifier.keras           →  가드 보조 (단일 프레임 폴백)
 ```
+
+## Inference-time 안정화 기법
+
+| 기법 | 적용 | 설명 |
+|------|------|------|
+| EMA logit smoothing (α=0.7) | ✅ | softmax frame-by-frame EMA. flicker 제거, latency 거의 0 |
+| Confidence hysteresis | ✅ | enter threshold(0.80) > exit threshold(0.35). 몸 흔들림에도 상태 유지 |
+| Upper velocity gate | ✅ | 어퍼만 실제 landmark 움직임 감지 후 인식. 정지자세 오인 방지 |
+| Per-side cooldown | ✅ | 같은 손 120ms 간격, 반대손은 100ms. L→R→L 콤보 허용 |
+| Attack rearm | ✅ | 1프레임 비공격 후 재장전. 더블트리거 방지 |
+| Action-specific thresholds | 3티어 | none/guard(0.90) > upper(0.85) > punch(0.80) |
+
+자세한 전체 적용 기술 목록: `docs/experiments/2026-05-18-paper-design-decisions.md`

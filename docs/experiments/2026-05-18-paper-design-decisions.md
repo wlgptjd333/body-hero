@@ -155,3 +155,98 @@ Total params: ~20K
 - Batch size: 32
 - Epochs: 56 (early stopped)
 - Training time: ~6 minutes on CPU
+
+---
+
+## 7. Full Technique Inventory
+
+### A. Spatial Processing
+
+| Technique | Applied? | Description |
+|-----------|----------|-------------|
+| Shoulder-centered normalization | ✅ | `normalize_landmarks_flat()`: subtract shoulder midpoint, divide by shoulder width. Makes landmarks invariant to camera distance and body position. |
+| Torso angle alignment | ❌ | Deliberately omitted. Normalized shoulder centers already handle rotation via relative coordinates. Additional rotation would distort body geometry. |
+| Per-landmark scaling | ✅ (implicit) | Each of 33 landmarks × 3 coordinates is independently processed by Conv1D kernels. |
+
+### B. Temporal Processing
+
+| Technique | Applied? | Description |
+|-----------|----------|-------------|
+| Sliding window (seq_len=4, stride=1) | ✅ | 132ms context window at 30fps. Centered labeling: middle frame determines label. |
+| Conv1D (k=3, padding="same") | ✅ | Each output position blends 3 adjacent frames. Acts as learned temporal filter. |
+| GlobalAveragePooling | ✅ | Replaces LSTM/FC layers. Averages Conv1D features across time. Acts as temporal regularizer. |
+| LSTM | ❌ | Tested, rejected. Over-parameterized for 4 time steps. Conv1D→GAP matches or beats LSTM with 60% fewer params. |
+| Bidirectional processing | ❌ | Not applicable to real-time inference (requires future frames). |
+
+### C. Confidence Stabilization (Inference-time)
+
+| Technique | Applied? | Description |
+|-----------|----------|-------------|
+| **Exponential Moving Average (EMA)** on logits | ✅ (α=0.7) | `s_t = α·x_t + (1-α)·s_{t-1}`. Smooths softmax output across frames. Filters landmark jitter and confidence flicker. ~0ms latency overhead. |
+| **Confidence hysteresis** (dual threshold) | ✅ | Enter threshold (0.80 for punch) ≠ Exit threshold (0.35). Once a state is entered, it persists until confidence drops far below the enter level. Prevents body-sway-induced state flicker. |
+| Action-specific thresholds | ✅ | 3 tiers: none/guard/squat (0.90), upper (0.85), punch (0.80). Punch gets lowest threshold to catch fast motions. |
+| Confirmation frames (count-based) | ✅ (per action) | Smoothing layer: require N consecutive frames of same prediction before sending UDP. Balanced profile: punch=1, squat=2, precise: all=2. Guard: instant. |
+
+### D. Input Debouncing (Game-side)
+
+| Technique | Applied? | Description |
+|-----------|----------|-------------|
+| Per-side cooldown | ✅ | Independent timers for left/right punches (balanced: 120ms). Prevents L→L double-fire while allowing L→R→L combos. |
+| Cross-punch minimum gap | ✅ | Minimum interval between ANY two attack actions (balanced: 100ms). |
+| Attack rearm logic | ✅ | After sending a punch/upper UDP packet, ignore subsequent attacks until N frames of non-attention neutral label (attack_rearm_n=1). Prevents single-motion double-trigger. |
+| Upper opposite block | ✅ | After an upper on one side, block the same upper on the opposite side for 6 frames (~200ms). Prevents "both hands up" false positive. |
+
+### E. Motion Gating
+
+| Technique | Applied? | Description |
+|-----------|----------|-------------|
+| **Upper-only velocity gate** | ✅ | `motion_mean_abs = mean(|landmark_t - landmark_{t-1}|)`. Upper punch requires minimum inter-frame motion (balanced: 0.0015). Prevents "standing with hands low" from triggering upper. Left upper has relaxed threshold (×0.55). |
+| Squat hip-drop detection | ✅ | When full-body-squat enabled, requires hip y-coordinate drop > 0.02 + lower body visibility. Prevents false squats from upper-body-only poses. |
+| Punch low-chamber suppression | ✅ (optional) | If wrist y > shoulder y + margin, suppress straight punch UDP. Prevents uppercut windup from triggering jab first. |
+
+### F. Data Processing
+
+| Technique | Applied? | Description |
+|-----------|----------|-------------|
+| Recording-based holdout evaluation | ✅ | Split by entire recordings (not frames). Ensures no temporal correlation between train/test. Prevents overly optimistic accuracy. |
+| Gaussian noise augmentation (σ=0.03) | ✅ | Added to training sequences. Simulates MediaPipe landmark jitter. |
+| Scale augmentation (±20%) | ✅ | Random scaling of x,y coordinates. Simulates player-camera distance variation. |
+| Horizontal flip + L/R label swap | ✅ | Flipped landmarks with swapped L/R labels. Doubles data for symmetric classes, fixes imbalance. |
+| Class-weighted loss | ✅ | `compute_class_weight("balanced")`. Handles 2:1 class imbalance (none: 76 recordings vs squat: 27). |
+
+### G. Architecture Selection
+
+| Technique | Applied? | Description |
+|-----------|----------|-------------|
+| Conv1D(64, k=3) → BN → Drop(0.25) | ✅ | 64 temporal filters, each seeing 3 adjacent frames. BatchNorm + Dropout for regularization. |
+| GlobalAveragePooling → Drop(0.3) | ✅ | Replaces FC layer. Averages across time. Minimal params (0). |
+| Dense(7, softmax) | ✅ | 7-class classifier: none, guard, punch_l, punch_r, upper_l, upper_r, squat. |
+| Total params | **~20K** | Conv part: 19,072. Dense: 455. BN: 256. **Total: 19,783.** |
+
+### H. Not Applied (Tested and Rejected)
+
+| Technique | Why rejected |
+|-----------|-------------|
+| LSTM (any size) | Over-parameterized for 4-step sequences. Conv→GAP matches or exceeds with 60% fewer params. |
+| Wider Conv1D (128 filters) | Lower accuracy (-0.89%) despite 2× params. Model capacity already sufficient. |
+| Deeper Conv (2× Conv1D) | No improvement, longer training. |
+| Kernel size 5 | Marginally worse. k=3 optimal for 4-frame window. |
+| Rotation augmentation | Landmarks are shoulder-relative. Rotation creates unrealistic body geometry. |
+| Translation augmentation | Landmarks already centered on shoulder midpoint. |
+| Temporal masking/dropout | All recordings are clean single-action takes. Masking adds unnatural noise. |
+| Landmark dropout | Tested at 0.05, no improvement (95.89% vs 96.12% baseline). |
+| Higher noise (σ=0.05) | punch_r recall improved but overall accuracy similar. σ=0.03 is sufficient. |
+| Test-time augmentation | Double inference for marginal gain. Not worth the compute. |
+
+### I. Latency Budget (balanced profile)
+
+| Stage | Latency | Notes |
+|-------|---------|-------|
+| MediaPipe inference | ~33ms | One frame at 480×360 |
+| Sequence buffer fill | 132ms | 4 frames at 30fps (first action only; pipeline then streams) |
+| TF model inference | ~3ms | 20K params, one forward pass |
+| Confirmation frames | 0-66ms | Punch: 1 frame (33ms), Guard: 0, Squat: 2 frames (66ms) |
+| Per-side cooldown | 0-120ms | Only for repeated same-side attacks |
+| UDP send | ~0.1ms | Localhost |
+| **First punch latency** | **~165ms** | seq=4 + confirm=1 |
+| **Subsequent punch (opposite side)** | **~33ms** | Buffer already full; just confirm=1 |
