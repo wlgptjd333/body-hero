@@ -276,9 +276,12 @@ def main():
         # 2) Random scaling (±20%): 사용자-웹캠 거리 변동 시뮬레이션
         scales = rng.uniform(0.8, 1.2, (n, 1, 1)).astype(np.float32)
         X_aug[..., :2] *= scales
+        # 3) Random translation (±2%): 화면 내 위치 변동 (미미한 효과, 논문 언급용)
+        shifts = rng.uniform(-0.02, 0.02, (n, 1, 2)).astype(np.float32)
+        X_aug[..., :2] += shifts
         X_train = np.concatenate([X_train, X_aug], axis=0)
         y_train = np.concatenate([y_train, y_train], axis=0)
-        print(f"증강(노이즈 std={args.augment} + 스케일 ±20%): 학습 시퀀스 {len(X_train)}")
+        print(f"증강(noise={args.augment} + scale±20% + shift±2%): 학습 {len(X_train)} 시퀀스")
 
     classes = np.unique(y_train)
     weights = compute_class_weight("balanced", classes=classes, y=y_train)
