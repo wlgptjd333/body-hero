@@ -75,18 +75,12 @@ python udp_send_webcam.py
 
 감도/쿨다운은 스크립트 상단 상수에서 조정할 수 있습니다.
 
-## 시퀀스 길이 (학습·실행 모두 기본 4프레임)
+## 시퀀스 길이 (학습·실행 모두 기본 2프레임)
 
-학습·서버·클라이언트 모두 **시퀀스 길이 4프레임**이 기본입니다. 학습 데이터는 각 동작만 녹화(준비·회수 없음, 모든 프레임이 해당 동작)이므로, 시퀀스가 길수록 오히려 신호가 희석될 수 있습니다. 4프레임이 반응 속도와 정확도의 균형이 가장 좋습니다.
+학습 데이터는 각 동작만 녹화(준비·회수 없음, 모든 프레임이 해당 동작)이므로, 시퀀스가 길수록 오히려 신호가 희석됩니다. **2프레임이 반응 속도와 정확도의 균형이 가장 좋습니다.**
 
-- 학습: `train_pose_classifier_seq.py` 인자 없이 실행하면 **4프레임 모델**을 학습해 `pose_classifier_seq_len4.keras` 로 저장.
-- 게임/추론: `udp_send_webcam_ml.py`, `pose_server.py`, `test_pose_live.py` 모두 `pose_classifier_seq_len4.keras` 가 있으면 그것을 우선 로드하고, 없을 때만 `pose_classifier_seq.keras`(8프레임)로 폴백.
-
-```cmd
-cd tools
-python train_pose_classifier_seq.py            :: 기본 4프레임 모델 (pose_classifier_seq_len4.keras)
-python train_pose_classifier_seq.py --seq-len 8 :: 8프레임 모델을 별도로 학습 (pose_classifier_seq.keras)
-```
+- 학습: `python train_pose_classifier_seq.py --seq-len 2 --model pose_classifier_seq_len2.keras`
+- 게임/추론: `udp_send_webcam_ml.py`는 `pose_classifier_seq_len2.keras` → `pose_classifier_seq_len4.keras` → `pose_classifier_seq.keras` 순으로 우선 로드.
 
 > 시퀀스 길이가 다르면 모델 입력 텐서 모양이 달라져서 **별개의 모델 파일**이 만들어집니다. 4프레임용 가중치를 8프레임 입력에 그대로 쓸 수 없습니다. 그래서 학습할 때 `--seq-len` 을 바꿔주면 자동으로 다른 파일로 저장됩니다.
 >
