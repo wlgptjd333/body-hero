@@ -241,7 +241,7 @@ func _update_zone_label(value: float) -> void:
 	if _zone_label:
 		var lo: float = value * 100.0
 		var hi: float = (1.0 - value) * 100.0
-		_zone_label.text = "가로 %.0f%% ~ %.0f%% / 세로 전체" % [lo, hi]
+		_zone_label.text = "가로 %.0f%%~%.0f%%, 세로 전체" % [lo, hi]
 
 
 func _setup_skip_guard_checkbox() -> void:

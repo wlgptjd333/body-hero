@@ -597,7 +597,7 @@ def main():
         type=float,
         default=0.2,
         metavar="M",
-        help="가로 중심 영역 margin (0.0~0.5). 세로는 항상 전체. M=0.2 → 가로 20~80%%. 기본 0.2.",
+        help="가로 중심 영역 margin (0.0~0.5). 세로는 항상 전체. M=0.15 → 가로 15~85%%. 기본 0.15.",
     )
     args = parser.parse_args()
     if args.allow_tf_gpu:

@@ -465,6 +465,8 @@ value = 0.3
 [node name="ZoneValueLabel" type="Label" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection/ZoneRow" unique_id=689698185]
 layout_mode = 2
 text = "30% ~ 70%"
+autowrap_mode = 0
+custom_minimum_size = Vector2(200, 0)
 
 [node name="SkipGuardRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentWebcam/WebcamSection" unique_id=1755471329]
 layout_mode = 2
