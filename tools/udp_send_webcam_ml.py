@@ -74,9 +74,9 @@ UPPER_CONFIDENCE_THRESHOLD = 0.88
 # 직선 펀치 softmax 하한. 기본은 어퍼와 동일(0.88) — 너무 높으면 잽이 잘 안 나감. --punch-confidence 로 덮어씀.
 PUNCH_CONFIDENCE_THRESHOLD = 0.88
 GUARD_FALLBACK_THRESHOLD = 0.65
-COOLDOWN_SEC = 0.08
-MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.08
-GUARD_EXIT_FRAMES = 5
+COOLDOWN_SEC = 0.10  # 연속 입력 chatter 방지
+MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.10
+GUARD_EXIT_FRAMES = 2  # 가드 해제 감지: 2프레임(약 66ms) 연속 not guard면 guard_end 전송
 FPS_TARGET = 30
 # 처리 해상도: 높을수록 좌우(펀치) 구분·포즈 안정에 유리, CPU 부하 증가 (렉 시 320x240 또는 --process-w/h로 낮춤)
 PROCESS_W, PROCESS_H = 480, 360
@@ -634,8 +634,8 @@ def main():
         UPPER_L_MOTION_RELAX = 0.6
     elif args.profile == "max_speed":
         # 콤보 우선: 오인식 리스크를 감수하고 반응·연타 지연 최소화
-        COOLDOWN_SEC = 0.06
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.06
+        COOLDOWN_SEC = 0.10
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.10
         OTHER_PUNCH_CONFIRM_FRAMES = 1
         UPPER_PUNCH_CONFIRM_FRAMES = 1
         PUNCH_CONFIRM_FRAMES = 1
