@@ -654,7 +654,6 @@ def main():
         UPPER_L_MOTION_RELAX = 0.55
     elif args.profile == "classic":
         # 초기버전 LSTM 모델 사용 + 낮은 thresholds
-        global MODEL_SEQ_PATH
         if not args.seq_model:
             classic_path = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4_classic.keras")
             if os.path.isfile(classic_path):
