@@ -1479,15 +1479,24 @@ def main():
                         return (lm.x, lm.y)
                     return (lm[0], lm[1])
 
+                def _lm_to_frame(lm):
+                    """MediaPipe 좌표(letterbox 정사각) → frame_small 좌표로 변환."""
+                    x_norm, y_norm = _get_lm_xy(lm)
+                    top = (mp_square_side - process_h) // 2
+                    left = (mp_square_side - process_w) // 2
+                    fx = int((x_norm * mp_square_side - left) * fsw / process_w) if process_w > 0 else 0
+                    fy = int((y_norm * mp_square_side - top) * fsh / process_h) if process_h > 0 else 0
+                    return (fx, fy)
+
                 if lm:
-                    h, w = frame_small.shape[0], frame_small.shape[1]
+                    fsh, fsw = frame_small.shape[:2]
                     for (i, j) in POSE_CONNECTIONS:
                         if i < len(lm) and j < len(lm):
-                            a = (int(_get_lm_xy(lm[i])[0] * w), int(_get_lm_xy(lm[i])[1] * h))
-                            b = (int(_get_lm_xy(lm[j])[0] * w), int(_get_lm_xy(lm[j])[1] * h))
+                            a = _lm_to_frame(lm[i])
+                            b = _lm_to_frame(lm[j])
                             cv2.line(frame_small, a, b, (0, 255, 100), 2)
                     for p in lm:
-                        x, y = int(_get_lm_xy(p)[0] * w), int(_get_lm_xy(p)[1] * h)
+                        x, y = _lm_to_frame(p)
                         cv2.circle(frame_small, (x, y), 3, (0, 200, 255), -1)
 
                 if gui_enabled:
