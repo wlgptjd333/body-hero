@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 웹캠 → Pose 랜드마크 → ML 추론(로컬 또는 pose_server) → Godot에 UDP로 액션 전송.
 

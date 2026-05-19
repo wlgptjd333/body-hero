@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 seq_len=2 최종: 최고 증강 조합 + flip + baseline 재현.
 """

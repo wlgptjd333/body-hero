@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Profile 비교: precise vs balanced vs rapid vs max_speed.
 Recording-based holdout, same model, simulated state machine.

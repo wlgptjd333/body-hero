@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 MediaPipe Pose 랜드마크를 어깨 너비(shoulder width) 기준으로 정규화합니다.
 거리/카메라 위치가 달라도 같은 동작이 비슷한 값으로 들어가게 해서

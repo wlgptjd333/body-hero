@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 포즈 분류 추론 서버: 시퀀스(기본 4프레임, Conv1D+GAP, ADR-0002) + 가드 단일 프레임 폴백.
 우선순위: pose_classifier_seq_len4.keras → seq.keras.

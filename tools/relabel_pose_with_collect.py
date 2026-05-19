@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 collect_pose_data.py와 동일한 라벨 정책으로
 pose_data.json 안의 **프레임 라벨**을 pose_recordings_meta.json의

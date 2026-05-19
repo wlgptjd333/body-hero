@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 저장된 pose_classifier.keras / pose_classifier_seq.keras 검증.
 train_pose_classifier.py / train_pose_classifier_seq.py 와 동일한

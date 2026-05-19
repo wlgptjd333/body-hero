@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """work_images/ 작업 트리 경로. 다른 스크립트에서 복사·이동 로직에 재사용."""
 
 from pathlib import Path

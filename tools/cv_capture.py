@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 OpenCV VideoCapture — Windows에서 USB/내장 인덱스 뒤바뀜 완화용 백엔드 선택.
 collect_pose_data, udp_send_webcam*, list_cameras, test_pose_live 등에서 공통 사용.

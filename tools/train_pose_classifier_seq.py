@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 연속 프레임(시퀀스) 포즈 분류: pose_data.json + pose_recordings_meta.json 그대로 사용.
 녹화 구간별로 슬라이딩 윈도우해 (seq_len 프레임) → Conv1D+GAP → 동작 분류.

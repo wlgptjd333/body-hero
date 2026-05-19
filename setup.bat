@@ -6,9 +6,15 @@ echo =========================
 :: 1. Create Python virtual environment
 if not exist "tools\venv_ml\" (
     echo [1/3] Creating Python virtual environment...
-    py -3.10 -m venv tools\venv_ml || python -m venv tools\venv_ml
+    python -m venv tools\venv_ml
     if %errorlevel% neq 0 (
-        echo Python 3.10 is not installed. Install it from https://python.org
+        python3 -m venv tools\venv_ml
+    )
+    if %errorlevel% neq 0 (
+        py -m venv tools\venv_ml
+    )
+    if %errorlevel% neq 0 (
+        echo Python is not installed. Install Python 3.10+ from https://python.org
         pause
         exit /b 1
     )

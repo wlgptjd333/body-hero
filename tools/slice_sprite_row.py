@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 스프라이트 시트에서 '한 줄' 영역만 잘라 동일 폭으로 N등분해 PNG로 저장합니다.
 (MONSTER BURGER처럼 상단 큰 그림 + IDLE 5프레임 줄 + 하단 파츠가 있는 시트는

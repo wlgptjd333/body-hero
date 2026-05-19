@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Aseprite(.aseprite) IDLE 애니 → 프레임별 PNG 추출 → (선택) rembg 배경 제거 →
 알파 기준 트림 후 동일 캔버스에 중앙 정렬(프레임 간 흔들림 최소화).
