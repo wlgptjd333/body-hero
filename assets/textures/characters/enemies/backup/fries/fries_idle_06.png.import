@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dmdg42dluvvbt"
-path="res://.godot/imported/fries_idle_06.png-b98fa288b1efbf649979367fd61c0fbb.ctex"
+path="res://.godot/imported/fries_idle_06.png-d864255434f8c2f88d3536b9315e61d7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/characters/enemies/fries/fries_idle_06.png"
-dest_files=["res://.godot/imported/fries_idle_06.png-b98fa288b1efbf649979367fd61c0fbb.ctex"]
+source_file="res://assets/textures/characters/enemies/backup/fries/fries_idle_06.png"
+dest_files=["res://.godot/imported/fries_idle_06.png-d864255434f8c2f88d3536b9315e61d7.ctex"]
 
 [params]
 

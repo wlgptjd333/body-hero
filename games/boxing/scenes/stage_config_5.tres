@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StageConfig" format=3 uid="uid://dauwouhuyvapm"]
+
+[ext_resource type="Script" uid="uid://cud5c7g430wal" path="res://games/boxing/scripts/stage_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+stage_id = "stage_5"
+monster_name = "CHICKEN MONSTER"
+scene_path = "res://games/boxing/scenes/stage_5.tscn"
+enemy_max_hp = 200.0
+enemy_attack_damage = 50.0
+enemy_attack_delay_min = 0.7
+enemy_attack_delay_max = 1.4
+enemy_evade_idle_min = 0.15
+enemy_evade_idle_max = 0.5

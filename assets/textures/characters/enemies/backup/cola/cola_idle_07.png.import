@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://byx6vq1mudeew"
-path="res://.godot/imported/cola_idle_07.png-f3d439979432dd230e0bd0fb7037e46b.ctex"
+path="res://.godot/imported/cola_idle_07.png-953ec69b93d592f593b4522451ab4a58.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/characters/enemies/cola/cola_idle_07.png"
-dest_files=["res://.godot/imported/cola_idle_07.png-f3d439979432dd230e0bd0fb7037e46b.ctex"]
+source_file="res://assets/textures/characters/enemies/backup/cola/cola_idle_07.png"
+dest_files=["res://.godot/imported/cola_idle_07.png-953ec69b93d592f593b4522451ab4a58.ctex"]
 
 [params]
 

@@ -38,6 +38,24 @@ const STAGE_DEFS: Array[Dictionary] = [
 		"bg_image": "res://assets/textures/bg/bg_stage3_fries.png",
 		"description": "감자튀김 무리에서 태어난 몬스터다. 빠르고 날카로운 연속 공격이 특징. 집중력을 잃지 마라.",
 	},
+	{
+		"id": "stage_4",
+		"name": "Stage 4",
+		"scene": "res://games/boxing/scenes/stage_4.tscn",
+		"monster_name": "PIZZA MONSTER",
+		"monster_image": "res://assets/textures/characters/enemies/pizza/pizza_idle_01.png",
+		"bg_image": "res://assets/textures/bg/bg_stage4_pizza.png",
+		"description": "뜨거운 피자가 화염 방사처럼 펀치를 퍼붓는다. 강력한 내구도를 자랑하지만 움직임은 둔하다. 끝까지 밀어붙여라.",
+	},
+	{
+		"id": "stage_5",
+		"name": "Stage 5",
+		"scene": "res://games/boxing/scenes/stage_5.tscn",
+		"monster_name": "CHICKEN MONSTER",
+		"monster_image": "res://assets/textures/characters/enemies/chicken/chicken_idle_01.png",
+		"bg_image": "res://assets/textures/bg/bg_stage5_chicken.png",
+		"description": "바삭한 치킨에서 태어난 최강의 몬스터. 모든 스탯이 극한에 달했다. 방심은 곧 패배다.",
+	},
 ]
 
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bojxmy25nued0"
-path="res://.godot/imported/cola_punch_l_01.png-7780a9aa61056770d62fbae3bff6a5c6.ctex"
+path="res://.godot/imported/cola_punch_l_01.png-fe47ad54fd1919f2518d4bc5a71670b0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/characters/enemies/cola/cola_punch_l_01.png"
-dest_files=["res://.godot/imported/cola_punch_l_01.png-7780a9aa61056770d62fbae3bff6a5c6.ctex"]
+source_file="res://assets/textures/characters/enemies/backup/cola/cola_punch_l_01.png"
+dest_files=["res://.godot/imported/cola_punch_l_01.png-fe47ad54fd1919f2518d4bc5a71670b0.ctex"]
 
 [params]
 

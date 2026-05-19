@@ -116,11 +116,6 @@ text = "화면 모드"
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentDisplay/WindowModeSection/WindowModeRow" unique_id=44846420]
-layout_mode = 2
-size_flags_vertical = 1
-text = "화면 모드"
-
 [node name="WindowModeOption" type="OptionButton" parent="Panel/Scroll/VBox/ContentDisplay/WindowModeSection/WindowModeRow" unique_id=978963374]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -136,11 +131,6 @@ text = "해상도 설정"
 [node name="ResolutionRow" type="HBoxContainer" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection" unique_id=1940018855]
 layout_mode = 2
 theme_override_constants/separation = 12
-
-[node name="Label" type="Label" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection/ResolutionRow" unique_id=44846421]
-layout_mode = 2
-size_flags_vertical = 1
-text = "해상도"
 
 [node name="OptionButton" type="OptionButton" parent="Panel/Scroll/VBox/ContentDisplay/ResolutionSection/ResolutionRow" unique_id=978963375]
 layout_mode = 2

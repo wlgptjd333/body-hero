@@ -78,9 +78,9 @@ FPS_TARGET = 30
 PROCESS_W, PROCESS_H = 480, 360
 # 이 프레임 수마다만 포즈+ML 실행 (1=매프레임, 2=2프레임마다). test_pose_live처럼 인식하려면 1
 PROCESS_EVERY_N_FRAMES = 1
-# Godot으로 액션 전송 시에만 적용: 어깨 중심이 이 구역 안에 있을 때만 전송 (화면 표시는 zone 무관)
-CENTER_ZONE_X = (0.2, 0.8)  # normalized [0,1] 기준
-CENTER_ZONE_Y = (0.2, 0.8)
+# Godot으로 액션 전송 시에만 적용: 어깨 중심 X좌표만 검사 (Y는 항상 전체)
+CENTER_ZONE_X = (0.3, 0.7)  # normalized [0,1] 기준
+CENTER_ZONE_Y = (0.0, 1.0)  # 세로 전체
 PUNCH_CONFIRM_FRAMES = 1
 OTHER_PUNCH_CONFIRM_FRAMES = 1
 UPPER_PUNCH_CONFIRM_FRAMES = 1
@@ -595,9 +595,9 @@ def main():
     parser.add_argument(
         "--center-zone",
         type=float,
-        default=0.2,
+        default=0.3,
         metavar="M",
-        help="가로 중심 영역 margin (0.0~0.5). 세로는 항상 전체. M=0.15 → 가로 15~85%%. 기본 0.15.",
+        help="가로 중심 영역 margin (0.0~0.5). 세로는 항상 전체. M=0.3 → 가로 30~70%%. 기본 0.3.",
     )
     args = parser.parse_args()
     if args.allow_tf_gpu:
@@ -1192,7 +1192,9 @@ def main():
                     )
                     if roi_active and tracked_bbox is not None:
                         bx1, by1, bx2, by2 = tracked_bbox
-                        cv2.rectangle(frame_small, (bx1, by1), (bx2, by2), (0, 255, 0), 1)
+                        cv2.rectangle(frame_small, (bx1, by1), (bx2, by2), (0, 255, 0), 2)
+                        cv2.putText(frame_small, "ROI", (bx1 + 4, by1 - 6),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
 
                 pred, confidence, seq_topk_debug = get_last_pred()
                 pred_history.append(pred if pred is not None else "none")

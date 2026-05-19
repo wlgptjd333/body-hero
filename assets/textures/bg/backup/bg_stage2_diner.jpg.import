@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bojiosh1yevjr"
-path="res://.godot/imported/bg_stage2_diner.jpg-b0306fdc63cb276491523052accffb0a.ctex"
+path="res://.godot/imported/bg_stage2_diner.jpg-cfa52577d64a4a2231ddd860cdb5fcf2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/bg/bg_stage2_diner.jpg"
-dest_files=["res://.godot/imported/bg_stage2_diner.jpg-b0306fdc63cb276491523052accffb0a.ctex"]
+source_file="res://assets/textures/bg/backup/bg_stage2_diner.jpg"
+dest_files=["res://.godot/imported/bg_stage2_diner.jpg-cfa52577d64a4a2231ddd860cdb5fcf2.ctex"]
 
 [params]
 

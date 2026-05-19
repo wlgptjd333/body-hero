@@ -84,6 +84,7 @@ func _ready() -> void:
 		UIThemeHelper.style_button_primary(_btn_apply)
 	if _btn_back:
 		UIThemeHelper.style_button_danger(_btn_back)
+	_style_section_headers()
 	_setup_tabs()
 	_setup_window_mode()
 	_setup_resolutions()
@@ -118,6 +119,22 @@ func _ready() -> void:
 	_setup_reset_button()
 	_setup_demo_mode()
 	_show_tab(0)
+
+
+func _style_section_headers() -> void:
+	var paths := [
+		"Panel/Scroll/VBox/ContentDisplay/WindowModeSection/Label",
+		"Panel/Scroll/VBox/ContentDisplay/ResolutionSection/Label",
+		"Panel/Scroll/VBox/ContentAudio/SoundSection/Label",
+		"Panel/Scroll/VBox/ContentUser/HealthSection/Label",
+		"Panel/Scroll/VBox/ContentUser/ResetSection/Label",
+		"Panel/Scroll/VBox/ContentWebcam/WebcamSection/Label",
+		"Panel/Scroll/VBox/ContentControls/KeySection/Label",
+	]
+	for path: String in paths:
+		var lbl: Label = get_node_or_null(path) as Label
+		if lbl:
+			UIThemeHelper.style_label_section(lbl)
 
 
 func _setup_tabs() -> void:

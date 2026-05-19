@@ -2,7 +2,7 @@ extends Control
 ## 스테이지 선택 화면
 
 const SCENE_MAIN_MENU: String = "res://scenes/main_menu.tscn"
-const STAGES_PER_PAGE: int = 3
+const STAGES_PER_PAGE: int = 6
 
 @onready var _bg: TextureRect = $Bg
 @onready var _back_btn: Button = $BackBtn
@@ -94,10 +94,10 @@ func _populate_current_page() -> void:
 		var mname: String = str(def.get("monster_name", sname))
 
 		var card := Button.new()
-		card.custom_minimum_size = Vector2(200, 68)
+		card.custom_minimum_size = Vector2(200, 56)
 		card.size_flags_horizontal = Control.SIZE_FILL
 		card.text = "%s\n%s" % [sname, mname]
-		card.add_theme_font_size_override("font_size", 15)
+		card.add_theme_font_size_override("font_size", 14)
 		card.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		card.pressed.connect(_on_stage_selected.bind(sid))
 		_stage_grid.add_child(card)
@@ -187,27 +187,55 @@ func _apply_card_styles() -> void:
 			_style_card_default(btn)
 
 
-func _style_card_default(btn: Button) -> void:
+func _make_card_style(bg: Color, border: Color, shadow_sz: int = 0, shadow_color: Color = Color(0, 0, 0, 0)) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.07, 0.07, 0.12, 0.9)
-	sb.border_width_left = 2
-	sb.border_width_top = 2
-	sb.border_width_right = 2
-	sb.border_width_bottom = 2
-	sb.border_color = Color(0.18, 0.18, 0.28, 0.7)
-	sb.corner_radius_top_left = 10
-	sb.corner_radius_top_right = 10
-	sb.corner_radius_bottom_right = 10
-	sb.corner_radius_bottom_left = 10
-	sb.content_margin_left = 14
+	sb.bg_color = bg
+	sb.border_width_left = 1
+	sb.border_width_top = 1
+	sb.border_width_right = 1
+	sb.border_width_bottom = 1
+	sb.border_color = border
+	sb.corner_radius_top_left = 8
+	sb.corner_radius_top_right = 8
+	sb.corner_radius_bottom_right = 8
+	sb.corner_radius_bottom_left = 8
+	sb.content_margin_left = 12
 	sb.content_margin_top = 10
-	sb.content_margin_right = 14
+	sb.content_margin_right = 12
 	sb.content_margin_bottom = 10
-	btn.add_theme_stylebox_override("normal", sb)
-	btn.add_theme_stylebox_override("hover", sb)
-	btn.add_theme_stylebox_override("pressed", sb)
-	btn.add_theme_stylebox_override("focus", sb)
-	btn.add_theme_color_override("font_color", UIThemeHelper.C_TEXT_PRIMARY)
+	if shadow_sz > 0:
+		sb.shadow_color = shadow_color
+		sb.shadow_size = shadow_sz
+		sb.shadow_offset = Vector2(0, 2)
+	return sb
+
+
+func _style_card_default(btn: Button) -> void:
+	var normal := _make_card_style(
+		Color(0.02, 0.02, 0.06, 0.55),
+		Color(0.2, 0.2, 0.32, 0.5),
+		4, Color(0, 0, 0, 0.3)
+	)
+	var hover := _make_card_style(
+		Color(0.06, 0.06, 0.12, 0.7),
+		Color(0.0, 0.5, 0.6, 0.7),
+		8, Color(0.0, 0.9, 1.0, 0.2)
+	)
+	var pressed := _make_card_style(
+		Color(0.1, 0.0, 0.03, 0.8),
+		Color(1.0, 0.0, 0.33, 0.6),
+		6, Color(1.0, 0.0, 0.33, 0.3)
+	)
+	var disabled := _make_card_style(
+		Color(0.04, 0.04, 0.06, 0.4),
+		Color(0.15, 0.15, 0.2, 0.3)
+	)
+	btn.add_theme_stylebox_override("normal", normal)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.add_theme_stylebox_override("disabled", disabled)
+	btn.add_theme_color_override("font_color", UIThemeHelper.C_TEXT_SECONDARY)
+	btn.add_theme_color_override("font_hover_color", UIThemeHelper.C_TEXT_PRIMARY)
 	btn.add_theme_font_size_override("font_size", 15)
 	btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
 

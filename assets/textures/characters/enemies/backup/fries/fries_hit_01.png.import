@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c2mjhbckfe5ft"
-path="res://.godot/imported/fries_hit_01.png-dc7a82a3dc9d839bef0854a0cc6621e0.ctex"
+path="res://.godot/imported/fries_hit_01.png-52f4bb6f5ab005a6a986bb8a7c53f5b0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/characters/enemies/fries/fries_hit_01.png"
-dest_files=["res://.godot/imported/fries_hit_01.png-dc7a82a3dc9d839bef0854a0cc6621e0.ctex"]
+source_file="res://assets/textures/characters/enemies/backup/fries/fries_hit_01.png"
+dest_files=["res://.godot/imported/fries_hit_01.png-52f4bb6f5ab005a6a986bb8a7c53f5b0.ctex"]
 
 [params]
 
