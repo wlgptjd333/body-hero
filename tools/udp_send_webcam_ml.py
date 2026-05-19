@@ -478,6 +478,7 @@ def _ensure_pose_server(auto_spawn: bool):
 
 
 def main():
+    global MODEL_SEQ_PATH
     parser = argparse.ArgumentParser(description="Webcam -> ML -> UDP for Body Hero")
     parser.add_argument("--camera-index", type=int, default=0, help="OpenCV camera index (기본 0, 외부 웹캠은 1/2일 수 있음)")
     parser.add_argument(
