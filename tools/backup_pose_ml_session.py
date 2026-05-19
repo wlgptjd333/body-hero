@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 현재 tools 폴더의 포즈 ML 데이터·가중치·히스토리를 타임스탬프 폴더로 옮기고,
 빈 pose_data.json + pose_recordings_meta.json 을 만들어 처음부터 수집할 수 있게 합니다.

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 pose_data.json / 시퀀스 윈도우 기준으로 punch·upper 의 L:R 녹화·샘플 수를 출력.
 왼쪽/오른쪽 데이터가 치우치면 train_pose_classifier_seq.py 가 자동으로 소수 쪽을 오버샘플하지만,

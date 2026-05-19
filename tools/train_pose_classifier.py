@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 포즈 분류 모델 학습: pose_data.json(정규화된 랜드마크) → Dense 네트워크 → none, guard, punch_l, punch_r, upper_l, upper_r.
 졸업작품용: 클래스 불균형 보정(class_weight), EarlyStopping, 회전/스케일/좌우반전 증강으로 다양한 사람·각도·거리 견고성 확보.

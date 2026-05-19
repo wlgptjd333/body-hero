@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 저장된 pose_data.json / pose_recordings_meta.json 에서 녹화 구간을 삭제합니다.
 

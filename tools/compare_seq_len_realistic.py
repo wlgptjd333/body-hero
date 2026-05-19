@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 녹화 단위 holdout: seq_len=1(Dense) vs 2(Conv1D+LSTM) vs 4(Conv1D+LSTM) 비교.
 

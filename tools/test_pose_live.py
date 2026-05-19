@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 학습된 시퀀스 포즈 분류 모델(Conv1D+GAP, seq_len=4, ADR-0002)로 웹캠 실시간 테스트.
 우선순위: pose_classifier_seq_len4.keras → seq.keras.

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Ablation: Dense vs Conv1D vs LSTM 분리.
 같은 데이터·증강, seq_len=1/2, 아키텍처만 교체.

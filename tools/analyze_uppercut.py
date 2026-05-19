@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 upper_l / upper_r 녹화 1회를 프레임별로 분석해서,
 - 손목 y (wr_y)

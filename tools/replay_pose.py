@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 저장된 pose_data.json / pose_recordings_meta.json에서
 특정 녹화 1회를 뼈대(스켈레톤) 애니메이션으로 리플레이합니다.

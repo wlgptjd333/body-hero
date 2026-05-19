@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 OpenCV로 열리는 카메라 인덱스만 나열 (Godot 설정 UI에서 OS.execute로 호출).
 

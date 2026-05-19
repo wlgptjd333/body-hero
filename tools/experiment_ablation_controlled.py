@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Controlled ablation: Dense vs Conv1D vs LSTM, equal parameters.
 

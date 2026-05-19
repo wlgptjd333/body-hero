@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Streaming simulation: EMA logit smoothing + hysteresis + delta features.
 
