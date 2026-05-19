@@ -1192,8 +1192,9 @@ def main():
                     if roi_active and tracked_bbox is not None:
                         bx1, by1, bx2, by2 = tracked_bbox
                         cv2.rectangle(frame_small, (bx1, by1), (bx2, by2), (0, 255, 0), 2)
-                        cv2.putText(frame_small, "ROI", (bx1 + 4, by1 - 6),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+                        if roi_mode:
+                            cv2.putText(frame_small, "ROI", (bx1 + 4, by1 - 6),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
 
                 pred, confidence, seq_topk_debug = get_last_pred()
                 pred_history.append(pred if pred is not None else "none")

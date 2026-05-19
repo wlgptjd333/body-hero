@@ -15,9 +15,9 @@ const PUNCH_WINDUP_OFFSET_R := Vector2(16, 12)
 const PUNCH_STRIKE_OFFSET_L := Vector2(58, -64)
 const PUNCH_STRIKE_OFFSET_R := Vector2(-58, -64)
 const PUNCH_STRIKE_SCALE_MUL := Vector2(1.28, 1.18)
-const PUNCH_WINDUP_DURATION := 0.035
-const PUNCH_STRIKE_DURATION := 0.058
-const PUNCH_RETURN_DURATION := 0.082
+const PUNCH_WINDUP_DURATION := 0.053
+const PUNCH_STRIKE_DURATION := 0.087
+const PUNCH_RETURN_DURATION := 0.123
 const PUNCH_WINDUP_SCALE := 0.86
 
 ## 어퍼: 몸·주먹을 살짝 내려 받은 뒤 크게 위로 아크 (잽보다 세로·스케일 과장)
