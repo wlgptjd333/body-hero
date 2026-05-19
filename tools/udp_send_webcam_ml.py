@@ -675,7 +675,6 @@ def main():
         PUNCH_CONFIDENCE_THRESHOLD = 0.55
         UPPER_MOTION_MEAN_ABS_MIN = 0.0005
         UPPER_L_MOTION_RELAX = 0.40
-        UPPER_L_MOTION_RELAX = 0.40
 
     if args.react is not None:
         r = max(0.0, min(1.0, float(args.react)))
