@@ -17,6 +17,8 @@ var _use_gpu: bool = false
 var _window_mode: int = 0  # 0=windowed, 1=fullscreen, 2=borderless
 var _saved_width: int = 0
 var _saved_height: int = 0
+var _bg_effect_enabled: bool = true
+var _bg_effect_strength: float = 0.35
 var _webcam_bridge = null  # set externally by GameState
 var _bridgify_fn: Callable = Callable()
 
@@ -87,6 +89,24 @@ func apply_saved_window_size() -> void:
 			win.set_mode(Window.MODE_EXCLUSIVE_FULLSCREEN)
 
 
+# --- BG Effect ---
+
+func get_bg_effect_enabled() -> bool:
+	return _bg_effect_enabled
+
+
+func set_bg_effect_enabled(v: bool) -> void:
+	_bg_effect_enabled = v
+
+
+func get_bg_effect_strength() -> float:
+	return _bg_effect_strength
+
+
+func set_bg_effect_strength(v: float) -> void:
+	_bg_effect_strength = clampf(v, 0.0, 1.0)
+
+
 # --- Load / Save ---
 
 func load_from_disk() -> void:
@@ -125,6 +145,10 @@ func load_from_disk() -> void:
 		_full_body_squat = bool(cfg.get_value("camera", "full_body_squat", false))
 	if cfg.has_section_key("camera", "use_gpu"):
 		_use_gpu = bool(cfg.get_value("camera", "use_gpu", false))
+	if cfg.has_section_key("graphics", "bg_effect_enabled"):
+		_bg_effect_enabled = bool(cfg.get_value("graphics", "bg_effect_enabled", true))
+	if cfg.has_section_key("graphics", "bg_effect_strength"):
+		_bg_effect_strength = clampf(float(cfg.get_value("graphics", "bg_effect_strength", 0.35)), 0.0, 1.0)
 
 
 func save_to_disk(width: int, height: int, camera_index: int, camera_backend: String = "auto", ml_speed_profile: String = "", roi_mode: bool = false, center_zone_margin: float = 0.3, skip_guard_single: bool = false, full_body_squat: bool = false, use_gpu: bool = false) -> void:
@@ -161,6 +185,8 @@ func save_to_disk(width: int, height: int, camera_index: int, camera_backend: St
 	cfg.set_value("camera", "skip_guard_single", _skip_guard_single)
 	cfg.set_value("camera", "full_body_squat", _full_body_squat)
 	cfg.set_value("camera", "use_gpu", _use_gpu)
+	cfg.set_value("graphics", "bg_effect_enabled", _bg_effect_enabled)
+	cfg.set_value("graphics", "bg_effect_strength", _bg_effect_strength)
 	cfg.save(DISPLAY_SETTINGS_PATH)
 	var changed: bool = (old_cam != _camera_index or old_back != _camera_backend or old_prof != _ml_speed_profile or old_roi != _roi_mode or old_zone != _center_zone_margin or old_skip != _skip_guard_single or old_full != _full_body_squat or old_gpu != _use_gpu)
 	if changed and _bridgify_fn.is_valid():

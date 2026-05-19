@@ -140,7 +140,7 @@ position = Vector2(576, 324)
 texture = ExtResource("4_bg")
 
 [node name="Enemy" type="Node2D" parent="." unique_id=1204726762]
-position = Vector2(576, 280)
+position = Vector2(576, 255)
 script = ExtResource("3_enemy")
 idle_texture_base = "res://assets/textures/characters/enemies/pizza/pizza_idle_"
 attack_texture_base = "res://assets/textures/characters/enemies/pizza/pizza_punch_l_"
@@ -148,7 +148,7 @@ hit_texture_base = "res://assets/textures/characters/enemies/pizza/pizza_hit_"
 ko_texture_base = "res://assets/textures/characters/enemies/pizza/pizza_ko_"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Enemy" unique_id=2025083540]
-scale = Vector2(1.02, 1.02)
+scale = Vector2(0.88, 0.88)
 
 [node name="HitSound" type="AudioStreamPlayer" parent="Enemy" unique_id=352363043]
 stream = ExtResource("7_hit")
@@ -267,7 +267,7 @@ grow_horizontal = 2
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 28.0
+offset_bottom = 38.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0.98, 0.95, 0.9, 1)
 theme_override_colors/font_outline_color = Color(0.1, 0.05, 0.05, 1)
@@ -360,10 +360,10 @@ show_percentage = false
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -56.0
-offset_top = 20.0
+offset_left = -160.0
+offset_top = 16.0
 offset_right = -16.0
-offset_bottom = 56.0
+offset_bottom = 52.0
 grow_horizontal = 0
 grow_vertical = 2
 theme_override_font_sizes/font_size = 20

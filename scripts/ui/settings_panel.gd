@@ -73,6 +73,10 @@ var _key_buttons: Dictionary = {}  # action_name -> Button
 @onready var _btn_reset_data: Button = $Panel/Scroll/VBox/ContentUser/ResetSection/ResetRow/BtnResetData
 @onready var _reset_confirm: AcceptDialog = $ResetConfirmDialog
 
+@onready var _bg_effect_checkbox: CheckBox = $Panel/Scroll/VBox/ContentDisplay/GraphicsSection/BgEffectRow/BgEffectCheckBox
+@onready var _bg_effect_slider: HSlider = $Panel/Scroll/VBox/ContentDisplay/GraphicsSection/StrengthRow/BgEffectSlider
+@onready var _bg_effect_value_label: Label = $Panel/Scroll/VBox/ContentDisplay/GraphicsSection/StrengthRow/BgEffectValueLabel
+
 var _tab_buttons: Array[Button] = []
 var _tab_panels: Array[VBoxContainer] = []
 var _current_tab: int = 0
@@ -118,6 +122,7 @@ func _ready() -> void:
 	_setup_webcam_gpu_checkbox()
 	_setup_reset_button()
 	_setup_demo_mode()
+	_setup_bg_effect()
 	_show_tab(0)
 
 
@@ -125,6 +130,7 @@ func _style_section_headers() -> void:
 	var paths := [
 		"Panel/Scroll/VBox/ContentDisplay/WindowModeSection/Label",
 		"Panel/Scroll/VBox/ContentDisplay/ResolutionSection/Label",
+		"Panel/Scroll/VBox/ContentDisplay/GraphicsSection/Label",
 		"Panel/Scroll/VBox/ContentAudio/SoundSection/Label",
 		"Panel/Scroll/VBox/ContentUser/HealthSection/Label",
 		"Panel/Scroll/VBox/ContentUser/ResetSection/Label",
@@ -402,6 +408,32 @@ func _setup_window_mode() -> void:
 	_window_mode_option.add_item("전체화면", 1)
 	_window_mode_option.add_item("창 없는 전체화면", 2)
 	_window_mode_option.select(clampi(GameState.get_window_mode(), 0, 2))
+
+
+func _setup_bg_effect() -> void:
+	if _bg_effect_checkbox:
+		_bg_effect_checkbox.button_pressed = GameState.get_bg_effect_enabled()
+	if _bg_effect_slider:
+		_bg_effect_slider.value = GameState.get_bg_effect_strength()
+		_update_bg_effect_label(_bg_effect_slider.value)
+		if not _bg_effect_slider.value_changed.is_connected(_on_bg_effect_slider_changed):
+			_bg_effect_slider.value_changed.connect(_on_bg_effect_slider_changed)
+
+
+func _on_bg_effect_slider_changed(v: float) -> void:
+	_update_bg_effect_label(v)
+
+
+func _update_bg_effect_label(v: float) -> void:
+	if _bg_effect_value_label:
+		_bg_effect_value_label.text = "%d%%" % int(v * 100.0)
+
+
+func _apply_bg_effect() -> void:
+	var enabled: bool = _bg_effect_checkbox.button_pressed if _bg_effect_checkbox else true
+	var strength: float = _bg_effect_slider.value if _bg_effect_slider else 0.15
+	GameState.set_bg_effect_enabled(enabled)
+	GameState.set_bg_effect_strength(strength)
 
 
 func _setup_reset_button() -> void:
@@ -692,6 +724,7 @@ func _on_apply() -> void:
 	_apply_resolution()
 	_apply_volumes()
 	_apply_health_profile()
+	_apply_bg_effect()
 	_save_webcam_and_window_from_ui()
 
 

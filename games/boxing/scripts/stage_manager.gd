@@ -1,16 +1,46 @@
 extends Node
 ## Stage Manager: 스테이지 설정, 적/배경/BGM 초기화를 담당.
-## 현재는 1개 스테이지만 관리하며, 향후 StageConfig 기반 다중 스테이지로 확장.
+
+const BULGE_SHADER := preload("res://shaders/perspective_bulge.gdshader")
+const BG_EFFECT_LAYER := 10
 
 @onready var _background: Sprite2D = $"../Background"
 @onready var _bgm: AudioStreamPlayer = $"../BGM"
 @onready var _enemy: Node2D = $"../Enemy"
 
+var _bg_effect_layer: CanvasLayer = null
+
+
 func setup_stage() -> void:
 	_fit_background_to_viewport()
+	_apply_bg_effect()
 	var vp := get_viewport()
 	if vp and not vp.size_changed.is_connected(_fit_background_to_viewport):
 		vp.size_changed.connect(_fit_background_to_viewport)
+
+
+func _apply_bg_effect() -> void:
+	if not GameState.get_bg_effect_enabled():
+		return
+	var root := get_parent()
+	if not root:
+		return
+	_bg_effect_layer = CanvasLayer.new()
+	_bg_effect_layer.name = "BgEffectLayer"
+	_bg_effect_layer.layer = BG_EFFECT_LAYER
+	root.add_child(_bg_effect_layer)
+	var rect := ColorRect.new()
+	rect.name = "BgEffectRect"
+	rect.layout_mode = 1
+	rect.anchors_preset = 15
+	rect.anchor_right = 1.0
+	rect.anchor_bottom = 1.0
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mat := ShaderMaterial.new()
+	mat.shader = BULGE_SHADER
+	mat.set_shader_parameter("distortion_strength", GameState.get_bg_effect_strength())
+	rect.material = mat
+	_bg_effect_layer.add_child(rect)
 
 
 func setup_training_mode() -> void:

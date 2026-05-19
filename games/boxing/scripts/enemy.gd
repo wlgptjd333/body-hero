@@ -1,7 +1,7 @@
 extends Node2D
 ## 적 캐릭터 (main.tscn Enemy/AnimatedSprite2D — IDLE burger_idle_*, ATTACK burger_punch_l_01~04, KO burger_ko_*)
 
-enum EnemyState { IDLE, ATTACK, EVADE, HIT, DEAD }
+enum EnemyState { INTRO, IDLE, ATTACK, EVADE, HIT, RAGE, DEAD }
 enum AttackPhase { STARTUP, ACTIVE, RECOVERY }
 
 const DEBUG_FSM := true
@@ -55,6 +55,8 @@ var _state_enter_time: int = 0
 var _is_evading := false
 var _evade_side_sign: float = 1.0
 var _is_attacking := false
+var _is_raged := false
+var _using_special := false
 
 
 @export var idle_texture_base := "res://assets/textures/characters/enemies/burger/burger_idle_"
@@ -79,6 +81,16 @@ const KO_FRAME_DURATION_SEC := 1.25
 const KO_FRAME_PATH_MAX := 3
 ## KO 재생 끝난 뒤(마지막 프레임·시체 자세) 스프라이트를 화면 아래로 살짝 내림. Y+ = 아래
 @export var ko_corpse_position_nudge: Vector2 = Vector2(0, 36)
+
+@export var intro_texture_base := ""
+const INTRO_FRAME_PATH_MAX := 8
+@export var rage_texture_base := ""
+const RAGE_FRAME_PATH_MAX := 8
+@export var special_texture_base := ""
+const SPECIAL_FRAME_PATH_MAX := 8
+@export var special_attack_chance: float = 0.3
+@export var special_attack_damage_mult: float = 1.8
+@export var rage_attack_speed_mult: float = 0.5
 
 @onready var hitbox: Area2D = $Hitbox
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -124,7 +136,10 @@ func _ready() -> void:
 	_setup_particle_textures()
 	_attack_idle_timer = randf_range(minf(attack_delay_min, attack_delay_max), maxf(attack_delay_min, attack_delay_max))
 	_evade_idle_timer = randf_range(minf(evade_idle_min, evade_idle_max), maxf(evade_idle_min, evade_idle_max))
+	if is_boss and not intro_texture_base.is_empty():
+		_current_state = EnemyState.INTRO
 	_enter_state(_current_state)
+
 
 func _apply_difficulty_stats() -> void:
 	match GameState.get_difficulty():
@@ -161,6 +176,12 @@ func _setup_idle_sprite_frames() -> void:
 	_load_ko_frames(sf)
 	_load_attack_frames(sf)
 	_load_hit_frames(sf)
+	if not intro_texture_base.is_empty():
+		_load_intro_frames(sf)
+	if not rage_texture_base.is_empty():
+		_load_rage_frames(sf)
+	if not special_texture_base.is_empty():
+		_load_special_frames(sf)
 	sprite.sprite_frames = sf
 	sprite.play("idle")
 
@@ -226,6 +247,37 @@ func _load_hit_frames(sf: SpriteFrames) -> void:
 	for t: Texture2D in texs:
 		sf.add_frame("hit", t, 1.0)
 	sf.set_animation_speed("hit", 1.0 / maxf(HIT_FRAME_DURATION_SEC, 0.001))
+
+
+func _load_intro_frames(sf: SpriteFrames) -> void:
+	var texs := _load_textures(intro_texture_base, INTRO_FRAME_PATH_MAX, "INTRO")
+	if texs.is_empty():
+		return
+	sf.add_animation("intro")
+	sf.set_animation_loop("intro", false)
+	for t: Texture2D in texs:
+		sf.add_frame("intro", t, 0.18)
+
+
+func _load_rage_frames(sf: SpriteFrames) -> void:
+	var texs := _load_textures(rage_texture_base, RAGE_FRAME_PATH_MAX, "RAGE")
+	if texs.is_empty():
+		return
+	sf.add_animation("rage")
+	sf.set_animation_loop("rage", false)
+	for t: Texture2D in texs:
+		sf.add_frame("rage", t, 0.15)
+
+
+func _load_special_frames(sf: SpriteFrames) -> void:
+	var texs := _load_textures(special_texture_base, SPECIAL_FRAME_PATH_MAX, "SPECIAL")
+	if texs.is_empty():
+		return
+	sf.add_animation("special")
+	sf.set_animation_loop("special", false)
+	for t: Texture2D in texs:
+		sf.add_frame("special", t, 0.2)
+	sf.set_animation_speed("special", 1.0 / maxf(0.2, 0.001))
 
 
 func _setup_hit_particles() -> void:
@@ -503,7 +555,9 @@ func _burst_hit_particles(punch_type: String) -> void:
 
 
 func _process(delta: float) -> void:
-	if _current_state == EnemyState.DEAD:
+	if _current_state == EnemyState.DEAD or _current_state == EnemyState.INTRO:
+		return
+	if _current_state == EnemyState.RAGE:
 		return
 	_update_fsm(delta)
 
@@ -524,8 +578,37 @@ func transition_to(next: int, reason := "") -> void:
 	_enter_state(_current_state)
 
 
+func _start_intro() -> void:
+	if sprite == null or sprite.sprite_frames == null or not sprite.sprite_frames.has_animation("intro"):
+		transition_to(EnemyState.IDLE, "no intro anim")
+		return
+	sprite.scale = _sprite_scale_base * 2.0
+	sprite.position = Vector2(0, -80)
+	sprite.modulate = Color(1, 1, 1, 0)
+	var tw := create_tween()
+	tw.tween_property(sprite, "modulate", Color.WHITE, 0.3)
+	sprite.play("intro")
+	if not sprite.animation_finished.is_connected(_on_intro_anim_finished):
+		sprite.animation_finished.connect(_on_intro_anim_finished)
+
+
+func _on_intro_anim_finished() -> void:
+	if sprite:
+		sprite.animation_finished.disconnect(_on_intro_anim_finished)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(sprite, "scale", _sprite_scale_base, 0.3).set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(sprite, "position", Vector2.ZERO, 0.3).set_trans(Tween.TRANS_QUAD)
+	tw.finished.connect(func():
+		if _current_state == EnemyState.INTRO:
+			transition_to(EnemyState.IDLE, "intro complete")
+	, Object.CONNECT_ONE_SHOT)
+
+
 func _enter_state(state: int) -> void:
 	match state:
+		EnemyState.INTRO:
+			_start_intro()
 		EnemyState.IDLE:
 			pass
 		EnemyState.ATTACK:
@@ -547,6 +630,8 @@ func _enter_state(state: int) -> void:
 			_play_hit_anim()
 			_hit_vfx(_last_hit_punch_type)
 			emit_signal("hit_received", _last_hit_damage)
+		EnemyState.RAGE:
+			_play_rage_anim()
 		EnemyState.DEAD:
 			_is_dead = true
 			_start_ko()
@@ -554,6 +639,8 @@ func _enter_state(state: int) -> void:
 
 func _exit_state(state: int) -> void:
 	match state:
+		EnemyState.INTRO:
+			pass
 		EnemyState.IDLE:
 			pass
 		EnemyState.ATTACK:
@@ -574,6 +661,9 @@ func _exit_state(state: int) -> void:
 				sprite.modulate = Color.WHITE
 				if sprite.sprite_frames and sprite.sprite_frames.has_animation("idle"):
 					sprite.play("idle")
+		EnemyState.RAGE:
+			if sprite and sprite.animation_finished.is_connected(_on_rage_anim_finished):
+				sprite.animation_finished.disconnect(_on_rage_anim_finished)
 		EnemyState.DEAD:
 			pass
 
@@ -600,7 +690,13 @@ func _update_idle(delta: float) -> void:
 	_evade_idle_timer -= delta
 
 	if _attack_idle_timer <= 0.0:
-		_attack_idle_timer = randf_range(minf(attack_delay_min, attack_delay_max), maxf(attack_delay_min, attack_delay_max))
+		var dmin := attack_delay_min
+		var dmax := attack_delay_max
+		if _is_raged:
+			dmin *= rage_attack_speed_mult
+			dmax *= rage_attack_speed_mult
+		_attack_idle_timer = randf_range(minf(dmin, dmax), maxf(dmin, dmax))
+		_using_special = is_boss and not special_texture_base.is_empty() and special_attack_chance > 0.0 and randf() < special_attack_chance
 		transition_to(EnemyState.ATTACK, "attack timer expired")
 		return
 	if _evade_idle_timer <= 0.0:
@@ -615,6 +711,7 @@ func _on_attack_frame_changed() -> void:
 
 
 func _on_attack_anim_finished() -> void:
+	_using_special = false
 	transition_to(EnemyState.IDLE, "attack complete")
 
 
@@ -681,8 +778,13 @@ func _start_attack_visual() -> void:
 	if sprite == null:
 		return
 	var sf: SpriteFrames = sprite.sprite_frames
-	if sf != null and sf.has_animation("attack") and sf.get_frame_count("attack") >= 1:
-		sprite.play("attack")
+	if sf == null:
+		return
+	var anim: String = "attack"
+	if _using_special and sf.has_animation("special") and sf.get_frame_count("special") >= 1:
+		anim = "special"
+	if sf.has_animation(anim) and sf.get_frame_count(anim) >= 1:
+		sprite.play(anim)
 	else:
 		var orig := sprite.position
 		var tw := create_tween()
@@ -701,7 +803,8 @@ func _emit_impact() -> void:
 	if _impact_emitted:
 		return
 	_impact_emitted = true
-	enemy_attack.emit(attack_damage)
+	var dmg := attack_damage * (special_attack_damage_mult if _using_special else 1.0)
+	enemy_attack.emit(dmg)
 
 
 func _start_evade_tween() -> void:
@@ -733,7 +836,7 @@ func _hit_vfx(punch_type: String) -> void:
 
 
 func take_damage(amount: float, punch_type: String = "punch_l") -> void:
-	if _current_state == EnemyState.DEAD:
+	if _current_state == EnemyState.DEAD or _current_state == EnemyState.INTRO or _current_state == EnemyState.RAGE:
 		return
 	current_hp -= amount
 	_last_hit_damage = amount
@@ -750,6 +853,11 @@ func take_damage(amount: float, punch_type: String = "punch_l") -> void:
 		transition_to(EnemyState.DEAD, "hp <= 0")
 		return
 
+	if is_boss and not _is_raged and current_hp <= max_hp * 0.5:
+		_is_raged = true
+		transition_to(EnemyState.RAGE, "rage trigger")
+		return
+
 	if _current_state == EnemyState.HIT:
 		_hit_timer = hit_stagger_duration
 		_play_hit_anim()
@@ -758,6 +866,21 @@ func take_damage(amount: float, punch_type: String = "punch_l") -> void:
 		return
 
 	transition_to(EnemyState.HIT, "take_damage")
+
+
+func _play_rage_anim() -> void:
+	if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("rage"):
+		sprite.play("rage")
+		if not sprite.animation_finished.is_connected(_on_rage_anim_finished):
+			sprite.animation_finished.connect(_on_rage_anim_finished)
+	else:
+		transition_to(EnemyState.IDLE, "rage no anim")
+
+
+func _on_rage_anim_finished() -> void:
+	if sprite and sprite.animation_finished.is_connected(_on_rage_anim_finished):
+		sprite.animation_finished.disconnect(_on_rage_anim_finished)
+	transition_to(EnemyState.IDLE, "rage complete")
 
 
 func _start_ko() -> void:
@@ -785,6 +908,8 @@ func reset_for_respawn() -> void:
 	_is_dead = false
 	_is_attacking = false
 	_is_evading = false
+	_is_raged = false
+	_using_special = false
 	if sprite:
 		if sprite.animation_finished.is_connected(_on_ko_animation_finished):
 			sprite.animation_finished.disconnect(_on_ko_animation_finished)

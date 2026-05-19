@@ -56,6 +56,15 @@ const STAGE_DEFS: Array[Dictionary] = [
 		"bg_image": "res://assets/textures/bg/bg_stage5_chicken.png",
 		"description": "바삭한 치킨에서 태어난 최강의 몬스터. 모든 스탯이 극한에 달했다. 방심은 곧 패배다.",
 	},
+	{
+		"id": "stage_6",
+		"name": "BOSS",
+		"scene": "res://games/boxing/scenes/stage_6.tscn",
+		"monster_name": "MALA TANG BOSS",
+		"monster_image": "res://assets/textures/characters/enemies/malatang/malatang_idle_01.png",
+		"bg_image": "res://assets/textures/bg/bg_stage6_mara.png",
+		"description": "매운 마라탕의 정수에서 태어난 보스. 압도적인 화력과 스피드로 덤벼든다. 모든 것을 걸어라.",
+	},
 ]
 
 

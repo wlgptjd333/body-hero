@@ -516,6 +516,22 @@ func get_use_gpu_ml() -> bool:
 	return _webcam_settings.get_use_gpu()
 
 
+func get_bg_effect_enabled() -> bool:
+	return _webcam_settings.get_bg_effect_enabled()
+
+
+func set_bg_effect_enabled(v: bool) -> void:
+	_webcam_settings.set_bg_effect_enabled(v)
+
+
+func get_bg_effect_strength() -> float:
+	return _webcam_settings.get_bg_effect_strength()
+
+
+func set_bg_effect_strength(v: float) -> void:
+	_webcam_settings.set_bg_effect_strength(v)
+
+
 func get_window_mode() -> int:
 	return _webcam_settings.get_window_mode()
 

@@ -67,6 +67,7 @@ func _ready() -> void:
 	if _btn_pause_icon:
 		UIThemeHelper.style_button_secondary(_btn_pause_icon)
 		_btn_pause_icon.text = "⚙️ 설정"
+	_style_pause_menu()
 
 	call_deferred("_initialize_all")
 	if _combat_director:
@@ -130,6 +131,24 @@ func _connect_signals() -> void:
 	_combat_director.bars_need_update.connect(_on_bars_need_update)
 	GameState.stamina_changed.connect(_on_stamina_changed)
 	GameState.player_hp_changed.connect(_on_player_hp_changed)
+
+
+func _style_pause_menu() -> void:
+	var pause_label: Label = get_node_or_null("PauseLayer/PauseVBox/PauseLabel")
+	if pause_label:
+		pause_label.add_theme_color_override("font_color", UIThemeHelper.C_ACCENT)
+		pause_label.add_theme_color_override("font_outline_color", Color(0.03, 0.06, 0.08, 1))
+		pause_label.add_theme_constant_override("outline_size", 6)
+		pause_label.add_theme_font_size_override("font_size", 28)
+		pause_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for btn_path: String in ["BtnPauseResume", "BtnPauseSettings", "BtnPauseQuit"]:
+		var btn: Button = get_node_or_null("PauseLayer/PauseVBox/%s" % btn_path)
+		if btn:
+			btn.custom_minimum_size = Vector2(240, 48)
+			if btn_path == "BtnPauseQuit":
+				UIThemeHelper.style_button_danger(btn)
+			else:
+				UIThemeHelper.style_button_primary(btn)
 
 
 func _connect_buttons() -> void:

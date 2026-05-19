@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="StageConfig" format=3 uid="uid://d6bossconfig"]
+
+[ext_resource type="Script" uid="uid://cud5c7g430wal" path="res://games/boxing/scripts/stage_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+stage_id = "stage_6"
+monster_name = "MALA TANG BOSS"
+scene_path = "res://games/boxing/scenes/stage_6.tscn"
+enemy_max_hp = 300.0
+enemy_attack_damage = 60.0
+enemy_attack_delay_min = 0.5
+enemy_attack_delay_max = 1.1
+enemy_evade_idle_min = 0.1
+enemy_evade_idle_max = 0.35
