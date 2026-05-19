@@ -15,9 +15,9 @@ const PUNCH_WINDUP_OFFSET_R := Vector2(16, 12)
 const PUNCH_STRIKE_OFFSET_L := Vector2(58, -64)
 const PUNCH_STRIKE_OFFSET_R := Vector2(-58, -64)
 const PUNCH_STRIKE_SCALE_MUL := Vector2(1.28, 1.18)
-const PUNCH_WINDUP_DURATION := 0.053
-const PUNCH_STRIKE_DURATION := 0.087
-const PUNCH_RETURN_DURATION := 0.123
+const PUNCH_WINDUP_DURATION := 0.042
+const PUNCH_STRIKE_DURATION := 0.070
+const PUNCH_RETURN_DURATION := 0.098
 const PUNCH_WINDUP_SCALE := 0.86
 
 ## 어퍼: 몸·주먹을 살짝 내려 받은 뒤 크게 위로 아크 (잽보다 세로·스케일 과장)
@@ -25,9 +25,9 @@ const UPPERCUT_DIP_OFFSET := Vector2(0, 26)
 const UPPERCUT_ARC_OFFSET_L := Vector2(34, -128)
 const UPPERCUT_ARC_OFFSET_R := Vector2(-34, -128)
 const UPPERCUT_STRIKE_SCALE_MUL := Vector2(1.38, 1.52)
-const UPPERCUT_DIP_DURATION := 0.078
-const UPPERCUT_RISE_DURATION := 0.143
-const UPPERCUT_RETURN_DURATION := 0.147
+const UPPERCUT_DIP_DURATION := 0.057
+const UPPERCUT_RISE_DURATION := 0.105
+const UPPERCUT_RETURN_DURATION := 0.108
 const GUARD_SCALE := Vector2(1.4, 1.4)
 const GUARD_DURATION_IN := 0.05
 const GUARD_DURATION_OUT := 0.06
@@ -36,7 +36,7 @@ const GUARD_MIN_DURATION := 0.06
 const GUARD_MAX_DURATION := 3.0
 const PUNCH_TRANS := Tween.TRANS_QUINT
 ## 웹캠(UDP) 펀치만 트윈 길이에 곱함. 1보다 작을수록 임팩트까지 시간 단축(키보드 타이밍은 유지).
-const UDP_PUNCH_TIME_SCALE := 0.30  # 웹캠 입력 애니메이션 3.3x 가속 (0.42→0.30)
+const UDP_PUNCH_TIME_SCALE := 1.0
 
 ## PUNCH_L_BODY_* constants removed — body sprite unused.
 

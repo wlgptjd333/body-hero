@@ -652,18 +652,23 @@ def main():
         UPPER_MOTION_MEAN_ABS_MIN = 0.0015
         UPPER_L_MOTION_RELAX = 0.55
     elif args.profile == "classic":
-        # 초기 커밋(6820c4d) 느낌: 짧은 cooldown, 여유있는 thresholds, 최소한의 게이트
+        # 초기버전 LSTM 모델 사용 + 낮은 thresholds
+        global MODEL_SEQ_PATH
+        if not args.seq_model:
+            classic_path = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4_classic.keras")
+            if os.path.isfile(classic_path):
+                MODEL_SEQ_PATH = classic_path
         PUNCH_CONFIRM_FRAMES = 1
         OTHER_PUNCH_CONFIRM_FRAMES = 1
         UPPER_PUNCH_CONFIRM_FRAMES = 1
-        SQUAT_CONFIRM_FRAMES = 2
-        COOLDOWN_SEC = 0.08
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.08
-        CONFIDENCE_THRESHOLD = 0.93
-        UPPER_CONFIDENCE_THRESHOLD = 0.88
-        PUNCH_CONFIDENCE_THRESHOLD = 0.88
-        UPPER_MOTION_MEAN_ABS_MIN = 0.0015
-        UPPER_L_MOTION_RELAX = 0.60
+        SQUAT_CONFIRM_FRAMES = 1
+        COOLDOWN_SEC = 0.04
+        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.02
+        CONFIDENCE_THRESHOLD = 0.75
+        UPPER_CONFIDENCE_THRESHOLD = 0.65
+        PUNCH_CONFIDENCE_THRESHOLD = 0.55
+        UPPER_MOTION_MEAN_ABS_MIN = 0.0005
+        UPPER_L_MOTION_RELAX = 0.40
     elif args.profile == "rapid":
         PUNCH_CONFIRM_FRAMES = 1
         OTHER_PUNCH_CONFIRM_FRAMES = 1
@@ -1202,7 +1207,7 @@ def main():
                         1,
                         cv2.LINE_AA,
                     )
-                    if roi_active and tracked_bbox is not None:
+                    if roi_mode and roi_active and tracked_bbox is not None:
                         bx1, by1, bx2, by2 = tracked_bbox
                         cv2.rectangle(frame_small, (bx1, by1), (bx2, by2), (0, 255, 0), 2)
                         if roi_mode:
