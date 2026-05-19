@@ -1,48 +1,48 @@
 @echo off
 chcp 65001 >nul
-echo Body Hero — 환경 설정
+echo Body Hero - Setup
 echo =========================
 
-:: 1. Python 가상환경 생성
+:: 1. Create Python virtual environment
 if not exist "tools\venv_ml\" (
-    echo [1/3] Python 가상환경 생성 중...
+    echo [1/3] Creating Python virtual environment...
     py -3.10 -m venv tools\venv_ml || python -m venv tools\venv_ml
     if %errorlevel% neq 0 (
-        echo Python 3.10이 설치되어 있지 않습니다. https://python.org 에서 3.10을 설치하세요.
+        echo Python 3.10 is not installed. Install it from https://python.org
         pause
         exit /b 1
     )
 ) else (
-    echo [1/3] 가상환경 이미 존재함
+    echo [1/3] Virtual environment already exists
 )
 
-:: 2. pip 업그레이드 + 패키지 설치
-echo [2/3] Python 패키지 설치 중...
+:: 2. Upgrade pip + install packages
+echo [2/3] Installing Python packages...
 call tools\venv_ml\Scripts\python.exe -m pip install --upgrade pip -q
 call tools\venv_ml\Scripts\pip.exe install -r tools\requirements_ml.txt
 if %errorlevel% neq 0 (
-    echo 패키지 설치 실패. tools/requirements_ml.txt 확인
+    echo Package installation failed. Check tools/requirements_ml.txt
     pause
     exit /b 1
 )
 
-:: 3. Godot 확인
-echo [3/3] Godot 확인 중...
+:: 3. Check Godot
+echo [3/3] Checking Godot...
 where godot >nul 2>&1
 if %errorlevel% equ 0 (
-    echo Godot 설치됨
+    echo Godot installed
 ) else (
-    echo Godot이 PATH에 없음 — Godot Editor로 수동 실행 필요
+    echo Godot not in PATH - run manually with Godot Editor
     echo https://godotengine.org/download/windows
 )
 
 echo.
 echo =========================
-echo 설정 완료!
+echo Setup complete!
 echo.
-echo Godot Editor로 열기:  project.godot
-echo ML 웹캠 실행:         tools\venv_ml\Scripts\python.exe tools/udp_send_webcam_ml.py
-echo 데이터 수집:           tools\venv_ml\Scripts\python.exe tools/collect_pose_data.py
-echo 모델 학습:            tools\venv_ml\Scripts\python.exe tools/train_pose_classifier.py
+echo Open in Godot Editor:  project.godot
+echo Run ML webcam:         tools\venv_ml\Scripts\python.exe tools/udp_send_webcam_ml.py
+echo Collect data:          tools\venv_ml\Scripts\python.exe tools/collect_pose_data.py
+echo Train model:           tools\venv_ml\Scripts\python.exe tools/train_pose_classifier.py
 echo.
 pause
