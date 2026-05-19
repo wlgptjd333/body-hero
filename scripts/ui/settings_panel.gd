@@ -19,6 +19,7 @@ const DEFAULT_PUNCH_RIGHT_AUX: int = KEY_C
 const ML_PROFILE_UI_LABELS: Array[String] = [
 	"정밀 (precise)",
 	"균형 (balanced)",
+	"클래식 (classic)",
 	"신속 (rapid)",
 	"최고 속도 (max_speed)",
 ]

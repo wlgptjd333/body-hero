@@ -2,7 +2,7 @@ extends RefCounted
 
 const DISPLAY_SETTINGS_PATH := "user://display_settings.cfg"
 const BACKEND_VALUES := ["auto", "dshow", "msmf", "default"]
-const PROFILE_VALUES: Array[String] = ["precise", "balanced", "rapid", "max_speed"]
+const PROFILE_VALUES: Array[String] = ["precise", "balanced", "classic", "rapid", "max_speed"]
 const DISPLAY_MIN_W := 640
 const DISPLAY_MIN_H := 360
 
