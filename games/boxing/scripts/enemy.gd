@@ -838,11 +838,11 @@ func _play_hit_anim() -> void:
 	if sprite == null or sprite.sprite_frames == null:
 		return
 	var is_upper := _last_hit_punch_type.begins_with("upper")
-	if is_upper and sprite.sprite_frames.has_animation("hit"):
-		sprite.play("hit")
-		return
-	if sprite.sprite_frames.has_animation("uhit"):
+	if is_upper and sprite.sprite_frames.has_animation("uhit"):
 		sprite.play("uhit")
+		return
+	if sprite.sprite_frames.has_animation("hit"):
+		sprite.play("hit")
 
 
 func _hit_vfx(punch_type: String) -> void:

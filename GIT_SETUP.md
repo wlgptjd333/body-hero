@@ -2,7 +2,7 @@
 
 ## 이미 완료된 것
 - `project.godot` 프로젝트명 → **Body Hero** 로 변경됨
-- `.gitignore`에 `tools/venv_ml/`, `venv/` 추가 (가상환경 제외)
+- `.gitignore`에 `venv/`, `tools/python_embed/` 추가 (Python 환경 제외)
 - `git init` 실행됨 (저장소 생성됨)
 
 ## 폴더 이름 (현재)

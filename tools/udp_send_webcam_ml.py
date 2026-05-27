@@ -81,9 +81,9 @@ PROCESS_EVERY_N_FRAMES = 1
 # Godotìœ¼ë¡œ ì•¡ì…˜ ì „ì†¡ ì‹œì—ë§Œ ì ìš©: ì–´ê¹¨ ì¤‘ì‹¬ Xì¢Œí‘œë§Œ ê²€ì‚¬ (YëŠ” í•­ìƒ ì „ì²´)
 CENTER_ZONE_X = (0.3, 0.7)  # normalized [0,1] ê¸°ì¤€
 CENTER_ZONE_Y = (0.0, 1.0)  # ì„¸ë¡œ ì „ì²´
-PUNCH_CONFIRM_FRAMES = 1
+PUNCH_CONFIRM_FRAMES = 2
 OTHER_PUNCH_CONFIRM_FRAMES = 1
-UPPER_PUNCH_CONFIRM_FRAMES = 1
+UPPER_PUNCH_CONFIRM_FRAMES = 2
 UPPER_MOTION_MEAN_ABS_MIN = 0.0015
 UPPER_L_MOTION_RELAX = 0.6
 PUNCH_HOLDOFF_AFTER_UPPER_FRAMES = 4
@@ -91,7 +91,7 @@ UPPER_LR_OPPOSITE_BLOCK_FRAMES = 6
 NONE_STREAK_TO_CLEAR_PUNCH_HOLDOFF = 3
 SQUAT_CONFIRM_FRAMES = 2
 # íŽ€ì¹˜Â·ì–´í¼ 1íšŒ ì „ì†¡ í›„, MLì´ ê³µê²© ë¼ë²¨ì´ ì•„ë‹Œ í”„ë ˆìž„ì´ ì´ ê°’ ì—°ì†ì¼ ë•Œë§Œ ë‹¤ìŒ ê³µê²© ì „ì†¡(ê¸°ë³¸ì€ argparseë¡œ ë®ì–´ì”€).
-ACTION_REARM_OFF_ATTACK_FRAMES_DEFAULT = 1
+ACTION_REARM_OFF_ATTACK_FRAMES_DEFAULT = 0
 POWER_PUNCH_LABELS = ("upper_l", "upper_r")
 PUNCH_LABELS = ("punch_l", "punch_r", "upper_l", "upper_r")
 # ì •ê·œí™” ì¢Œí‘œ: yëŠ” ì•„ëž˜ë¡œ ê°ˆìˆ˜ë¡ ì¦ê°€. ì†ëª©ì´ ê°™ì€ìª½ ì–´ê¹¨ë³´ë‹¤ ì´ ê°’ë§Œí¼ ë” ì•„ëž˜ë©´ "ë‚®ì€ ì¤€ë¹„"ë¡œ ê°„ì£¼.
@@ -294,7 +294,7 @@ def _predict_local(
         raw_label = "none"
 
     # Hysteresis: maintain active state via EMA confidence
-    HYST_EXIT = 0.15
+    HYST_EXIT = 0.60
     if raw_label == "none":
         if _active_state is not None and ema_conf >= HYST_EXIT:
             label = CLASS_NAMES[_active_state]
@@ -648,9 +648,9 @@ def main():
         UPPER_MOTION_MEAN_ABS_MIN = 0.0020
         UPPER_L_MOTION_RELAX = 0.65
     elif args.profile == "balanced":
-        PUNCH_CONFIRM_FRAMES = 1
+        PUNCH_CONFIRM_FRAMES = 2
         OTHER_PUNCH_CONFIRM_FRAMES = 1
-        UPPER_PUNCH_CONFIRM_FRAMES = 1
+        UPPER_PUNCH_CONFIRM_FRAMES = 2
         SQUAT_CONFIRM_FRAMES = 2
         COOLDOWN_SEC = 0.10
         MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.08
@@ -927,8 +927,8 @@ def main():
         motion_mean_abs = 0.0
         pred_history: deque = deque(maxlen=12)
         in_zone = False  # Godot ì „ì†¡ ì—¬ë¶€ë§Œ ì œì–´
-        neutral_off_attack_streak: int = 0
-        attack_send_armed: bool = True
+        last_sent_side: str = ""  # "l" or "r", same-hand rearm용
+        sent_side_none_streak: int = 0  # none 연속 프레임 카운터 (last_sent_side 리셋용)
 
         # ë©€í‹° íŽ˜ë¥´ì†Œë‚˜ ì¶”ì  ìƒíƒœ (ì „ì‹œíšŒ ë“± ê°„ì„­ ë°©ì§€)
         tracked_center: Tuple[float, float] = (0.5, 0.5)
@@ -1232,14 +1232,7 @@ def main():
                 pred_history.append(pred if pred is not None else "none")
                 lm = last_lm
 
-                if attack_rearm_n > 0:
-                    pred_for_rearm: str = pred if pred is not None else "none"
-                    if pred_for_rearm in PUNCH_LABELS:
-                        neutral_off_attack_streak = 0
-                    else:
-                        neutral_off_attack_streak += 1
-                        if neutral_off_attack_streak >= attack_rearm_n:
-                            attack_send_armed = True
+                # same-hand rearm: per-side check in send logic below
 
                 if pred in (None, "none"):
                     none_streak += 1
@@ -1247,6 +1240,12 @@ def main():
                         punch_holdoff_until_frame = 0
                 else:
                     none_streak = 0
+                if pred in PUNCH_LABELS:
+                    sent_side_none_streak = 0
+                else:
+                    sent_side_none_streak += 1
+                    if sent_side_none_streak >= 2:
+                        last_sent_side = ""
                 if pred == "squat":
                     squat_count += 1
                 else:
@@ -1410,12 +1409,14 @@ def main():
                         other_punch_pred = None
                         other_punch_count = 0
 
-                if attack_rearm_n > 0 and action and action in PUNCH_LABELS and not attack_send_armed:
-                    action = None
-                    punch_l_count = 0
-                    punch_r_count = 0
-                    other_punch_pred = None
-                    other_punch_count = 0
+                if action and action in PUNCH_LABELS:
+                    side = "l" if "l" in action else "r" if "r" in action else ""
+                    if side and side == last_sent_side:
+                        action = None
+                        punch_l_count = 0
+                        punch_r_count = 0
+                        other_punch_pred = None
+                        other_punch_count = 0
 
                 if action and in_zone:
                     send(action)
@@ -1441,9 +1442,10 @@ def main():
                             punch_holdoff_until_frame,
                             frame_idx + PUNCH_HOLDOFF_AFTER_UPPER_FRAMES,
                         )
-                    if attack_rearm_n > 0 and action in PUNCH_LABELS:
-                        attack_send_armed = False
-                        neutral_off_attack_streak = 0
+                    if action in PUNCH_LABELS and "l" in action:
+                        last_sent_side = "l"
+                    elif action in PUNCH_LABELS and "r" in action:
+                        last_sent_side = "r"
 
                 # ìƒë‹¨ ì¤‘ì•™ì— í˜„ìž¬ ë™ìž‘ í‘œì‹œ
                 pred_display = pred if pred else "none"

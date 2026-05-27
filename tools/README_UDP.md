@@ -38,24 +38,11 @@ Godot은 **UDP 포트 4242**에서 **액션 문자열**만 받습니다. 글러�
 
 로컬 추론 시 `tensorflow`, `numpy`가 필요합니다 (`pip install tensorflow numpy`). 모델이 없거나 TensorFlow가 없으면 기존처럼 **pose_server**로 HTTP 요청합니다 (이때는 `python pose_server.py`를 먼저 실행).
 
-### Python 환경: ML과 스프라이트(rembg) 분리 권장
+### Python 환경
 
-`sanitize_sprites.py`용으로 `rembg` / `onnxruntime` 등을 **ML과 같은 가상환경(또는 전역 Python)** 에 설치하면 `protobuf`·`numpy`·Windows DLL 조합이 바뀌어 **`udp_send_webcam_ml.py`가 ImportError나 DLL 오류로 안 켜질 수 있습니다.**
+`tools\python_embed\python.exe` (Embedded Python)을 사용합니다. 모든 ML 패키지(`mediapipe`, `tensorflow`, `opencv-python` 등)가 포함되어 있어 별도 가상환경이 필요 없습니다.
 
-**권장:** 가상환경을 둘로 나눕니다.
-
-1. **ML·웹캠·Godot 연동 전용**  
-   프로젝트 루트에서 `python -m venv .venv_ml` → 활성화 → `pip install -r tools/requirements_ml.txt`  
-   → `udp_send_webcam_ml.py`, `pose_server.py`, 학습 스크립트는 **항상 이 venv**에서 실행.
-2. **스프라이트 배경 제거 전용(선택)**  
-   `python -m venv .venv_sprites` → `pip install -r tools/requirements_sprites.txt` → `sanitize_sprites.py`만 여기서 실행.
-
-이미 한 환경에 다 설치해 꼬였다면: ML용 venv를 새로 만들고 `requirements_ml.txt`만 다시 깔거나, 같은 venv에서 `pip install -r tools/requirements_ml.txt --force-reinstall` 를 시도해 보세요.
-
-**동작 확인(ML venv에서):**  
-`python -c "import cv2; import tensorflow; from mediapipe.tasks.python import vision; print('ok')"`
-
-1. 데이터 수집·학습 → [README_ML.md](README_ML.md) (학습 후 `tools`에 `.keras` 파일 생성)
+데이터 수집·학습 → [README_ML.md](README_ML.md) (학습 후 `tools`에 `.keras` 파일 생성)
 2. **(로컬 추론)** 게임 실행(F5) 후: `python udp_send_webcam_ml.py`  
    - 로컬 모델/TensorFlow가 없으면 **pose_server를 같은 스크립트가 자동으로 띄움** (이미 5000 포트에 서버가 있으면 그대로 사용).  
    - 자동 시작을 끄려면: `python udp_send_webcam_ml.py --no-auto-server` 후 별도 터미널에서 `python pose_server.py`
