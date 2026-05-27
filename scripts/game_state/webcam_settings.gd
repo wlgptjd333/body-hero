@@ -14,6 +14,7 @@ var _center_zone_margin: float = 0.3
 var _skip_guard_single: bool = true  # 기본 시퀀스 가드
 var _full_body_squat: bool = false
 var _use_gpu: bool = false
+var _full_model: bool = false
 var _window_mode: int = 0  # 0=windowed, 1=fullscreen, 2=borderless
 var _saved_width: int = 0
 var _saved_height: int = 0
@@ -57,6 +58,10 @@ func get_full_body_squat() -> bool:
 
 func get_use_gpu() -> bool:
 	return _use_gpu
+
+
+func get_full_model() -> bool:
+	return _full_model
 
 
 
@@ -145,13 +150,15 @@ func load_from_disk() -> void:
 		_full_body_squat = bool(cfg.get_value("camera", "full_body_squat", false))
 	if cfg.has_section_key("camera", "use_gpu"):
 		_use_gpu = bool(cfg.get_value("camera", "use_gpu", false))
+	if cfg.has_section_key("camera", "full_model"):
+		_full_model = bool(cfg.get_value("camera", "full_model", false))
 	if cfg.has_section_key("graphics", "bg_effect_enabled"):
 		_bg_effect_enabled = bool(cfg.get_value("graphics", "bg_effect_enabled", true))
 	if cfg.has_section_key("graphics", "bg_effect_strength"):
 		_bg_effect_strength = clampf(float(cfg.get_value("graphics", "bg_effect_strength", 0.35)), 0.0, 1.0)
 
 
-func save_to_disk(width: int, height: int, camera_index: int, camera_backend: String = "auto", ml_speed_profile: String = "", roi_mode: bool = false, center_zone_margin: float = 0.3, skip_guard_single: bool = false, full_body_squat: bool = false, use_gpu: bool = false) -> void:
+func save_to_disk(width: int, height: int, camera_index: int, camera_backend: String = "auto", ml_speed_profile: String = "", roi_mode: bool = false, center_zone_margin: float = 0.3, skip_guard_single: bool = false, full_body_squat: bool = false, use_gpu: bool = false, full_model: bool = false) -> void:
 	var old_cam := _camera_index
 	var old_back := _camera_backend
 	var old_prof := _ml_speed_profile
@@ -160,6 +167,7 @@ func save_to_disk(width: int, height: int, camera_index: int, camera_backend: St
 	var old_skip := _skip_guard_single
 	var old_full := _full_body_squat
 	var old_gpu := _use_gpu
+	var old_full_model := _full_model
 	_saved_width = maxi(DISPLAY_MIN_W, width)
 	_saved_height = maxi(DISPLAY_MIN_H, height)
 	_camera_index = clampi(camera_index, 0, 9)
@@ -171,6 +179,7 @@ func save_to_disk(width: int, height: int, camera_index: int, camera_backend: St
 	_skip_guard_single = skip_guard_single
 	_full_body_squat = full_body_squat
 	_use_gpu = use_gpu
+	_full_model = full_model
 	var cfg := ConfigFile.new()
 	if FileAccess.file_exists(DISPLAY_SETTINGS_PATH):
 		cfg.load(DISPLAY_SETTINGS_PATH)
@@ -185,10 +194,11 @@ func save_to_disk(width: int, height: int, camera_index: int, camera_backend: St
 	cfg.set_value("camera", "skip_guard_single", _skip_guard_single)
 	cfg.set_value("camera", "full_body_squat", _full_body_squat)
 	cfg.set_value("camera", "use_gpu", _use_gpu)
+	cfg.set_value("camera", "full_model", _full_model)
 	cfg.set_value("graphics", "bg_effect_enabled", _bg_effect_enabled)
 	cfg.set_value("graphics", "bg_effect_strength", _bg_effect_strength)
 	cfg.save(DISPLAY_SETTINGS_PATH)
-	var changed: bool = (old_cam != _camera_index or old_back != _camera_backend or old_prof != _ml_speed_profile or old_roi != _roi_mode or old_zone != _center_zone_margin or old_skip != _skip_guard_single or old_full != _full_body_squat or old_gpu != _use_gpu)
+	var changed: bool = (old_cam != _camera_index or old_back != _camera_backend or old_prof != _ml_speed_profile or old_roi != _roi_mode or old_zone != _center_zone_margin or old_skip != _skip_guard_single or old_full != _full_body_squat or old_gpu != _use_gpu or old_full_model != _full_model)
 	if changed and _bridgify_fn.is_valid():
 		_bridgify_fn.call()
 

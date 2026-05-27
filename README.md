@@ -9,12 +9,11 @@
 
 ```bash
 git clone https://github.com/wlgptjd333/body-hero.git
-cd body-hero
-setup.bat              # Windows: venv 생성 + pip install
-# 또는 ./setup.sh      # Linux/WSL
 ```
 
-이후 Godot 4.6으로 `project.godot` 열고 **F5** 실행.
+Godot 4.6으로 `project.godot` 열고 **F5** 실행.
+- 첫 실행 시 `tools/python_embed/`가 없으면 GitHub Releases에서 자동 다운로드 + 설치합니다.
+- 인터넷이 없는 환경에서는 `tools/python_ml_env.zip`을 직접 `tools/` 폴더에 넣으면 오프라인 설치 가능합니다.
 
 ## 프로젝트 구조
 
@@ -45,6 +44,7 @@ body-hero/
 │       ├── shop_panel.gd
 │       └── ui_theme_helper.gd
 ├── tools/
+│   ├── build_python_embed.bat     # 개발자 전용: 임베디드 Python 빌드
 │   ├── collect_pose_data.py       # 웹캠 데이터 수집
 │   ├── train_pose_classifier_seq.py  # 시퀀스 ML 학습
 │   ├── udp_send_webcam_ml.py      # 게임-웹캠 브리지
@@ -55,7 +55,6 @@ body-hero/
 │   └── unit/
 │       ├── test_enemy_fsm.gd      # FSM 단위 테스트 (23개)
 │       └── test_game_state.gd     # GameState 테스트 (36개)
-├── setup.bat / setup.sh           # 환경 설정 스크립트
 └── assets/
     ├── textures/characters/enemies/  # 버거/콜라/프라이즈 스프라이트
     ├── audio/bgm/                    # BGM
@@ -67,9 +66,10 @@ body-hero/
 ### 웹캠 ML (권장)
 ```bash
 cd tools
-venv_ml\Scripts\python.exe udp_send_webcam_ml.py
+python_embed\python.exe udp_send_webcam_ml.py
 ```
 Godot 메뉴 → 설정 → 웹캠 탭에서 카메라 설정 후 **적용**하면 스테이지 진입 시 자동 실행됩니다.
+게임 내부에서 자동 실행되므로 직접 실행할 필요는 없습니다.
 
 ### 키보드 테스트
 - **A/D** — 왼/오 펀치
@@ -81,10 +81,12 @@ Godot 메뉴 → 설정 → 웹캠 탭에서 카메라 설정 후 **적용**하�
 
 ```bash
 cd tools
-venv_ml\Scripts\python.exe collect_pose_data.py          # 데이터 수집
-venv_ml\Scripts\python.exe train_pose_classifier_seq.py  # 4프레임 시퀀스 모델 학습
-venv_ml\Scripts\python.exe pose_server.py                # ML 서버 실행
+python_embed\python.exe collect_pose_data.py          # 데이터 수집
+python_embed\python.exe train_pose_classifier_seq.py  # 4프레임 시퀀스 모델 학습
+python_embed\python.exe pose_server.py                # ML 서버 실행
 ```
+
+개발자 참고: `tools/build_python_embed.bat`로 python_embed 환경을 빌드한 후 위 명령을 실행하세요.
 
 ## 테스트
 

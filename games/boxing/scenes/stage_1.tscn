@@ -140,6 +140,7 @@ texture = ExtResource("4_bg")
 [node name="Enemy" type="Node2D" parent="." unique_id=2072129645]
 position = Vector2(576, 280)
 script = ExtResource("3_enemy")
+uhit_texture_base = "res://assets/textures/characters/enemies/burger/burger_uhit_"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Enemy" unique_id=1932976256]
 scale = Vector2(1.02, 1.02)

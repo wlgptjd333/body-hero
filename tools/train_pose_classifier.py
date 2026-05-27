@@ -264,7 +264,7 @@ def main():
 
     # 데이터 증강: 노이즈 (소수 클래스 강화) + 회전/스케일 (각도·거리 다양성) + 좌우반전 (L/R 균형)
     if args.augment > 0:
-        X_noise = X_train_orig + np.random.RandomState(42).normal(0, args.augment, X_train_orig.shape).astype(np.float32)
+        X_noise = X_train_orig + np.random.RandomState(46).normal(0, args.augment, X_train_orig.shape).astype(np.float32)
         X_train = np.concatenate([X_train, X_noise], axis=0)
         y_train = np.concatenate([y_train, y_train_orig], axis=0)
         print(f"증강(노이즈 std={args.augment}): 학습 샘플 {len(X_train)}")

@@ -117,10 +117,14 @@ func _ready() -> void:
 	if _btn_start_collect_pose:
 		_btn_start_collect_pose.pressed.connect(_on_start_collect_pose_pressed)
 	_setup_roi_checkbox()
+	var roi_row := get_node_or_null("Panel/Scroll/VBox/ContentWebcam/WebcamSection/RoiRow")
+	if roi_row:
+		roi_row.visible = false
 	_setup_zone_slider()
 	_setup_skip_guard_checkbox()
 	_setup_full_body_squat_checkbox()
 	_setup_webcam_gpu_checkbox()
+	_setup_webcam_full_model_checkbox()
 	_setup_reset_button()
 	_setup_demo_mode()
 	_setup_bg_effect()
@@ -281,6 +285,7 @@ func _setup_full_body_squat_checkbox() -> void:
 
 
 var _webcam_gpu_checkbox: CheckBox = null
+var _webcam_full_model_checkbox: CheckBox = null
 
 func _setup_webcam_gpu_checkbox() -> void:
 	var parent := get_node_or_null("Panel/Scroll/VBox/ContentWebcam/WebcamSection")
@@ -297,6 +302,23 @@ func _setup_webcam_gpu_checkbox() -> void:
 	row.add_child(label)
 	parent.add_child(row)
 	_webcam_gpu_checkbox = check
+
+
+func _setup_webcam_full_model_checkbox() -> void:
+	var parent := get_node_or_null("Panel/Scroll/VBox/ContentWebcam/WebcamSection")
+	if not parent:
+		return
+	var row := HBoxContainer.new()
+	row.name = "FullModelRow"
+	var check := CheckBox.new()
+	check.name = "FullModelCheckBox"
+	check.button_pressed = GameState.get_full_model()
+	row.add_child(check)
+	var label := Label.new()
+	label.text = "Full Pose 모델 (정확도↑ 속도↓)"
+	row.add_child(label)
+	parent.add_child(row)
+	_webcam_full_model_checkbox = check
 
 
 func _fill_camera_option_default() -> void:
@@ -324,11 +346,15 @@ func _select_camera_id_in_option(want_id: int) -> void:
 func _on_refresh_cameras_pressed() -> void:
 	if _lbl_camera_hint:
 		_lbl_camera_hint.text = "스캔 중…"
-	var py: String = GameState.get_venv_python_executable()
+	var py: String = GameState.resolve_python_executable_for_ml()
 	var list_script: String = GameState.get_list_cameras_script_path()
-	if not FileAccess.file_exists(py) or not FileAccess.file_exists(list_script):
+	if not FileAccess.file_exists(list_script):
 		if _lbl_camera_hint:
-			_lbl_camera_hint.text = "venv_ml Python 또는 list_cameras.py 없음. tools 폴더를 확인하세요."
+			_lbl_camera_hint.text = "list_cameras.py 없음. tools 폴더를 확인하세요."
+		return
+	if py != "python.exe" and py != "python3" and not FileAccess.file_exists(py):
+		if _lbl_camera_hint:
+			_lbl_camera_hint.text = "Python 실행 파일 없음. tools/python_embed 또는 BODY_HERO_PYTHON_EXE 를 확인하세요."
 		return
 	var out_path: String = ProjectSettings.globalize_path("user://camera_list_scan.txt")
 	var exec_out: Array = []
@@ -706,6 +732,9 @@ func _save_webcam_and_window_from_ui() -> void:
 	var use_gpu: bool = false
 	if _webcam_gpu_checkbox:
 		use_gpu = _webcam_gpu_checkbox.button_pressed
+	var full_model: bool = false
+	if _webcam_full_model_checkbox:
+		full_model = _webcam_full_model_checkbox.button_pressed
 	GameState.save_display_settings(
 		sz.x,
 		sz.y,
@@ -717,6 +746,7 @@ func _save_webcam_and_window_from_ui() -> void:
 		skip_guard,
 		full_body,
 		use_gpu,
+		full_model,
 	)
 
 
@@ -765,7 +795,7 @@ func _on_start_collect_pose_pressed() -> void:
 	var py: String = GameState.resolve_python_executable_for_ml()
 	if py != "python.exe" and py != "python3" and not FileAccess.file_exists(py):
 		if _lbl_collect_pose_hint:
-			_lbl_collect_pose_hint.text = "Python 실행 파일이 없습니다. tools/venv_ml 또는 BODY_HERO_PYTHON_EXE 를 확인하세요."
+			_lbl_collect_pose_hint.text = "Python 실행 파일이 없습니다. tools/python_embed 또는 BODY_HERO_PYTHON_EXE 를 확인하세요."
 		return
 	var cam: String = str(GameState.get_camera_index())
 	var backend: String = GameState.get_camera_backend()

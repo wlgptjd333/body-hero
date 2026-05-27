@@ -73,6 +73,11 @@ const ATTACK_FRAME_PATH_MAX := 4
 const HIT_FRAME_PATH_MAX := 4
 const HIT_FRAME_DURATION_SEC := 0.2
 
+@export var uhit_texture_base := ""
+const UHIT_FRAME_PATH_MAX := 4
+
+const UHIT_FRAME_DURATION_SEC := 0.2
+
 @export var ko_texture_base := "res://assets/textures/characters/enemies/burger/burger_ko_"
 ## KO만 idle보다 크게(캔버스·누끼 후 실제 그림 크기 차이 보정)
 const KO_DISPLAY_SCALE := 1.0
@@ -176,6 +181,8 @@ func _setup_idle_sprite_frames() -> void:
 	_load_ko_frames(sf)
 	_load_attack_frames(sf)
 	_load_hit_frames(sf)
+	if not uhit_texture_base.is_empty():
+		_load_uhit_frames(sf)
 	if not intro_texture_base.is_empty():
 		_load_intro_frames(sf)
 	if not rage_texture_base.is_empty():
@@ -247,6 +254,17 @@ func _load_hit_frames(sf: SpriteFrames) -> void:
 	for t: Texture2D in texs:
 		sf.add_frame("hit", t, 1.0)
 	sf.set_animation_speed("hit", 1.0 / maxf(HIT_FRAME_DURATION_SEC, 0.001))
+
+
+func _load_uhit_frames(sf: SpriteFrames) -> void:
+	var texs := _load_textures(uhit_texture_base, UHIT_FRAME_PATH_MAX, "UHIT")
+	if texs.is_empty():
+		return
+	sf.add_animation("uhit")
+	sf.set_animation_loop("uhit", false)
+	for t: Texture2D in texs:
+		sf.add_frame("uhit", t, 1.0)
+	sf.set_animation_speed("uhit", 1.0 / maxf(UHIT_FRAME_DURATION_SEC, 0.001))
 
 
 func _load_intro_frames(sf: SpriteFrames) -> void:
@@ -819,9 +837,12 @@ func _start_evade_tween() -> void:
 func _play_hit_anim() -> void:
 	if sprite == null or sprite.sprite_frames == null:
 		return
-	if not sprite.sprite_frames.has_animation("hit"):
+	var is_upper := _last_hit_punch_type.begins_with("upper")
+	if is_upper and sprite.sprite_frames.has_animation("hit"):
+		sprite.play("hit")
 		return
-	sprite.play("hit")
+	if sprite.sprite_frames.has_animation("uhit"):
+		sprite.play("uhit")
 
 
 func _hit_vfx(punch_type: String) -> void:

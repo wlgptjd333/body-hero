@@ -9,7 +9,7 @@ Body Hero.pck
 
 # Python
 venv/
-tools/venv_ml/
+tools/python_embed/
 *.pyc
 __pycache__/
 

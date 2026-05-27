@@ -161,6 +161,12 @@ def main():
     parser.add_argument("--patience", type=int, default=22)
     parser.add_argument("--augment", type=float, default=0.03)
     parser.add_argument(
+        "--augment-jitter",
+        type=float,
+        default=0.0,
+        help="Lite 흔들림 시뮬레이션: 시간축 상관 노이즈(std). Full 모델 수집 데이터 학습 시 0.02~0.03 권장 (기본 0)",
+    )
+    parser.add_argument(
         "--flip-augment",
         action="store_true",
         default=True,
@@ -271,18 +277,33 @@ def main():
             y_train = np.concatenate([y_train, y_flip], axis=0)
             print(f"증강(좌우반전+L/R스왑): 시퀀스 {len(X_train)} (train)")
 
-    if args.augment > 0:
+    if args.augment > 0 or args.augment_jitter > 0:
         rng = np.random.RandomState(43)
         n = len(X_train)
         X_aug = X_train.copy()
-        # 1) Gaussian noise (기존)
-        X_aug += rng.normal(0, args.augment, X_aug.shape).astype(np.float32)
-        # 2) Random scaling (±20%): 사용자-웹캠 거리 변동 시뮬레이션
+        # 1) Gaussian noise (기존: 프레임 독립)
+        if args.augment > 0:
+            X_aug += rng.normal(0, args.augment, X_aug.shape).astype(np.float32)
+        # 2) Temporal jitter noise (시간축 상관: Lite 흔들림 시뮬레이션)
+        if args.augment_jitter > 0:
+            # 각 시퀀스·랜드마크별 random walk: seq_len 프레임에 걸쳐 천천히 변화
+            jitter_base = rng.normal(0, args.augment_jitter, (n, 1, FEATURE_DIM)).astype(np.float32)
+            jitter_steps = rng.normal(0, args.augment_jitter * 0.3, (n, args.seq_len, FEATURE_DIM)).astype(np.float32)
+            jitter = jitter_base + np.cumsum(jitter_steps, axis=1)
+            X_aug += jitter
+        # 3) Random scaling (±20%): 사용자-웹캠 거리 변동 시뮬레이션
         scales = rng.uniform(0.8, 1.2, (n, 1, 1)).astype(np.float32)
-        X_aug[..., :2] *= scales
+        for i in range(0, FEATURE_DIM, 3):
+            X_aug[..., i:i+2] *= scales
         X_train = np.concatenate([X_train, X_aug], axis=0)
         y_train = np.concatenate([y_train, y_train], axis=0)
-        print(f"증강(noise={args.augment} + scale±20% + shift±2%): 학습 {len(X_train)} 시퀀스")
+        aug_parts = []
+        if args.augment > 0:
+            aug_parts.append(f"noise={args.augment}")
+        if args.augment_jitter > 0:
+            aug_parts.append(f"jitter={args.augment_jitter}")
+        aug_parts.append("scale±20%")
+        print(f"증강({' + '.join(aug_parts)}): 학습 {len(X_train)} 시퀀스")
 
     classes = np.unique(y_train)
     weights = compute_class_weight("balanced", classes=classes, y=y_train)

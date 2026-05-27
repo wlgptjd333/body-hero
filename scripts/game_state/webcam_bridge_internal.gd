@@ -11,6 +11,7 @@ var launched_roi: bool = false
 var launched_zone: float = 0.3
 var launched_skip_guard: bool = false
 var launched_full_body_squat: bool = false
+var launched_full_model: bool = false
 
 
 func is_running() -> bool:
@@ -31,6 +32,7 @@ func ensure(
 	skip_guard_single: bool,
 	full_body_squat: bool,
 	use_gpu: bool,
+	full_model: bool,
 	python_exe: String,
 	script_path: String,
 ) -> void:
@@ -47,6 +49,7 @@ func ensure(
 			and launched_zone == center_zone_margin
 			and launched_skip_guard == skip_guard_single
 			and launched_full_body_squat == full_body_squat
+			and launched_full_model == full_model
 		):
 			print(
 				"웹캠 ML 브리지 유지 (PID=%d, index=%d, backend=%s, profile=%s, gpu=%s, roi=%s, zone=%.2f, skip_guard=%s, full_body=%s)"
@@ -76,7 +79,9 @@ func ensure(
 		args.append("--full-body-squat")
 	if use_gpu:
 		args.append("--gpu")
-	print("웹캠 ML 실행 시도: python=", python_exe, " script=", script_path, " profile=", ml_speed_profile, " gpu=", use_gpu, " roi=", roi_mode, " zone=", center_zone_margin, " skip_guard=", skip_guard_single, " full_body=", full_body_squat)
+	if full_model:
+		args.append("--full-model")
+	print("웹캠 ML 실행 시도: python=", python_exe, " script=", script_path, " profile=", ml_speed_profile, " gpu=", use_gpu, " full_model=", full_model, " roi=", roi_mode, " zone=", center_zone_margin, " skip_guard=", skip_guard_single, " full_body=", full_body_squat)
 	bridge_pid = OS.create_process(python_exe, args, false)
 	if bridge_pid <= 0:
 		push_warning("웹캠 ML 브리지 시작 실패(OS.create_process).")
@@ -89,7 +94,8 @@ func ensure(
 		launched_zone = center_zone_margin
 		launched_skip_guard = skip_guard_single
 		launched_full_body_squat = full_body_squat
-		print("웹캠 ML 브리지 시작 PID=", bridge_pid, " index=", camera_index, " backend=", camera_backend, " profile=", ml_speed_profile, " gpu=", use_gpu, " roi=", roi_mode, " zone=", center_zone_margin, " skip_guard=", skip_guard_single, " full_body=", full_body_squat)
+		launched_full_model = full_model
+		print("웹캠 ML 브리지 시작 PID=", bridge_pid, " index=", camera_index, " backend=", camera_backend, " profile=", ml_speed_profile, " gpu=", use_gpu, " full_model=", full_model, " roi=", roi_mode, " zone=", center_zone_margin, " skip_guard=", skip_guard_single, " full_body=", full_body_squat)
 
 
 func shutdown() -> void:
@@ -109,6 +115,7 @@ func _reset_launched() -> void:
 	launched_zone = 0.3
 	launched_skip_guard = false
 	launched_full_body_squat = false
+	launched_full_model = false
 
 
 func _is_process_running_safe(pid: int) -> bool:

@@ -6,6 +6,7 @@ signal stamina_changed(new_stamina: float)
 signal player_hp_changed(new_hp: float)
 
 const _WebcamBridge = preload("res://scripts/game_state/webcam_bridge_internal.gd")
+const _PythonEnvDownloader = preload("res://scripts/game_state/python_env_downloader.gd")
 const _WorkoutTracker = preload("res://scripts/game_state/workout_tracker.gd")
 const _Shop = preload("res://scripts/game_state/shop.gd")
 const _DailyChallenges = preload("res://scripts/game_state/daily_challenges.gd")
@@ -131,6 +132,12 @@ func _defer_prewarm_webcam_ml_bridge() -> void:
 		await get_tree().process_frame
 	if not has_webcam_ml_runtime_files():
 		return
+	var embed_py := get_embedded_python_executable()
+	if not FileAccess.file_exists(embed_py):
+		var downloader := _PythonEnvDownloader.new()
+		var target := get_tools_absolute_dir().path_join("python_embed")
+		downloader.download(target, self)
+		await downloader.download_completed
 	ensure_webcam_ml_bridge(true)
 
 
@@ -486,8 +493,9 @@ func save_display_settings(
 	skip_guard_single: bool = false,
 	full_body_squat: bool = false,
 	use_gpu: bool = false,
+	full_model: bool = false,
 ) -> void:
-	_webcam_settings.save_to_disk(width, height, camera_index, camera_backend, ml_speed_profile, roi_mode, center_zone_margin, skip_guard_single, full_body_squat, use_gpu)
+	_webcam_settings.save_to_disk(width, height, camera_index, camera_backend, ml_speed_profile, roi_mode, center_zone_margin, skip_guard_single, full_body_squat, use_gpu, full_model)
 
 
 func get_camera_index() -> int:
@@ -514,6 +522,10 @@ func get_full_body_squat() -> bool:
 
 func get_use_gpu_ml() -> bool:
 	return _webcam_settings.get_use_gpu()
+
+
+func get_full_model() -> bool:
+	return _webcam_settings.get_full_model()
 
 
 func get_bg_effect_enabled() -> bool:
@@ -557,6 +569,7 @@ func ensure_webcam_ml_bridge(auto_launch: bool) -> void:
 		get_skip_guard_single(),
 		get_full_body_squat(),
 		get_use_gpu_ml(),
+		get_full_model(),
 		resolve_python_executable_for_ml(),
 		get_udp_send_webcam_ml_script_path(),
 	)
@@ -570,8 +583,11 @@ func is_webcam_ml_bridge_running() -> bool:
 	return _webcam_bridge.is_running()
 
 
-func shutdown_webcam_ml_bridge() -> void:
+func shutdown_webcam_ml_bridge(auto_restart: bool = true) -> void:
+	var was_running := _webcam_bridge.is_running()
 	_webcam_bridge.shutdown()
+	if was_running and auto_restart:
+		ensure_webcam_ml_bridge(true)
 
 
 func _connect_close_requested_for_webcam_bridge() -> void:
@@ -581,13 +597,22 @@ func _connect_close_requested_for_webcam_bridge() -> void:
 
 
 func _on_root_close_requested_shutdown_webcam() -> void:
-	shutdown_webcam_ml_bridge()
+	shutdown_webcam_ml_bridge(false)
 
 
 func get_tools_absolute_dir() -> String:
-	if OS.has_feature("editor"):
-		return ProjectSettings.globalize_path("res://tools")
-	return OS.get_executable_path().get_base_dir().path_join("tools")
+	var exe_dir := OS.get_executable_path().get_base_dir()
+	var tools_dir := exe_dir.path_join("tools")
+	if DirAccess.dir_exists_absolute(tools_dir):
+		return tools_dir
+	return ProjectSettings.globalize_path("res://tools")
+
+
+func get_embedded_python_executable() -> String:
+	var tools := get_tools_absolute_dir()
+	if OS.get_name() == "Windows":
+		return tools.path_join("python_embed").path_join("python.exe")
+	return tools.path_join("python_embed").path_join("bin").path_join("python3")
 
 
 func get_venv_python_executable() -> String:
@@ -597,8 +622,11 @@ func get_venv_python_executable() -> String:
 	return tools.path_join("venv_ml").path_join("bin").path_join("python")
 
 
-## venv_ml 우선, 없으면 BODY_HERO_PYTHON_EXE, 없으면 PATH의 python (Windows: python.exe).
+## 우선순위: python_embed → BODY_HERO_PYTHON_EXE → venv_ml → system python.
 func resolve_python_executable_for_ml() -> String:
+	var embed_py := get_embedded_python_executable()
+	if FileAccess.file_exists(embed_py):
+		return embed_py
 	var env_path := OS.get_environment("BODY_HERO_PYTHON_EXE").strip_edges()
 	if env_path != "":
 		if FileAccess.file_exists(env_path):
