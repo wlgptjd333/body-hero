@@ -18,25 +18,25 @@
 
 ```mermaid
 graph LR
-    A[웹캠<br>480×360] -->|30 FPS| B[MediaPipe Pose<br>33 landmarks]
-    B -->|정규화 + 시퀀스| C[Python UDP Bridge]
-    C -->|UDP 패킷| D[Godot 4.6<br>게임 엔진]
-    F[키보드<br>A/D/Q/E/Space/S] --> D
-    D -->|play_action| E[게임 화면<br>60 FPS]
+    A["웹캠 (480x360)"] -->|"30 FPS"| B["MediaPipe Pose (33 landmarks)"]
+    B -->|"정규화 + 시퀀스"| C["Python UDP Bridge"]
+    C -->|"UDP 패킷"| D["Godot 4.6 게임 엔진"]
+    F["키보드 (A/D/Q/E/Space/S)"] --> D
+    D -->|"play_action"| E["게임 화면 (60 FPS)"]
 ```
 
 ## AI 인식 파이프라인
 
 ```mermaid
 graph TD
-    A[웹캠 프레임] -->|30 FPS| B[MediaPipe Pose 추론<br>~33ms]
-    B -->|33 landmarks × 3 coords| C[어깨 중심 정규화]
-    C -->|99 features| D[4프레임 시퀀스 버퍼<br>132ms]
-    D -->|(4, 99)| E[Conv1D 64, k=3<br>~3ms]
-    E --> F[GlobalAveragePooling1D]
-    F --> G[Dense 7<br>Softmax]
-    G -->|액션 분류| H[Confidence 필터<br>+ EMA 스무딩]
-    H -->|UDP| I[Godot player.play_action]
+    A["웹캠 프레임"] -->|"30 FPS"| B["MediaPipe Pose 추론 (~33ms)"]
+    B -->|"33 landmarks x 3 coords"| C["어깨 중심 정규화"]
+    C -->|"99 features"| D["4프레임 시퀀스 버퍼 (132ms)"]
+    D -->|"(4, 99)"| E["Conv1D 64, k=3 (~3ms)"]
+    E --> F["GlobalAveragePooling1D"]
+    F --> G["Dense 7 Softmax"]
+    G -->|"액션 분류"| H["Confidence 필터 + EMA 스무딩"]
+    H -->|"UDP"| I["Godot player.play_action"]
 ```
 
 ## 성능 및 AI 인식률
