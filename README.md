@@ -4,16 +4,6 @@
 >
 > Godot 4.6 + MediaPipe Pose + 실시간 AI 동작 인식
 
-<!-- GIF 자리: 실제 게임 플레이 영상 (키보드 + 웹캠) -->
-<!-- ![게임플레이 GIF](docs/images/gameplay.gif) -->
-
-## 시연 영상
-
-> 🎬 **아래 GIF/영상 자리** (추후 촬영하여 교체)
->
-> - 메인 메뉴 → 스테이지 선택 → 실전 플레이 → 보스전 클리어
-> - 좌측: 웹캠 ML 인식 화면 / 우측: 게임 화면 (PIP 형태)
-
 ## 시스템 구조
 
 ```mermaid
@@ -97,11 +87,6 @@ graph TD
 | Training | 트레이닝 더미 | 무한 리스폰 연습 모드 |
 
 > 총 **7개 씬**: 스테이지 1~6(보스 포함) + 트레이닝
-
-<!-- 스크린샷 자리 -->
-<!-- ![메인 메뉴](assets/textures/bg/bg_bodyhero_main_menu.png) -->
-<!-- ![스테이지 1](assets/textures/bg/bg_stage1_burger.png) -->
-<!-- ![보스전](work_images/reference/concept_boss.png) -->
 
 ## 기술 스택
 
