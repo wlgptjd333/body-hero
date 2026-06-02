@@ -1,9 +1,175 @@
 # Body Hero
 
-웹캠 1인칭 헬스 복싱 게임 (Godot 4.6) — Punch your screen to fight! Real-time body tracking with webcam.
+> 웹캠 1인칭 헬스 복싱 게임 — **당신의 주먹이 곧 조이패드!**
+>
+> Godot 4.6 + MediaPipe Pose + 실시간 AI 동작 인식
 
-> 이전 버전의 **잽(jab)/훅(hook)** 은 `punch_l`/`punch_r`로 통합되었습니다.  
-> 레거시 migration 스크립트(`scratch/`) 및 오래된 데이터 백업은 정리되었습니다.
+<!-- GIF 자리: 실제 게임 플레이 영상 (키보드 + 웹캠) -->
+<!-- ![게임플레이 GIF](docs/images/gameplay.gif) -->
+
+## 시연 영상
+
+> 🎬 **아래 GIF/영상 자리** (추후 촬영하여 교체)
+>
+> - 메인 메뉴 → 스테이지 선택 → 실전 플레이 → 보스전 클리어
+> - 좌측: 웹캠 ML 인식 화면 / 우측: 게임 화면 (PIP 형태)
+
+## 시스템 구조
+
+```mermaid
+graph LR
+    A[웹캠<br>480×360] -->|30 FPS| B[MediaPipe Pose<br>33 landmarks]
+    B -->|정규화 + 시퀀스| C[Python UDP Bridge]
+    C -->|UDP 패킷| D[Godot 4.6<br>게임 엔진]
+    F[키보드<br>A/D/Q/E/Space/S] --> D
+    D -->|play_action| E[게임 화면<br>60 FPS]
+```
+
+## AI 인식 파이프라인
+
+```mermaid
+graph TD
+    A[웹캠 프레임] -->|30 FPS| B[MediaPipe Pose 추론<br>~33ms]
+    B -->|33 landmarks × 3 coords| C[어깨 중심 정규화]
+    C -->|99 features| D[4프레임 시퀀스 버퍼<br>132ms]
+    D -->|(4, 99)| E[Conv1D 64, k=3<br>~3ms]
+    E --> F[GlobalAveragePooling1D]
+    F --> G[Dense 7<br>Softmax]
+    G -->|액션 분류| H[Confidence 필터<br>+ EMA 스무딩]
+    H -->|UDP| I[Godot player.play_action]
+```
+
+## 성능 및 AI 인식률
+
+| 지표 | 수치 |
+|------|------|
+| **포즈 인식 정확도** | **99.22%** (recording-based holdout 20%) |
+| 참고: 내부 검증 | 99.90% (random split, 비교용) |
+| **모델 파라미터** | **19,783** (~20K, 경량화) |
+| **학습 시간** | ~6분 (CPU) |
+| **첫 액션 반응 시간** | ~165ms (seq_buf 132ms + confirm 33ms) |
+| **후속 액션 반응** | ~33ms (버퍼 가득, 1프레임) |
+| **게임 엔진 프레임** | 60 FPS |
+| **ML 파이프라인 프레임** | 30 FPS |
+| **none recall** | 99.3% (false positive 거의 제거) |
+
+### 동작별 인식률 (Recording-based Holdout)
+
+| 동작 | Recall | Precision |
+|------|--------|-----------|
+| none (idle) | 99.3% | 98.3% |
+| guard (가드) | 99.1% | 99.9% |
+| punch_l (왼펀치) | 99.6% | 99.7% |
+| punch_r (오른펀치) | 97.8% | 98.9% |
+| upper_l (왼어퍼) | 99.6% | 99.8% |
+| upper_r (오른어퍼) | 99.4% | 98.4% |
+| squat (스쿼트) | 99.9% | 100.0% |
+
+## 게임 플레이
+
+### 🥊 웹캠 ML (권장)
+
+1. 게임 실행 → 설정 → 웹캠 탭에서 카메라 선택 → **적용**
+2. 스테이지 진입 시 웹캠 ML이 자동 실행됨
+3. 실제로 주먹을 뻗으면 화면 속 글러브가 따라 펀치!
+
+### ⌨️ 키보드 테스트
+
+- **A / Z** — 왼펀치
+- **D / C** — 오른펀치
+- **Q** — 왼어퍼컷
+- **E** — 오른어퍼컷
+- **Space** — 가드 (누르는 동안)
+- **S** — 스쿼트 (HP 회복)
+
+> ⚠️ **리바인딩 지원**: 설정 패널에서 각 키를 원하는 키로 변경 가능
+
+## 스테이지 구성
+
+| 스테이지 | 보스 | 테마 |
+|----------|------|------|
+| Stage 1 | — | 햄버거 몬스터 |
+| Stage 2 | — | 콜라 아레나 |
+| Stage 3 | — | 감자튀김 몬스터 |
+| Stage 4 | — | 피자 몬스터 |
+| Stage 5 | — | 치킨 몬스터 |
+| Stage 6 | — | 마라탕 몬스터 |
+| **BOSS** | **마라탕 보스** | 보스 페이즈 + 버프 선택 |
+| Training | — | 트레이닝 모드 (무한 리스폰) |
+
+> 총 **8개 씬**: 스테이지 1~6 + 보스 + 트레이닝
+
+<!-- 스크린샷 자리 -->
+<!-- ![메인 메뉴](assets/textures/bg/bg_bodyhero_main_menu.png) -->
+<!-- ![스테이지 1](assets/textures/bg/bg_stage1_burger.png) -->
+<!-- ![보스전](work_images/reference/concept_boss.png) -->
+
+## 기술 스택
+
+| 항목 | 버전/기술 |
+|------|-----------|
+| 게임 엔진 | Godot Engine 4.6 |
+| 스크립트 | GDScript 2.0 |
+| ML 프레임워크 | Python 3.10 + TensorFlow/Keras 2.16+ |
+| 포즈 추정 | MediaPipe Pose 0.10+ |
+| 통신 | UDP (localhost) |
+| 아키텍처 | Conv1D(64, k=3) → GAP → Dense(7) |
+| 파라미터 | ~20K |
+| 테스트 | GUT (Godot Unit Test) |
+
+## 프로젝트 구조
+
+```
+body-hero/
+├── project.godot              # Godot 4.6 프로젝트
+├── games/boxing/
+│   ├── scenes/                # 스테이지 1~6 + 보스 + training (8개)
+│   │   ├── stage_1.tscn       #   햄버거
+│   │   ├── stage_2.tscn       #   콜라
+│   │   ├── stage_3.tscn       #   감자튀김
+│   │   ├── stage_4.tscn       #   피자
+│   │   ├── stage_5.tscn       #   치킨
+│   │   ├── stage_6.tscn       #   마라탕
+│   │   └── training.tscn      #   트레이닝 모드
+│   └── scripts/               # 게임 로직
+│       ├── enemy.gd           #   적 FSM (IDLE/ATTACK/EVADE/HIT/DEAD)
+│       ├── player.gd          #   플레이어 글러브 + 입력
+│       ├── stage.gd           #   스테이지 컨트롤러
+│       └── combat_director.gd #   전투 판정/콤보
+├── scripts/
+│   ├── game_state.gd          # 전역 상태 (AutoLoad)
+│   ├── game_state/            #   하위 모듈 13개
+│   │   ├── workout_tracker.gd
+│   │   ├── upgrade_system.gd
+│   │   ├── achievements.gd
+│   │   ├── shop.gd
+│   │   ├── boss_manager.gd
+│   │   └── ...
+│   └── ui/                    # UI 패널 10개
+│       ├── settings_panel.gd
+│       ├── shop_panel.gd
+│       └── ui_theme_helper.gd
+├── tools/                     # Python ML + UDP 브리지
+│   ├── train_pose_classifier_seq.py
+│   ├── udp_send_webcam_ml.py
+│   ├── pose_server.py
+│   ├── collect_pose_data.py
+│   └── *.keras                # 학습된 ML 모델
+├── tests/
+│   └── unit/
+│       ├── test_enemy_fsm.gd     # FSM 단위 테스트 (23개)
+│       └── test_game_state.gd    # GameState 테스트 (36개)
+├── assets/
+│   ├── textures/characters/   # 버거/콜라/프라이즈/피자/치킨/마라탕
+│   ├── audio/bgm/             # BGM
+│   └── audio/sfx/             # 효과음
+└── docs/
+    ├── experiments/           # ML 실험 기록
+    │   ├── 2026-05-18-ablation-controlled.md
+    │   ├── 2026-05-18-paper-design-decisions.md
+    │   └── ...
+    └── superpowers/           # 설계 문서 및 계획
+```
 
 ## 빠른 시작
 
@@ -12,70 +178,9 @@ git clone https://github.com/wlgptjd333/body-hero.git
 ```
 
 Godot 4.6으로 `project.godot` 열고 **F5** 실행.
+
 - 첫 실행 시 `tools/python_embed/`가 없으면 GitHub Releases에서 자동 다운로드 + 설치합니다.
 - 인터넷이 없는 환경에서는 `tools/python_ml_env.zip`을 직접 `tools/` 폴더에 넣으면 오프라인 설치 가능합니다.
-
-## 프로젝트 구조
-
-```
-body-hero/
-├── project.godot           # Godot 4.6 프로젝트
-├── games/boxing/           # 메인 게임
-│   ├── scenes/             #   스테이지 1~3, training
-│   │   ├── stage_1.tscn
-│   │   ├── stage_2.tscn
-│   │   ├── stage_3.tscn
-│   │   └── training.tscn
-│   └── scripts/            #   게임 로직
-│       ├── enemy.gd        #   적 FSM (IDLE/ATTACK/EVADE/HIT/DEAD)
-│       ├── player.gd       #   플레이어 글러브 + 입력
-│       ├── stage.gd        #   스테이지 컨트롤러
-│       └── combat_director.gd  # 전투 판정/콤보
-├── scripts/
-│   ├── game_state.gd       # 전역 상태 (AutoLoad)
-│   ├── game_state/         #   하위 모듈
-│   │   ├── workout_tracker.gd
-│   │   ├── upgrade_system.gd
-│   │   ├── achievements.gd
-│   │   ├── shop.gd
-│   │   └── ...
-│   └── ui/                 # UI 패널
-│       ├── settings_panel.gd
-│       ├── shop_panel.gd
-│       └── ui_theme_helper.gd
-├── tools/
-│   ├── build_python_embed.bat     # 개발자 전용: 임베디드 Python 빌드
-│   ├── collect_pose_data.py       # 웹캠 데이터 수집
-│   ├── train_pose_classifier_seq.py  # 시퀀스 ML 학습
-│   ├── udp_send_webcam_ml.py      # 게임-웹캠 브리지
-│   ├── pose_server.py             # ML 서버
-│   ├── pose_data.json             # 수집된 포즈 데이터
-│   └── *.keras                    # 학습된 ML 모델
-├── tests/
-│   └── unit/
-│       ├── test_enemy_fsm.gd      # FSM 단위 테스트 (23개)
-│       └── test_game_state.gd     # GameState 테스트 (36개)
-└── assets/
-    ├── textures/characters/enemies/  # 버거/콜라/프라이즈 스프라이트
-    ├── audio/bgm/                    # BGM
-    └── audio/sfx/                    # 효과음
-```
-
-## 게임 플레이
-
-### 웹캠 ML (권장)
-```bash
-cd tools
-python_embed\python.exe udp_send_webcam_ml.py
-```
-Godot 메뉴 → 설정 → 웹캠 탭에서 카메라 설정 후 **적용**하면 스테이지 진입 시 자동 실행됩니다.
-게임 내부에서 자동 실행되므로 직접 실행할 필요는 없습니다.
-
-### 키보드 테스트
-- **A/D** — 왼/오 펀치
-- **Q/E** — 왼/오 어퍼컷
-- **스페이스** — 가드 (누르는 동안)
-- **S** — 스쿼트 (HP 회복)
 
 ## ML 데이터 수집 → 학습
 
@@ -91,19 +196,15 @@ python_embed\python.exe pose_server.py                # ML 서버 실행
 ## 테스트
 
 GUT 테스트 프레임워크 (59개, Godot 4.6):
+
 ```
 프로젝트 → Gut → Run all tests
-# 또는 WSL CLI:
-~/.local/bin/godot --headless -s addons/gut/gut_cmdln.gd -d --path .
+# 또는 CLI:
+godot --headless -s addons/gut/gut_cmdln.gd -d --path .
 ```
 
-## 기술 스택
+## 라이선스
 
-| 항목 | 버전 |
-|------|------|
-| Godot Engine | 4.6.2 |
-| GDScript | 2.0 |
-| Python | 3.10 |
-| TensorFlow/Keras | 2.16+ |
-| MediaPipe | 0.10+ |
+MIT License © 2026 Jihyeseong (지혜성)
 
+> 이 프로젝트는 **협성대학교 졸업작품**으로 제작되었습니다.
