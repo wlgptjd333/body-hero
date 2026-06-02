@@ -1,21 +1,21 @@
 """
-ì›¹ìº  â†’ Pose ëžœë“œë§ˆí¬ â†’ ML ì¶”ë¡ (ë¡œì»¬ ë˜ëŠ” pose_server) â†’ Godotì— UDPë¡œ ì•¡ì…˜ ì „ì†¡.
+웹캠 → Pose 랜드마크 → ML 추론 (로컬 또는 pose_server) → Godot에 UDP로 액션 전송.
 
-- ê¸°ë³¸: pose_classifier_seq_len4.keras(4í”„ë ˆìž„ ìš°ì„ , ADR-0002) â†’ seq.keras(8í”„ë ˆìž„ í´ë°±) + pose_classifier.keras(ê°€ë“œ í´ë°±). pose_server ë¶ˆí•„ìš”.
-- ì‹œí€€ìŠ¤ ëª¨ë¸ì´ ì—†ìœ¼ë©´ HTTPë¡œ pose_serverì— ìš”ì²­. ì„œë²„ê°€ ì—†ìœ¼ë©´ pose_server.pyë¥¼ ìžë™ìœ¼ë¡œ ë„ì›€ (--no-auto-server ë¡œ ëŒ ìˆ˜ ìžˆìŒ).
+- 기본: pose_classifier_seq_len4.keras(4프레임 우선, ADR-0002) → seq.keras(8프레임 폴백) + pose_classifier.keras(가드 폴백). pose_server 불필요.
+- 시퀀스 모델이 없으면 HTTP로 pose_server에 요청. 서버가 없으면 pose_server.py를 자동으로 띄움 (--no-auto-server 로 끌 수 있음).
 
-ì‚¬ìš© ìˆœì„œ:
-  1) ë°ì´í„° ìˆ˜ì§‘: python collect_pose_data.py
-  2) ì‹œí€€ìŠ¤ í•™ìŠµ: python train_pose_classifier_seq.py  [ê°€ë“œ í´ë°±: train_pose_classifier.py]
-  3) ë³¸ ìŠ¤í¬ë¦½íŠ¸: python udp_send_webcam_ml.py
-  4) Godot ì‹¤í–‰ í›„ í”Œë ˆì´
+사용 순서:
+  1) 데이터 수집: python collect_pose_data.py
+  2) 시퀀스 학습: python train_pose_classifier_seq.py  [가드 폴백: train_pose_classifier.py]
+  3) 본 스크립트: python udp_send_webcam_ml.py
+  4) Godot 실행 후 플레이
 
-íŽ€ì¹˜(punch_l/r) ë¼ë²¨ì´ ì „í˜€ ì•ˆ ëœ° ë•Œ: --debug-topk 5 ë¡œ ì‹œí€€ìŠ¤ softmax ìˆœìœ„ í™•ì¸.
-  ìƒìœ„ê°€ noneì´ë©´ ë°ì´í„°Â·ìž¬í•™ìŠµ ìª½, punchê°€ ìžˆëŠ”ë° í™•ë¥ ë§Œ ë‚®ìœ¼ë©´ --punch-confidence 0.5~0.65.
-  ê°€ë“œë§Œ ëœ¨ë©´ --skip-guard-single ìœ¼ë¡œ ë‹¨ì¼ ê°€ë“œ ëª¨ë¸ ë‹¨ì¶•ì„ ë„ê³  ë¹„êµ.
-  ì–´í¼ ìœˆë“œì—…ì—ì„œ ì§ì„ ì´ ë¨¼ì € ë‚˜ê°€ë©´: `--upper-windup-punch-suppress`. ì§ì„  ìž½ì€ ì–´í¼ë³´ë‹¤ í™•ì • í”„ë ˆìž„ ì§§ê²ŒÂ·softmaxëŠ” ì–´í¼ì™€ ë™ì¼ í•˜í•œ ê¶Œìž¥.
-  í•œ ë²ˆì˜ íŽ€ì¹˜Â·ì–´í¼ì— UDPê°€ ì—¬ëŸ¬ ë²ˆ ë‚˜ê°€ë©´: `--attack-rearm-frames`(ê¸°ë³¸ 3). 0ì´ë©´ ë”.
-  Godot UDP ì•¡ì…˜: punch_l, punch_r, upper_l, upper_r, guard, squat â€¦
+펀치(punch_l/r) 라벨이 전혀 안 뜰 때: --debug-topk 5 로 시퀀스 softmax 순위 확인.
+  상위가 none이면 데이터·재학습 쪽, punch가 있는 데 확률만 낮으면 --punch-confidence 0.5~0.65.
+  가드만 뜨면 --skip-guard-single 으로 단일 가드 모델 단축을 끄고 비교.
+  어퍼 윈드업에서 직선이 먼저 나가면: `--upper-windup-punch-suppress`. 직선 잽은 어퍼보다 확정 프레임 짧게·softmax는 어퍼와 동일 하한 권장.
+  한 번의 펀치·어퍼에 UDP가 여러 번 나가면: `--attack-rearm-frames`(기본 3). 0이면 끔.
+  Godot UDP 액션: punch_l, punch_r, upper_l, upper_r, guard, squat …
 """
 import math
 import os
@@ -30,8 +30,8 @@ import sys
 from collections import deque
 from typing import Any, List, Optional, Tuple
 
-# ë¡œê·¸: MediaPipeÂ·TensorFlowê°€ ê°ê° C++ ìª½ absl/oneDNNì„ ì¼œì„œ ë¹„ìŠ·í•œ ì˜ì–´ ë¬¸êµ¬ê°€ 2ë²ˆ ë‚˜ì˜¬ ìˆ˜ ìžˆìŒ(ì •ìƒ).
-# TF ìª½ INFO/WARN ì¤„ì´ê¸°(3=ERRORë§Œ). oneDNNì€ ê¸°ë³¸ ì„±ëŠ¥ì„ ìœ ì§€í•˜ê³ , í•„ìš”í•  ë•Œë§Œ í™˜ê²½ë³€ìˆ˜ë¡œ ëˆë‹¤.
+# 로그: MediaPipe·TensorFlow가 각각 C++ 쪽 absl/oneDNN을 켜서 비슷한 영어 문구가 2번 나올 수 있음(정상).
+# TF 쪽 INFO/WARN 줄이기(3=ERROR만). oneDNN은 기본 성능을 유지하고, 필요할 때만 환경변수로 끈다.
 os.environ.setdefault("GLOG_minloglevel", "2")
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 if os.environ.get("BODY_HERO_DISABLE_ONEDNN", "").strip().lower() in ("1", "true", "yes", "on"):
@@ -48,8 +48,8 @@ from pose_normalize import normalize_landmarks_flat, shoulder_center_and_width
 from pose_class_names import GUARD_INDEX, POSE_CLASS_NAMES
 from cv_capture import open_cv_video_capture
 
-# ë¡œì»¬ ì¶”ë¡ ìš© (pose_serverì™€ ë™ì¼). ì‹œí€€ìŠ¤ ê¸¸ì´ëŠ” ë¡œë“œí•œ ëª¨ë¸ ìž…ë ¥(time)ì—ì„œ ìžë™ ì„¤ì •.
-# ìš°ì„ ìˆœìœ„: seq_len=4 â†’ 8 (ADR-0002).
+# 로컬 추론용 (pose_server와 동일). 시퀀스 길이는 로드한 모델 입력(time)에서 자동 설정.
+# 우선순위: seq_len=4 → 8 (ADR-0002).
 _MODEL_SEQ_4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
 _MODEL_SEQ_8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
 if os.path.exists(_MODEL_SEQ_4):
@@ -59,28 +59,28 @@ elif os.path.exists(_MODEL_SEQ_8):
     MODEL_SEQ_PATH = _MODEL_SEQ_8
     SEQ_LEN = 8
 else:
-    MODEL_SEQ_PATH = _MODEL_SEQ_4  # ì—†ìœ¼ë©´ ê¸°ë³¸ ê²½ë¡œ ìœ ì§€(í•™ìŠµ ì „)
+    MODEL_SEQ_PATH = _MODEL_SEQ_4  # 없으면 기본 경로 유지(학습 전)
     SEQ_LEN = 4
 MODEL_SINGLE_PATH = os.path.join(SCRIPT_DIR, "pose_classifier.keras")
 CLASS_NAMES = list(POSE_CLASS_NAMES)
-# MLÂ·UDP ë¼ë²¨ = POSE_CLASS_NAMES (punch_l/r â€¦)
-# ì‹œí€€ìŠ¤ ëª¨ë¸: 1ë“± í´ëž˜ìŠ¤ í™•ë¥ ì´ ì´ ê°’ ë¯¸ë§Œì´ë©´ none. (ê¸°ë³¸ì€ balancedì— ë§žì¶¤; --profile ë¡œ ë®ì–´ì”€)
+# ML·UDP 라벨 = POSE_CLASS_NAMES (punch_l/r …)
+# 시퀀스 모델: 1등 클래스 확률이 이 값 미만이면 none. (기본은 balanced에 맞춤; --profile 로 덮어씀)
 CONFIDENCE_THRESHOLD = 0.93
 UPPER_CONFIDENCE_THRESHOLD = 0.88
-# ì§ì„  íŽ€ì¹˜ softmax í•˜í•œ. ê¸°ë³¸ì€ ì–´í¼ì™€ ë™ì¼(0.88) â€” ë„ˆë¬´ ë†’ìœ¼ë©´ ìž½ì´ ìž˜ ì•ˆ ë‚˜ê°. --punch-confidence ë¡œ ë®ì–´ì”€.
+# 직선 펀치 softmax 하한. 기본은 어퍼와 동일(0.88) — 너무 높으면 잽이 잘 안 나감. --punch-confidence 로 덮어씀.
 PUNCH_CONFIDENCE_THRESHOLD = 0.88
 GUARD_FALLBACK_THRESHOLD = 0.65
-COOLDOWN_SEC = 0.08  # ê°™ì€ ì† ì—°ì† ë°©ì§€ (per-side, 0.08së©´ ì•½ 2~3í”„ë ˆìž„)
-MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.04  # ìµœì†Œ ê°„ê²©ë§Œ (êµì°¨íŽ€ì¹˜ Lâ†’Râ†’L ìš©, ê±°ì˜ ì°¨ë‹¨ ì—†ìŒ)
-GUARD_EXIT_FRAMES = 2  # ê°€ë“œ í•´ì œ ê°ì§€: 2í”„ë ˆìž„(ì•½ 66ms) ì—°ì† not guardë©´ guard_end ì „ì†¡
+COOLDOWN_SEC = 0.08  # 같은 손 연속 방지 (per-side, 0.08s면 약 2~3프레임)
+MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.04  # 최소 간격만 (교차펀치 L→R→L 용, 거의 차단 없음)
+GUARD_EXIT_FRAMES = 2  # 가드 해제 감지: 2프레임(약 66ms) 연속 not guard면 guard_end 전송
 FPS_TARGET = 30
-# ì²˜ë¦¬ í•´ìƒë„: ë†’ì„ìˆ˜ë¡ ì¢Œìš°(íŽ€ì¹˜) êµ¬ë¶„Â·í¬ì¦ˆ ì•ˆì •ì— ìœ ë¦¬, CPU ë¶€í•˜ ì¦ê°€ (ë ‰ ì‹œ 320x240 ë˜ëŠ” --process-w/hë¡œ ë‚®ì¶¤)
+# 처리 해상도: 높을수록 좌우(펀치) 구분·포즈 안정에 유리, CPU 부하 증가 (렉 시 320x240 또는 --process-w/h로 낮춤)
 PROCESS_W, PROCESS_H = 480, 360
-# ì´ í”„ë ˆìž„ ìˆ˜ë§ˆë‹¤ë§Œ í¬ì¦ˆ+ML ì‹¤í–‰ (1=ë§¤í”„ë ˆìž„, 2=2í”„ë ˆìž„ë§ˆë‹¤). test_pose_liveì²˜ëŸ¼ ì¸ì‹í•˜ë ¤ë©´ 1
+# 이 프레임 수마다만 포즈+ML 실행 (1=매프레임, 2=2프레임마다). test_pose_live처럼 인식하려면 1
 PROCESS_EVERY_N_FRAMES = 1
-# Godotìœ¼ë¡œ ì•¡ì…˜ ì „ì†¡ ì‹œì—ë§Œ ì ìš©: ì–´ê¹¨ ì¤‘ì‹¬ Xì¢Œí‘œë§Œ ê²€ì‚¬ (YëŠ” í•­ìƒ ì „ì²´)
-CENTER_ZONE_X = (0.3, 0.7)  # normalized [0,1] ê¸°ì¤€
-CENTER_ZONE_Y = (0.0, 1.0)  # ì„¸ë¡œ ì „ì²´
+# Godot으로 액션 전송 시에만 적용: 어깨 중심 X좌표만 검사 (Y는 항상 전체)
+CENTER_ZONE_X = (0.3, 0.7)  # normalized [0,1] 기준
+CENTER_ZONE_Y = (0.0, 1.0)  # 세로 전체
 PUNCH_CONFIRM_FRAMES = 2
 OTHER_PUNCH_CONFIRM_FRAMES = 1
 UPPER_PUNCH_CONFIRM_FRAMES = 2
@@ -90,19 +90,19 @@ PUNCH_HOLDOFF_AFTER_UPPER_FRAMES = 4
 UPPER_LR_OPPOSITE_BLOCK_FRAMES = 6
 NONE_STREAK_TO_CLEAR_PUNCH_HOLDOFF = 3
 SQUAT_CONFIRM_FRAMES = 2
-# íŽ€ì¹˜Â·ì–´í¼ 1íšŒ ì „ì†¡ í›„, MLì´ ê³µê²© ë¼ë²¨ì´ ì•„ë‹Œ í”„ë ˆìž„ì´ ì´ ê°’ ì—°ì†ì¼ ë•Œë§Œ ë‹¤ìŒ ê³µê²© ì „ì†¡(ê¸°ë³¸ì€ argparseë¡œ ë®ì–´ì”€).
+# 펀치·어퍼 1회 전송 후, ML이 공격 라벨이 아닌 프레임이 이 값 연속일 때만 다음 공격 전송(기본은 argparse로 덮어씀).
 ACTION_REARM_OFF_ATTACK_FRAMES_DEFAULT = 0
 POWER_PUNCH_LABELS = ("upper_l", "upper_r")
 PUNCH_LABELS = ("punch_l", "punch_r", "upper_l", "upper_r")
-# ì •ê·œí™” ì¢Œí‘œ: yëŠ” ì•„ëž˜ë¡œ ê°ˆìˆ˜ë¡ ì¦ê°€. ì†ëª©ì´ ê°™ì€ìª½ ì–´ê¹¨ë³´ë‹¤ ì´ ê°’ë§Œí¼ ë” ì•„ëž˜ë©´ "ë‚®ì€ ì¤€ë¹„"ë¡œ ê°„ì£¼.
+# 정규화 좌표: y는 아래로 갈수록 증가. 손목이 같은쪽 어깨보다 이 값만큼 더 아래면 "낮은 준비"로 간주.
 UPPER_WINDUP_WRIST_BELOW_SHOULDER_DEFAULT = 0.08
 
-# main()ì—ì„œ argparseë¡œ ë®ì–´ì”€ (ì¶”ë¡  ìŠ¤ë ˆë“œê°€ ì½ìŒ)
+# main()에서 argparse로 덮어씀 (추론 스레드가 읽음)
 _debug_seq_topk: int = 0
 _skip_guard_single: bool = False
 _punch_confidence_override: Optional[float] = None
 
-# ì†ë„/ì •í™•ë„ í”„ë¦¬ì…‹ (ëŸ°íƒ€ìž„ì—ì„œ ìƒìˆ˜ë“¤ì„ ë®ì–´ì”€)
+# 속도/정확도 프리셋 (런타임에서 상수들을 덮어씀)
 SPEED_PROFILES = ("precise", "balanced", "classic", "rapid", "max_speed")
 
 class RemappedLandmark:
@@ -125,23 +125,23 @@ except ImportError:
 
 if not hasattr(cv2, "VideoCapture"):
     print(
-        "OpenCV(cv2)ì— VideoCaptureê°€ ì—†ìŠµë‹ˆë‹¤. headless ì œê±° í›„ íŒ¨í‚¤ì§€ê°€ ê¼¬ì˜€ê±°ë‚˜ ìž˜ëª»ëœ cv2ê°€ ë¡œë“œëœ ê²½ìš°ìž…ë‹ˆë‹¤.\n"
-        f"  cv2 ë¡œë“œ ê²½ë¡œ: {getattr(cv2, '__file__', '?')}\n"
-        "  (venv_ml)ì—ì„œ ì•„ëž˜ë¥¼ ì‹¤í–‰í•œ ë’¤ ë‹¤ì‹œ ì‹œë„í•˜ì„¸ìš”:\n"
+        "OpenCV(cv2)에 VideoCapture가 없습니다. headless 제거 후 패키지가 꼬였거나 잘못된 cv2가 로드된 경우입니다.\n"
+        f"  cv2 로드 경로: {getattr(cv2, '__file__', '?')}\n"
+        "  (venv_ml)에서 아래를 실행한 뒤 다시 시도하세요:\n"
         "    pip uninstall opencv-python opencv-python-headless opencv-contrib-python -y\n"
         "    pip install --force-reinstall \"opencv-python>=4.9,<5\""
     )
     raise SystemExit(1)
 
 
-# ë¡œì»¬ ì¶”ë¡ : numpyëŠ” ì¦‰ì‹œ, TensorFlowëŠ” _load_local_models()ì—ì„œë§Œ ë¡œë“œ(ì‹œìž‘Â·ìŠ¤ë ˆë“œ ë¶„ë¦¬ë¡œ ì²´ê° ì§€ì—° ì™„í™”)
+# 로컬 추론: numpy는 즉시, TensorFlow는 _load_local_models()에서만 로드(시작·스레드 분리로 체감 지연 완화)
 _np = None
 _tf = None
 _model_seq = None
 _model_single = None
 _use_local_inference = False
 
-# EMA logit smoothing state (Î±=0.7)
+# EMA logit smoothing state (α=0.7)
 _ema_logits = None
 # Hysteresis state (active action index, held until confidence drops below 0.35)
 _active_state = None
@@ -153,14 +153,14 @@ except ImportError:
 
 
 def _prepare_tf_import_env() -> None:
-    """CUDA/GPU í”„ë¡œë¸Œê°€ ì˜¤ëž˜ ê±¸ë¦¬ëŠ” PCì—ì„œ TF ì²« ìž„í¬íŠ¸ ì‹œê°„ì„ ì¤„ì´ê¸° ìœ„í•´ CPUë§Œ ì”€(í™˜ê²½ ë³€ìˆ˜ë¡œ ëŒ ìˆ˜ ìžˆìŒ)."""
+    """CUDA/GPU 프로브가 오래 걸리는 PC에서 TF 첫 임포트 시간을 줄이기 위해 CPU만 씀(환경 변수로 끌 수 있음)."""
     v = os.environ.get("BODY_HERO_TF_CPU_ONLY", "1")
     if str(v).strip().lower() not in ("0", "false", "no", "off"):
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 def _keras_load_model_safe(path: str):
-    """compile=Falseë¡œ ê·¸ëž˜í”„/ë©”íŠ¸ë¦­ ì»´íŒŒì¼ ìƒëžµ â†’ ë¡œë“œ ì‹œê°„ ë‹¨ì¶•. êµ¬í˜• TFëŠ” ì¸ìž ì—†ì´ ìž¬ì‹œë„."""
+    """compile=False로 그래프/메트릭 컴파일 생략 → 로드 시간 단축. 구형 TF는 인자 없이 재시도."""
     if _tf is None:
         return None
     try:
@@ -170,7 +170,7 @@ def _keras_load_model_safe(path: str):
 
 
 def _load_local_models():
-    """ë™ê¸°: ì‹œí€€ìŠ¤+ê°€ë“œ ëª¨ë¸ ì „ë¶€ ë¡œë“œ. (í…ŒìŠ¤íŠ¸Â·ìŠ¤í¬ë¦½íŠ¸ í˜¸í™˜ìš©; ëŸ°íƒ€ìž„ì€ _tf_load_worker_phased ì‚¬ìš©)"""
+    """동기: 시퀀스+가드 모델 전부 로드. (테스트·스크립트 호환용; 런타임은 _tf_load_worker_phased 사용)"""
     global _model_seq, _model_single, _use_local_inference, SEQ_LEN, _tf
     if _np is None:
         return False
@@ -200,11 +200,11 @@ def _load_local_models():
 
 
 def _tf_load_worker_phased(seq_model_ready: threading.Event, load_errors: list) -> None:
-    """ë°±ê·¸ë¼ìš´ë“œ: ì‹œí€€ìŠ¤ ëª¨ë¸ë§Œ ë¨¼ì € ëë‚´ê³  ì´ë²¤íŠ¸ë¡œ ì•Œë¦¼ â†’ ê°€ë“œìš© ë‹¨ì¼ ëª¨ë¸ì€ ê·¸ ë’¤ì— ë¡œë“œ(ê²Œìž„ ì‹œìž‘ ëŒ€ê¸° ì‹œê°„ ë‹¨ì¶•)."""
+    """백그라운드: 시퀀스 모델만 먼저 끝내고 이벤트로 알림 → 가드용 단일 모델은 그 뒤에 로드(게임 시작 대기 시간 단축)."""
     global _tf, _model_seq, _model_single, _use_local_inference, SEQ_LEN
     try:
         if _np is None:
-            load_errors.append(RuntimeError("numpyê°€ ì—†ìŠµë‹ˆë‹¤."))
+            load_errors.append(RuntimeError("numpy가 없습니다."))
             return
         if not os.path.isfile(MODEL_SEQ_PATH):
             return
@@ -230,23 +230,23 @@ def _tf_load_worker_phased(seq_model_ready: threading.Event, load_errors: list) 
     if not os.path.isfile(MODEL_SINGLE_PATH):
         return
     try:
-        print("ê°€ë“œ ë³´ì¡° ëª¨ë¸(Keras) ì¶”ê°€ ë¡œë“œ ì¤‘â€¦", flush=True)
+        print("가드 보조 모델(Keras) 추가 로드 중…", flush=True)
         _model_single = _keras_load_model_safe(MODEL_SINGLE_PATH)
-        print("ê°€ë“œ ë³´ì¡° ëª¨ë¸ ë¡œë“œ ì™„ë£Œ.", flush=True)
+        print("가드 보조 모델 로드 완료.", flush=True)
     except Exception as e:
-        print("ê°€ë“œ ë³´ì¡° ëª¨ë¸ ë¡œë“œ ì‹¤íŒ¨(ì‹œí€€ìŠ¤ë§Œ ì‚¬ìš©):", e, flush=True)
+        print("가드 보조 모델 로드 실패(시퀀스만 사용):", e, flush=True)
 
 
 def _predict_local(
     sequence: list,
     seq_topk: int = 0,
 ) -> Tuple[Optional[str], float, Optional[List[Tuple[str, float]]]]:
-    """ê°€ë“œ ë‹¨ì¼(ì„ íƒ) â†’ ì‹œí€€ìŠ¤ softmax. (í‘œì‹œ ë¼ë²¨, í™•ì‹ ë„, seq_topk>0ì¼ ë•Œ ìƒìœ„k (ì´ë¦„,í™•ë¥ )).
+    """가드 단일(선택) → 시퀀스 softmax. (표시 라벨, 확신도, seq_topk>0일 때 상위k (이름,확률)).
 
-    seq_topk>0ì´ë©´ ê°€ë“œë¡œ ë‹¨ì¶•ë˜ê¸° ì „ì—ë„ ì‹œí€€ìŠ¤ë¥¼ í•œ ë²ˆ ëŒë ¤ ìƒìœ„ í™•ë¥ ì„ ëŒë ¤ì¤€ë‹¤(ì›ì¸ ì¡°ì‚¬ìš©).
+    seq_topk>0이면 가드로 단축되기 전에도 시퀀스를 한 번 돌려 상위 확률을 돌려준다(원인 조사용).
 
-    EMA smoothing: raw softmaxë¥¼ EMA(Î±=0.7)ë¡œ smoothingí•œ í›„ threshold ì ìš©.
-    Hysteresis: í˜„ìž¬ active stateì˜ exit thresholdê°€ enterë³´ë‹¤ ë‚®ì•„ flicker ë°©ì§€.
+    EMA smoothing: raw softmax를 EMA(α=0.7)로 smoothing한 후 threshold 적용.
+    Hysteresis: 현재 active state의 exit threshold가 enter보다 낮아 flicker 방지.
     """
     none3: Tuple[Optional[str], float, Optional[List[Tuple[str, float]]]] = (None, 0.0, None)
     if _model_seq is None or _np is None or not sequence or len(sequence) != SEQ_LEN:
@@ -262,8 +262,8 @@ def _predict_local(
         idxs = _np.argsort(pred_vec)[-k:][::-1]
         topk_list = [(CLASS_NAMES[int(i)], float(pred_vec[int(i)])) for i in idxs]
 
-    # EMA logit smoothing for state maintenance (Î±=0.7)
-    # raw â†’ argmax (instant onset), EMA â†’ hysteresis (smooth state)
+    # EMA logit smoothing for state maintenance (α=0.7)
+    # raw → argmax (instant onset), EMA → hysteresis (smooth state)
     global _ema_logits, _active_state
     if _ema_logits is None:
         _ema_logits = pred_vec.copy()
@@ -345,7 +345,7 @@ def _download_pose_model(model_path, model_url, fallback_url=None):
 
 
 def predict_action(sequence):
-    """ë¡œì»¬ ëª¨ë¸ì´ ìžˆìœ¼ë©´ ë¡œì»¬ ì¶”ë¡ , ì—†ìœ¼ë©´ HTTPë¡œ pose_server ìš”ì²­. (ì•¡ì…˜, í™•ì‹ ë„) ë°˜í™˜. ìŠ¤ë ˆë“œì—ì„œë§Œ í˜¸ì¶œ."""
+    """로컬 모델이 있으면 로컬 추론, 없으면 HTTP로 pose_server 요청. (액션, 확신도) 반환. 스레드에서만 호출."""
     if not sequence or len(sequence) != SEQ_LEN:
         return None, 0.0
     if _use_local_inference:
@@ -365,7 +365,7 @@ def predict_action(sequence):
         return None, 0.0
 
 
-# ML ì˜ˆì¸¡ ê²°ê³¼ (ë°±ê·¸ë¼ìš´ë“œ ìŠ¤ë ˆë“œì—ì„œ ê°±ì‹ , ë©”ì¸ ë£¨í”„ëŠ” ì½ê¸°ë§Œ)
+# ML 예측 결과 (백그라운드 스레드에서 갱신, 메인 루프는 읽기만)
 _pred_lock = threading.Lock()
 _last_pred = None
 _last_confidence = 0.0
@@ -388,7 +388,7 @@ def _predict_worker(sequence):
 
 
 def start_predict_async(sequence):
-    """ì‹œí€€ìŠ¤ë¥¼ ë°±ê·¸ë¼ìš´ë“œì—ì„œ ì˜ˆì¸¡í•˜ë„ë¡ ìš”ì²­. ì´ë¯¸ ì˜ˆì¸¡ ì¤‘ì´ë©´ ë¬´ì‹œ."""
+    """시퀀스를 백그라운드에서 예측하도록 요청. 이미 예측 중이면 무시."""
     global _predict_busy
     with _pred_lock:
         if _predict_busy or not sequence or len(sequence) != SEQ_LEN:
@@ -406,7 +406,7 @@ def get_last_pred():
 def _low_chamber_straight_punch_ambiguous(
     flat: List[float], pred: Optional[str], margin: float
 ) -> bool:
-    """ê°™ì€ ìª½ ì†ëª©ì´ ì–´ê¹¨ë³´ë‹¤ ì¶©ë¶„ížˆ ì•„ëž˜ë©´ ì§ì„  íŽ€ì¹˜ ë¼ë²¨ì„ UDPë¡œ í™•ì •í•˜ì§€ ì•ŠìŒ(ì–´í¼ ìœˆë“œì—…ê³¼ êµ¬ë¶„)."""
+    """같은 쪽 손목이 어깨보다 충분히 아래면 직선 펀치 라벨을 UDP로 확정하지 않음(어퍼 윈드업과 구분)."""
     if not flat or len(flat) < 99 or pred not in ("punch_l", "punch_r"):
         return False
     if pred == "punch_l":
@@ -434,33 +434,33 @@ def _wait_pose_server_ready(proc: subprocess.Popen, timeout_sec: float = 60.0) -
                     err = proc.stderr.read()
             except Exception:
                 pass
-            print("pose_serverê°€ ë°”ë¡œ ì¢…ë£Œë˜ì—ˆìŠµë‹ˆë‹¤ (ì½”ë“œ %s)." % proc.returncode)
+            print("pose_server가 바로 종료되었습니다 (코드 %s)." % proc.returncode)
             if err:
                 print(err.decode(errors="replace")[-1200:])
             return False
         if _pose_server_health_ok():
             return True
         time.sleep(0.25)
-    print("pose_server í—¬ìŠ¤ ì²´í¬ íƒ€ìž„ì•„ì›ƒ (%sì´ˆ)." % int(timeout_sec))
+    print("pose_server 헬스 체크 타임아웃 (%s초)." % int(timeout_sec))
     return False
 
 
 def _ensure_pose_server(auto_spawn: bool):
-    """HTTP ì¶”ë¡ ìš© pose_server. (ì„±ê³µ ì—¬ë¶€, ì´ ìŠ¤í¬ë¦½íŠ¸ê°€ ë„ìš´ Popen ë˜ëŠ” None)."""
+    """HTTP 추론용 pose_server. (성공 여부, 이 스크립트가 띄운 Popen 또는 None)."""
     if _pose_server_health_ok():
-        print("ì¶”ë¡ : pose_server (HTTP, ì´ë¯¸ ì‹¤í–‰ ì¤‘)")
+        print("추론: pose_server (HTTP, 이미 실행 중)")
         return True, None
     if not auto_spawn:
-        print("ì¶”ë¡ : pose_server í•„ìš”. ìˆ˜ë™ ì‹¤í–‰: cd tools && python pose_server.py")
-        print("      (ìžë™ ì‹œìž‘ì„ ì“°ë ¤ë©´ --no-auto-server ì˜µì…˜ì„ ë¹¼ì„¸ìš”)")
+        print("추론: pose_server 필요. 수동 실행: cd tools && python pose_server.py")
+        print("      (자동 시작을 쓰려면 --no-auto-server 옵션을 빼세요)")
         return False, None
     if not os.path.isfile(MODEL_SEQ_PATH):
-        print("ë¡œì»¬ ì¶”ë¡  ë¶ˆê°€ + pose_classifier_seq.keras ì—†ìŒ â†’ pose_serverë¥¼ ì‹œìž‘í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.")
+        print("로컬 추론 불가 + pose_classifier_seq.keras 없음 → pose_server를 시작할 수 없습니다.")
         return False, None
     if not os.path.isfile(POSE_SERVER_SCRIPT):
-        print("pose_server.pyë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤:", POSE_SERVER_SCRIPT)
+        print("pose_server.py를 찾을 수 없습니다:", POSE_SERVER_SCRIPT)
         return False, None
-    print("ë¡œì»¬ ì¶”ë¡  ë¶ˆê°€ â†’ pose_server ìžë™ ì‹œìž‘ ì¤‘...")
+    print("로컬 추론 불가 → pose_server 자동 시작 중...")
     proc = subprocess.Popen(
         [sys.executable, POSE_SERVER_SCRIPT],
         cwd=SCRIPT_DIR,
@@ -475,48 +475,48 @@ def _ensure_pose_server(auto_spawn: bool):
             except Exception:
                 pass
         return False, None
-    print("pose_server ì¤€ë¹„ ì™„ë£Œ (http://127.0.0.1:5000)")
+    print("pose_server 준비 완료 (http://127.0.0.1:5000)")
     return True, proc
 
 
 def main():
     global MODEL_SEQ_PATH
     parser = argparse.ArgumentParser(description="Webcam -> ML -> UDP for Body Hero")
-    parser.add_argument("--camera-index", type=int, default=0, help="OpenCV camera index (ê¸°ë³¸ 0, ì™¸ë¶€ ì›¹ìº ì€ 1/2ì¼ ìˆ˜ ìžˆìŒ)")
+    parser.add_argument("--camera-index", type=int, default=0, help="OpenCV camera index (기본 0, 외부 웹캠은 1/2일 수 있음)")
     parser.add_argument(
         "--camera-backend",
         choices=["auto", "default", "dshow", "msmf"],
         default="auto",
-        help="Windows ê¶Œìž¥: auto(DirectShow ìš°ì„ ). USBê°€ ì•ˆ ìž¡ížˆë©´ dshow + --camera-index ë°”ê¿” ë³´ì„¸ìš”.",
+        help="Windows 권장: auto(DirectShow 우선). USB가 안 잡히면 dshow + --camera-index 바꿔 보세요.",
     )
     parser.add_argument(
         "--no-auto-server",
         action="store_true",
-        help="ë¡œì»¬ ì¶”ë¡  ë¶ˆê°€ ì‹œ pose_serverë¥¼ ìžë™ìœ¼ë¡œ ë„ìš°ì§€ ì•ŠìŒ (ë³„ë„ í„°ë¯¸ë„ì—ì„œ ìˆ˜ë™ ì‹¤í–‰)",
+        help="로컬 추론 불가 시 pose_server를 자동으로 띄우지 않음 (별도 터미널에서 수동 실행)",
     )
     parser.add_argument(
         "--process-w",
         type=int,
         default=None,
         metavar="W",
-        help=f"MediaPipe/ML ìž…ë ¥ ë„ˆë¹„ (ê¸°ë³¸ {PROCESS_W}, ê°€ë²¼ìš°ë ¤ë©´ 320)",
+        help=f"MediaPipe/ML 입력 너비 (기본 {PROCESS_W}, 가벼우려면 320)",
     )
     parser.add_argument(
         "--process-h",
         type=int,
         default=None,
         metavar="H",
-        help=f"MediaPipe/ML ìž…ë ¥ ë†’ì´ (ê¸°ë³¸ {PROCESS_H})",
+        help=f"MediaPipe/ML 입력 높이 (기본 {PROCESS_H})",
     )
     parser.add_argument(
         "--headless",
         action="store_true",
-        help="ë¯¸ë¦¬ë³´ê¸° ì°½ ì—†ì´ ì‹¤í–‰ (opencv-python-headlessÂ·ì›ê²© í„°ë¯¸ë„ ë“±). ì¢…ë£Œ: Ctrl+C",
+        help="미리보기 창 없이 실행 (opencv-python-headless·원격 터미널 등). 종료: Ctrl+C",
     )
     parser.add_argument(
         "--allow-tf-gpu",
         action="store_true",
-        help="TensorFlowê°€ GPU/CUDAë¥¼ íƒìƒ‰í•˜ê²Œ í•¨. ê¸°ë³¸ì€ CPUë§Œ ì‚¬ìš©í•´ ì²« ìž„í¬íŠ¸ê°€ ë” ë¹ ë¥¸ ê²½ìš°ê°€ ë§ŽìŒ.",
+        help="TensorFlow가 GPU/CUDA를 탐색하게 함. 기본은 CPU만 사용해 첫 임포트가 더 빠른 경우가 많음.",
     )
     parser.add_argument(
         "--gpu",
@@ -531,61 +531,61 @@ def main():
     parser.add_argument(
         "--seq-model",
         default=None,
-        help="ì‹œí€€ìŠ¤ ëª¨ë¸ ê²½ë¡œ(ê¸°ë³¸ tools/pose_classifier_seq.keras). seq_len4/6/8 ëª¨ë¸ì„ ë°”ê¿” ë¼ì›Œ ì²« ë°˜ì‘ ì†ë„ íŠœë‹ ê°€ëŠ¥",
+        help="시퀀스 모델 경로(기본 tools/pose_classifier_seq.keras). seq_len4/6/8 모델을 바꿔 끼워 첫 반응 속도 튜닝 가능",
     )
     parser.add_argument(
         "--profile",
         choices=list(SPEED_PROFILES),
         default="balanced",
-        help="í”„ë¡œí•„: precise(ì •í™•ë„ìµœìš°ì„ ) | balanced(ê¸°ë³¸) | classic(ì´ˆê¸°ë²„ì „ëŠë‚Œ) | rapid(ë¹ ë¥¸ì—°íƒ€) | max_speed(ìµœëŒ€ì†ë„), ê¸°ë³¸ balanced",
+        help="프로필: precise(정확도최우선) | balanced(기본) | classic(초기버전느낌) | rapid(빠른연타) | max_speed(최대속도), 기본 balanced",
     )
     parser.add_argument(
         "--react",
         type=float,
         default=None,
-        help="ë°˜ì‘ ì†ë„(0~1). ë†’ì„ìˆ˜ë¡ ìž„ê³„ê°’ í•˜í–¥ + ì¿¨ë‹¤ìš´ ë‹¨ì¶•. --profile ìœ„ì— ì¶”ê°€ ì¡°ì •",
+        help="반응 속도(0~1). 높을수록 임계값 하향 + 쿨다운 단축. --profile 위에 추가 조정",
     )
     parser.add_argument(
         "--combo",
         type=float,
         default=None,
-        help="ì—°íƒ€ ì†ë„(0~1). ë†’ì„ìˆ˜ë¡ COOLDOWN/MIN_GAPì„ profile ê¸°ì¤€ ìµœëŒ€ 60%%ê¹Œì§€ ë‹¨ì¶•",
+        help="연타 속도(0~1). 높을수록 COOLDOWN/MIN_GAP을 profile 기준 최대 60%%까지 단축",
     )
     parser.add_argument(
         "--debug-topk",
         type=int,
         default=0,
         metavar="K",
-        help="ì‹œí€€ìŠ¤ ëª¨ë¸ softmax ìƒìœ„ Kê°œë¥¼ í™”ë©´ ì™¼ìª½ì— í‘œì‹œ(0=ë”). íŽ€ì¹˜ê°€ ìˆœìœ„ì—ë§Œ ì˜¬ë¼ì˜¤ëŠ”ì§€Â·í™•ë¥ ì´ ì–¼ë§ˆì¸ì§€ í™•ì¸.",
+        help="시퀀스 모델 softmax 상위 K개를 화면 왼쪽에 표시(0=끔). 펀치가 순위에만 올라오는지·확률이 얼마인지 확인.",
     )
     parser.add_argument(
         "--skip-guard-single",
         action="store_true",
-        help="ë§ˆì§€ë§‰ í”„ë ˆìž„ ê°€ë“œ ë‹¨ì¼ ëª¨ë¸ ë‹¨ì¶•ì„ ëˆë‹¤. ê°€ë“œì— íŽ€ì¹˜ê°€ ë¨¹ížˆëŠ”ì§€ ë¹„êµìš©(ì‹œí€€ìŠ¤ë§Œìœ¼ë¡œ ë¼ë²¨ ê²°ì •).",
+        help="마지막 프레임 가드 단일 모델 단축을 끈다. 가드에 펀치가 먹히는지 비교용(시퀀스만으로 라벨 결정).",
     )
     parser.add_argument(
         "--full-body-squat",
         action="store_true",
-        help="ìŠ¤ì¿¼íŠ¸ íŒì • ì‹œ í•˜ì²´ visibility + ì—‰ë©ì´ í•˜ê°•ì„ ìš”êµ¬. ì „ì‹ ì´ ë³´ì¼ ë•Œë§Œ ìŠ¤ì¿¼íŠ¸ ì¸ì‹. ê¸°ë³¸ì€ ë”(ìƒë°˜ì‹ ë§Œìœ¼ë¡œë„ ìŠ¤ì¿¼íŠ¸ ê°€ëŠ¥).",
+        help="스쿼트 판정 시 하체 visibility + 엉덩이 하강을 요구. 전신이 보일 때만 스쿼트 인식. 기본은 끔(상반신만으로도 스쿼트 가능).",
     )
     parser.add_argument(
         "--punch-confidence",
         type=float,
         default=None,
         metavar="P",
-        help="punch_l/punch_rë§Œ ì±„íƒ ìµœì†Œ softmax(0~1). ìƒëžµ ì‹œ í”„ë¡œí•„ì˜ PUNCH_CONFIDENCE_THRESHOLD. ì•½í•˜ë©´ 0.55~0.88ë¡œ ì‹œí—˜.",
+        help="punch_l/punch_r만 채택 최소 softmax(0~1). 생략 시 프로필의 PUNCH_CONFIDENCE_THRESHOLD. 약하면 0.55~0.88로 시험.",
     )
     parser.add_argument(
         "--upper-windup-punch-suppress",
         action="store_true",
-        help="ë‚®ì€ ì¤€ë¹„(ì†ëª©ì´ ì–´ê¹¨ ì•„ëž˜)ì—ì„œ punch_l/r UDP í™•ì • ì–µì œ(ì–´í¼ ìœˆë“œì—… ì‹œ ì§ì„  ë¨¼ì € ë‚˜ê° ì™„í™”). ê¸°ë³¸ì€ ë”.",
+        help="낮은 준비(손목이 어깨 아래)에서 punch_l/r UDP 확정 억제(어퍼 윈드업 시 직선 먼저 나감 완화). 기본은 끔.",
     )
     parser.add_argument(
         "--upper-windup-punch-margin",
         type=float,
         default=None,
         metavar="M",
-        help="ì–µì œ íŒì •: ì†ëª© y > ì–´ê¹¨ y + M ì¼ ë•Œ ì§ì„  íŽ€ì¹˜ ë¯¸í™•ì •. ê¸°ë³¸ %.2f (--upper-windup-punch-suppress ì¼°ì„ ë•Œë§Œ)."
+        help="억제 판정: 손목 y > 어깨 y + M 일 때 직선 펀치 미확정. 기본 %.2f (--upper-windup-punch-suppress 켰을 때만)."
         % UPPER_WINDUP_WRIST_BELOW_SHOULDER_DEFAULT,
     )
     parser.add_argument(
@@ -593,19 +593,19 @@ def main():
         type=int,
         default=ACTION_REARM_OFF_ATTACK_FRAMES_DEFAULT,
         metavar="N",
-        help="íŽ€ì¹˜Â·ì–´í¼ UDP 1íšŒ í›„, punch/upper ê°€ ì•„ë‹Œ ë¼ë²¨ì´ Ní”„ë ˆìž„ ì—°ì†ì¼ ë•Œë§Œ ë‹¤ìŒ íŽ€ì¹˜Â·ì–´í¼ í—ˆìš©. ê¸°ë³¸ 3. 0=ë”.",
+        help="펀치·어퍼 UDP 1회 후, punch/upper 가 아닌 라벨이 N프레임 연속일 때만 다음 펀치·어퍼 허용. 기본 3. 0=끔.",
     )
     parser.add_argument(
         "--roi",
         action="store_true",
-        help="ROI ëª¨ë“œ: í”Œë ˆì´ì–´ ì¶”ì  í›„ ì£¼ë³€ë§Œ í¬ë¡­í•˜ì—¬ MediaPipeì— ì „ë‹¬. ì „ì‹œíšŒ ë“± ë§Žì€ ì‚¬ëžŒì´ ì§€ë‚˜ë‹¤ë‹ ë•Œ ê°„ì„­ ìµœì†Œí™”.",
+        help="ROI 모드: 플레이어 추적 후 주변만 크롭하여 MediaPipe에 전달. 전시회 등 많은 사람이 지나다닐 때 간섭 최소화.",
     )
     parser.add_argument(
         "--center-zone",
         type=float,
         default=0.3,
         metavar="M",
-        help="ê°€ë¡œ ì¤‘ì‹¬ ì˜ì—­ margin (0.0~0.5). ì„¸ë¡œëŠ” í•­ìƒ ì „ì²´. M=0.3 â†’ ê°€ë¡œ 30~70%%. ê¸°ë³¸ 0.3.",
+        help="가로 중심 영역 margin (0.0~0.5). 세로는 항상 전체. M=0.3 → 가로 30~70%%. 기본 0.3.",
     )
     args = parser.parse_args()
     if args.allow_tf_gpu:
@@ -618,7 +618,7 @@ def main():
     if args.punch_confidence is not None:
         jc = float(args.punch_confidence)
         if jc < 0.0 or jc > 1.0:
-            print("--punch-confidence ëŠ” 0~1 ì‚¬ì´ì—¬ì•¼ í•©ë‹ˆë‹¤. ë¬´ì‹œí•©ë‹ˆë‹¤.", flush=True)
+            print("--punch-confidence 는 0~1 사이여야 합니다. 무시합니다.", flush=True)
             _punch_confidence_override = None
         else:
             _punch_confidence_override = jc
@@ -660,7 +660,7 @@ def main():
         UPPER_MOTION_MEAN_ABS_MIN = 0.0015
         UPPER_L_MOTION_RELAX = 0.55
     elif args.profile == "classic":
-        # ì´ˆê¸°ë²„ì „ LSTM ëª¨ë¸ ì‚¬ìš© + ë‚®ì€ thresholds
+        # 초기버전 LSTM 모델 사용 + 낮은 thresholds
         if not args.seq_model:
             classic_path = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4_classic.keras")
             if os.path.isfile(classic_path):
@@ -723,7 +723,7 @@ def main():
     roi_mode: bool = bool(args.roi)
     zone_margin: float = max(0.0, min(0.5, float(args.center_zone)))
     CENTER_ZONE_X = (zone_margin, 1.0 - zone_margin)
-    CENTER_ZONE_Y = (0.0, 1.0)  # ì„¸ë¡œëŠ” í•­ìƒ ì „ì²´ â€” ìŠ¤ì¿¼íŠ¸ ì¸ì‹ ë°©í•´ ë°©ì§€
+    CENTER_ZONE_Y = (0.0, 1.0)  # 세로는 항상 전체 — 스쿼트 인식 방해 방지
     spawned_server = None
     cap = None
     landmarker = None
@@ -750,12 +750,12 @@ def main():
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         cap, cap_backend_note = open_cv_video_capture(args.camera_index, args.camera_backend)
         if not cap.isOpened():
-            print(f"ì›¹ìº ì„ ì—´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤. (--camera-index {args.camera_index} --camera-backend {args.camera_backend})")
+            print(f"웹캠을 열 수 없습니다. (--camera-index {args.camera_index} --camera-backend {args.camera_backend})")
             load_th.join(timeout=3.0)
             return
 
         print(
-            f"ì¹´ë©”ë¼ ì—´ë¦¼: index={args.camera_index} backend={args.camera_backend} ({cap_backend_note})",
+            f"카메라 열림: index={args.camera_index} backend={args.camera_backend} ({cap_backend_note})",
             flush=True,
         )
 
@@ -767,9 +767,9 @@ def main():
         if args.gpu:
             try:
                 _gpu_delegate = BaseOptions.Delegate.GPU
-                print("[ì„¤ì •] MediaPipe GPU delegate ì‚¬ìš© ì¤‘...", flush=True)
+                print("[설정] MediaPipe GPU delegate 사용 중...", flush=True)
             except AttributeError:
-                print("[ê²½ê³ ] ì´ MediaPipe ë²„ì „ì´ GPU delegateë¥¼ ì§€ì›í•˜ì§€ ì•ŠìŒ, CPU ì‚¬ìš©", flush=True)
+                print("[경고] 이 MediaPipe 버전이 GPU delegate를 지원하지 않음, CPU 사용", flush=True)
         options = PoseLandmarkerOptions(
             base_options=BaseOptions(model_asset_path=model_path, delegate=_gpu_delegate),
             running_mode=RunningMode.VIDEO,
@@ -795,7 +795,7 @@ def main():
         last_console_ping = 0.0
         while mp_th.is_alive() or not seq_model_ready.is_set():
             if time.time() - t_load0 > 900.0:
-                print("ëª¨ë¸ ë¡œë”© íƒ€ìž„ì•„ì›ƒ(900ì´ˆ).", flush=True)
+                print("모델 로딩 타임아웃(900초).", flush=True)
                 return
             wait_bits: list = []
             if mp_th.is_alive():
@@ -827,21 +827,21 @@ def main():
                     2,
                 )
                 try:
-                    cv2.imshow("Body Hero â€” ML Pose", frame_s)
+                    cv2.imshow("Body Hero — ML Pose", frame_s)
                     if (cv2.waitKey(1) & 0xFF) == ord("q"):
-                        print("ë¡œë”© ì¤‘ ì‚¬ìš©ìžê°€ Që¡œ ì¢…ë£Œí–ˆìŠµë‹ˆë‹¤.")
+                        print("로딩 중 사용자가 Q로 종료했습니다.")
                         return
                 except Exception:
                     gui_load_wait = False
             else:
                 time.sleep(0.05)
             if not gui_load_wait and time.time() - last_console_ping > 8.0:
-                print("ì¤€ë¹„ ì¤‘ (%s) %.0fì´ˆ ê²½ê³¼" % (status_line, time.time() - t_load0), flush=True)
+                print("준비 중 (%s) %.0f초 경과" % (status_line, time.time() - t_load0), flush=True)
                 last_console_ping = time.time()
 
         mp_th.join()
         if landmarker_holder["err"] is not None and _gpu_delegate != BaseOptions.Delegate.CPU:
-            print("[GPU] GPU delegate ì‹¤íŒ¨, CPUë¡œ í´ë°±", flush=True)
+            print("[GPU] GPU delegate 실패, CPU로 폴백", flush=True)
             _gpu_delegate = BaseOptions.Delegate.CPU
             options = PoseLandmarkerOptions(
                 base_options=BaseOptions(model_asset_path=model_path, delegate=BaseOptions.Delegate.CPU),
@@ -859,14 +859,14 @@ def main():
             raise landmarker_holder["err"]
         landmarker = landmarker_holder["lm"]
         if landmarker is None:
-            print("MediaPipe PoseLandmarker ì´ˆê¸°í™”ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.", flush=True)
+            print("MediaPipe PoseLandmarker 초기화에 실패했습니다.", flush=True)
             return
 
         def make_mp_image(rgb):
             return mp_core_image.Image(image_format=mp_core_image.ImageFormat.SRGB, data=rgb.copy(order="C"))
 
         def letterbox_square_bgr(bgr, side: int):
-            """ë¹„ì •ì‚¬ê° ìž…ë ¥ ì‹œ MediaPipe NORM_RECT ê²½ê³  ì™„í™”(ì •ì‚¬ê° ROI)."""
+            """비정사각형 입력 시 MediaPipe NORM_RECT 경고 완화(정사각형 ROI)."""
             h, w = bgr.shape[:2]
             if h <= 0 or w <= 0:
                 return bgr
@@ -885,22 +885,22 @@ def main():
         mp_square_side = max(process_w, process_h)
 
         if load_errors:
-            print("ëª¨ë¸ ë¡œë“œ ì‹¤íŒ¨:", load_errors[0], flush=True)
+            print("모델 로드 실패:", load_errors[0], flush=True)
             raise load_errors[0]
 
         if _use_local_inference:
             guard_ok = (
-                "ê°€ë“œ í´ë°± O"
+                "가드 폴백 O"
                 if _model_single is not None
-                else "ê°€ë“œ í´ë°± X(ì‹œí€€ìŠ¤ë§Œ, ë³´ì¡° ëª¨ë¸ì€ ë°±ê·¸ë¼ìš´ë“œ ë¡œë”© ì¤‘ì¼ ìˆ˜ ìžˆìŒ)"
+                else "가드 폴백 X(시퀀스만, 보조 모델은 백그라운드 로딩 중일 수 있음)"
             )
-            print("ì¶”ë¡ : ë¡œì»¬ ëª¨ë¸ (pose_server ë¶ˆí•„ìš”). %s (ì‹œí€€ìŠ¤ %dí”„ë ˆìž„)" % (guard_ok, SEQ_LEN), flush=True)
+            print("추론: 로컬 모델 (pose_server 불필요). %s (시퀀스 %d프레임)" % (guard_ok, SEQ_LEN), flush=True)
         else:
             ok, spawned_server = _ensure_pose_server(auto_spawn=not args.no_auto_server)
             if not ok:
                 return
 
-        print("ë¡œì»¬ ê°€ì¤‘ì¹˜ ì¤€ë¹„ ì™„ë£Œ (%.1fì´ˆ)" % (time.time() - t_load0), flush=True)
+        print("로컬 가중치 준비 완료 (%.1f초)" % (time.time() - t_load0), flush=True)
 
         last_action_time = 0.0
         last_any_punch_send_time = -999.0
@@ -914,23 +914,23 @@ def main():
         other_punch_count = 0
         squat_count = 0
         squat_armed = True
-        hip_y_recent: deque = deque(maxlen=15)  # ìµœê·¼ ì—‰ë©ì´ yì¢Œí‘œ (ìŠ¤ì¿¼íŠ¸ ì˜¤ì¸ì‹ ë°©ì§€ìš©)
-        last_upper_sent_side = None  # "l" | "r" â€” upper_l/upper_r ì§í›„ ë°˜ëŒ€ìª½ ì–´í¼ í™•ì • ì–µì œìš©
+        hip_y_recent: deque = deque(maxlen=15)  # 최근 엉덩이 y좌표 (스쿼트 오인식 방지용)
+        last_upper_sent_side = None  # "l" | "r" — upper_l/upper_r 직후 반대쪽 어퍼 확정 억제용
         upper_block_other_until_frame = 0
         punch_holdoff_until_frame = 0
         none_streak = 0
         frame_idx = 0
-        sequence_buffer = []  # ìµœê·¼ SEQ_LENí”„ë ˆìž„ (test_pose_liveì²˜ëŸ¼ í¬ì¦ˆ ìžˆìœ¼ë©´ ë¬´ì¡°ê±´ ì¶”ê°€)
+        sequence_buffer = []  # 최근 SEQ_LEN프레임 (test_pose_live처럼 포즈 있으면 무조건 추가)
         last_lm = None
         last_flat = None
-        prev_flat_norm = None  # ì§ì „ í¬ì¦ˆ ì •ê·œí™” ë²¡í„° â€” ì–´í¼ ì¤€ë¹„(ì €ì†) vs ì‹¤ì œ ê¶¤ì  êµ¬ë¶„ìš©
+        prev_flat_norm = None  # 직전 포즈 정규화 벡터 — 어퍼 준비(저속) vs 실제 궤적 구분용
         motion_mean_abs = 0.0
         pred_history: deque = deque(maxlen=12)
-        in_zone = False  # Godot ì „ì†¡ ì—¬ë¶€ë§Œ ì œì–´
+        in_zone = False  # Godot 전송 여부만 제어
         last_sent_side: str = ""  # "l" or "r", same-hand rearm용
         sent_side_none_streak: int = 0  # none 연속 프레임 카운터 (last_sent_side 리셋용)
 
-        # ë©€í‹° íŽ˜ë¥´ì†Œë‚˜ ì¶”ì  ìƒíƒœ (ì „ì‹œíšŒ ë“± ê°„ì„­ ë°©ì§€)
+        # 멀티 페르소나 추적 상태 (전시회 등 간섭 방지)
         tracked_center: Tuple[float, float] = (0.5, 0.5)
         tracked_width: float = 0.0
         tracked_bbox: Optional[Tuple[int, int, int, int]] = None
@@ -978,7 +978,7 @@ def main():
             return (int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys)))
 
         def _lower_body_visible(landmarks) -> bool:
-            """í•˜ì²´ ëžœë“œë§ˆí¬(23~28)ì˜ visibilityê°€ ì¶©ë¶„í•œì§€ í™•ì¸."""
+            """하체 랜드마크(23~28)의 visibility가 충분한지 확인."""
             if not landmarks or len(landmarks) < 29:
                 return False
             key_indices = [23, 24, 25, 26, 27, 28]
@@ -990,42 +990,42 @@ def main():
                     visible_count += 1
             return visible_count >= 3
 
-        print("ì›¹ìº  + ML(ì‹œí€€ìŠ¤) íŒì • â†’ Godot UDP")
-        print(f"ì¹´ë©”ë¼: index={args.camera_index} backend={args.camera_backend} â†’ {cap_backend_note}")
-        print(f"ì„¤ì •: í•´ìƒë„ {process_w}x{process_h}, ì‹œí€€ìŠ¤ {SEQ_LEN}í”„ë ˆìž„, FPS ëª©í‘œ {FPS_TARGET}")
+        print("웹캠 + ML(시퀀스) 판정 → Godot UDP")
+        print(f"카메라: index={args.camera_index} backend={args.camera_backend} → {cap_backend_note}")
+        print(f"설정: 해상도 {process_w}x{process_h}, 시퀀스 {SEQ_LEN}프레임, FPS 목표 {FPS_TARGET}")
         print(
-            f"íŽ€ì¹˜: ì§ì„ ì€ ì—°ì† {PUNCH_CONFIRM_FRAMES}í”„ë ˆìž„ í™•ì •, softmax í•˜í•œ "
-            f"{PUNCH_CONFIDENCE_THRESHOLD:.2f} (ì–´í¼ {UPPER_PUNCH_CONFIRM_FRAMES}í”„Â·{UPPER_CONFIDENCE_THRESHOLD:.2f})",
+            f"펀치: 직선은 연속 {PUNCH_CONFIRM_FRAMES}프레임 확정, softmax 하한 "
+            f"{PUNCH_CONFIDENCE_THRESHOLD:.2f} (어퍼 {UPPER_PUNCH_CONFIRM_FRAMES}프레임·{UPPER_CONFIDENCE_THRESHOLD:.2f})",
             flush=True,
         )
         if attack_rearm_n > 0:
             print(
-                f"ê³µê²© ìž¬ìž¥ì „: íŽ€ì¹˜Â·ì–´í¼ ì „ì†¡ í›„, ë¹„ê³µê²© ë¼ë²¨ {attack_rearm_n}í”„ë ˆìž„ ì—°ì† ì‹œì—ë§Œ ë‹¤ìŒ ê³µê²© ì „ì†¡. "
-                "ë”: --attack-rearm-frames 0",
+                f"공격 재장전: 펀치·어퍼 전송 후, 비공격 라벨 {attack_rearm_n}프레임 연속 시에만 다음 공격 전송. "
+                "끔: --attack-rearm-frames 0",
                 flush=True,
             )
         if suppress_low_chamber_punch:
             print(
-                f"ì–´í¼ ìœˆë“œì—… ì–µì œ ì¼¬: ì†ëª©ì´ ê°™ì€ìª½ ì–´ê¹¨ë³´ë‹¤ y+{upper_windup_margin:.2f} ì´ìƒ ì•„ëž˜ë©´ "
-                "punch_l/r UDP í™•ì • ì•ˆ í•¨.",
+                f"어퍼 윈드업 억제 켬: 손목이 같은쪽 어깨보다 y+{upper_windup_margin:.2f} 이상 아래면 "
+                "punch_l/r UDP 확정 안 함.",
                 flush=True,
             )
         if _debug_seq_topk <= 0 and _punch_confidence_override is None and not _skip_guard_single:
             print(
-                "íŒ: ìƒë‹¨ì— punch_l/punch_rì´ ì „í˜€ ì•ˆ ëœ¨ë©´: --debug-topk 5 (ì‹œí€€ìŠ¤ ìˆœìœ„Â·í™•ë¥ ), "
-                "ë˜ëŠ” --punch-confidence 0.55 / --skip-guard-single",
+                "팁: 상단에 punch_l/punch_r이 전혀 안 뜨면: --debug-topk 5 (시퀀스 순위·확률), "
+                "또는 --punch-confidence 0.55 / --skip-guard-single",
                 flush=True,
             )
         gui_enabled: bool = not args.headless
         if args.headless:
-            print("í—¤ë“œë¦¬ìŠ¤ ëª¨ë“œ: ë¯¸ë¦¬ë³´ê¸° ì°½ ì—†ìŒ. ì¢…ë£Œ: Ctrl+C")
+            print("헤드리스 모드: 미리보기 창 없음. 종료: Ctrl+C")
         else:
-            print("ì¢…ë£Œ: Q í‚¤ ë˜ëŠ” Ctrl+C")
-        print("â€» [ì•¡ì…˜] í•œ ì¤„ = UDPë¡œ ê²Œìž„ì— ì „ì†¡ 1íšŒìž…ë‹ˆë‹¤. ê°™ì€ ì¤„ì´ ì—°ì†ì´ë©´ ê·¸ë§Œí¼ ì—¬ëŸ¬ ë²ˆ ë‚˜ê°„ ê²ƒìž…ë‹ˆë‹¤.\n")
+            print("종료: Q 키 또는 Ctrl+C")
+        print("※ [액션] 한 줄 = UDP로 게임에 전송 1회입니다. 같은 줄이 연속이면 그만큼 여러 번 나간 것입니다.\n")
 
         def send(action: str):
             sock.sendto(action.encode("utf-8"), (GODOT_HOST, GODOT_PORT))
-            print(f"  [ì•¡ì…˜] {action}")
+            print(f"  [액션] {action}")
 
         try:
             while True:
@@ -1046,7 +1046,7 @@ def main():
                 selected_w: float = 0.0
                 result_poses = None
 
-                # test_pose_liveì™€ ë™ì¼: í¬ì¦ˆ ìžˆìœ¼ë©´ ë²„í¼ì— ì¶”ê°€, SEQ_LENê°œ ì°¨ë©´ ì˜ˆì¸¡ ìš”ì²­ (zone ë¬´ê´€)
+                # test_pose_live와 동일: 포즈 있으면 버퍼에 추가, SEQ_LEN개 차면 예측 요청 (zone 무관)
                 run_pose_this_frame = (frame_idx % PROCESS_EVERY_N_FRAMES == 0)
                 do_full_scan: bool = (
                     (frame_idx % ROI_FULL_SCAN_INTERVAL == 0)
@@ -1106,7 +1106,7 @@ def main():
                             result_poses, tracked_center, tracked_width
                         )
                         if best_lm is None:
-                            # ìœ íš¨í•œ í¬ì¦ˆ ì—†ìŒ (ì–´ê¹¨ ë„ˆë¹„ ë¹„ì •ìƒ) â†’ íƒì§€ ì‹¤íŒ¨ë¡œ ì²˜ë¦¬
+                            # 유효한 포즈 없음 (어깨 너비 비정상) → 탐지 실패로 처리
                             last_lm = None
                             sequence_buffer.clear()
                             globals().update(_ema_logits=None, _active_state=None)
@@ -1135,8 +1135,8 @@ def main():
                                 track_lost_frames += 1
                                 pose_accepted = False
                             elif width_collapse:
-                                # ê°€ë“œ ìžì„¸: ì–´ê¹¨ê°€ ê°€ë ¤ì ¸ ë„ˆë¹„ê°€ ì¼ì‹œì ìœ¼ë¡œ ê¸‰ê°.
-                                # ìœ„ì¹˜Â·bboxëŠ” ê°±ì‹ , ë„ˆë¹„ë§Œ ê¸°ì¡´ ê°’ ìœ ì§€.
+                                # 가드 자세: 어깨가 가려져 너비가 일시적으로 급감.
+                                # 위치·bbox는 갱신, 너비만 기존 값 유지.
                                 track_lost_frames = 0
                                 tracked_center = (cx, cy)
                                 tracked_bbox = bbox
@@ -1169,7 +1169,7 @@ def main():
                                     sequence_buffer.pop(0)
                                 if len(sequence_buffer) == SEQ_LEN:
                                     start_predict_async(sequence_buffer.copy())
-                                # ì—‰ë©ì´ ìœ„ì¹˜ ì¶”ì  (ìŠ¤ì¿¼íŠ¸ ì˜¤ì¸ì‹ ë°©ì§€)
+                                # 엉덩이 위치 추적 (스쿼트 오인식 방지)
                                 if last_lm and len(last_lm) > 24:
                                     try:
                                         hy23: float = last_lm[23].y if hasattr(last_lm[23], "y") else last_lm[23][1]
@@ -1270,7 +1270,7 @@ def main():
                         guarding = True
                 else:
                     if guarding:
-                        # ê°€ë“œ ì¤‘ MLì´ íŽ€ì¹˜ë¡œ íŠ€ì–´ë„ ì¹´ìš´íŠ¸ë§Œ ìŒ“ì´ë©´ guard_end ì§í›„ ë°”ë¡œ íŽ€ì¹˜ê°€ ë‚˜ê°€ëŠ” ê²ƒ ë°©ì§€
+                        # 가드 중 ML이 펀치로 튀어도 카운트만 쌓이면 guard_end 직후 바로 펀치가 나가는 것 방지
                         punch_l_count = 0
                         punch_r_count = 0
                         other_punch_pred = None
@@ -1339,7 +1339,7 @@ def main():
                                 if is_upper
                                 else OTHER_PUNCH_CONFIRM_FRAMES
                             )
-                            # ì–´í¼: ì²« ì¹´ìš´íŠ¸ëŠ” ëžœë“œë§ˆí¬ê°€ ì›€ì§ì¼ ë•Œë§Œ(ì¤€ë¹„ ìžì„¸ ì •ì§€ ì–µì œ). í•œë²ˆ ìŒ“ì¸ ë’¤ëŠ” í”¼í¬ì—ì„œ ë©ˆì¶°ë„ ìœ ì§€.
+                            # 어퍼: 첫 카운트는 랜드마크가 움직일 때만(준비 자세 정지 억제). 한번 쌓인 뒤는 피크에서 멈춰도 유지.
                             motion_min: float = UPPER_MOTION_MEAN_ABS_MIN
                             if pred == "upper_l":
                                 motion_min *= UPPER_L_MOTION_RELAX
@@ -1363,17 +1363,17 @@ def main():
                                 other_punch_pred = None
                                 other_punch_count = 0
                         elif pred == "squat":
-                            # ìŠ¤ì¿¼íŠ¸ 1íšŒ(ì§§ê²Œ ë‚´ë ¤ê°”ë‹¤ ì˜¬ë¼ì˜¤ê¸°)ë‹¹ 1íšŒë§Œ ì „ì†¡.
-                            # ìœ ì§€ ìžì„¸ì—ì„œ ë°˜ë³µ ì „ì†¡ë˜ì§€ ì•Šë„ë¡ squat_armed ë¡œ ìž¬ìž¥ì „.
+                            # 스쿼트 1회(짧게 내려갔다 올라오기)당 1회만 전송.
+                            # 유지 자세에서 반복 전송되지 않도록 squat_armed 로 재장전.
                             punch_l_count = 0
                             punch_r_count = 0
                             other_punch_pred = None
                             other_punch_count = 0
-                            # [ìŠ¤ì¿¼íŠ¸ ì˜¤ì¸ì‹ ë°©ì§€] í•˜ì²´ ëžœë“œë§ˆí¬ visibility ì²´í¬ + ì—‰ë©ì´ í•˜ê°• ì²´í¬
+                            # [스쿼트 오인식 방지] 하체 랜드마크 visibility 체크 + 엉덩이 하강 체크
                             squat_valid: bool = True
                             if full_body_squat and last_lm and len(last_lm) > 28:
                                 if not _lower_body_visible(last_lm):
-                                    # í•˜ì²´ê°€ í”„ë ˆìž„ ë°–(visibility ë‚®ìŒ) â†’ ìŠ¤ì¿¼íŠ¸ ë¶ˆê°€
+                                    # 하체가 프레임 밖(visibility 낮음) → 스쿼트 불가
                                     squat_valid = False
                                     squat_count = 0
                                 elif len(hip_y_recent) >= 8:
@@ -1381,26 +1381,26 @@ def main():
                                     new_hip: float = hip_y_recent[-1]
                                     dropped: bool = (new_hip - old_hip) > 0.02
                                     if not dropped:
-                                        # í•˜ì²´ëŠ” ë³´ì´ëŠ”ë° ì—‰ë©ì´ê°€ ë‚ ì•„ê°€ì§€ ì•ŠìŒ â†’ ìŠ¤ì¿¼íŠ¸ ì•„ë‹˜
+                                        # 하체는 보이는데 엉덩이가 내려가지 않음 → 스쿼트 아님
                                         squat_valid = False
                                         squat_count = 0
                             if squat_valid and squat_armed and squat_count >= SQUAT_CONFIRM_FRAMES:
                                 action = "squat"
                                 squat_armed = False
                         else:
-                            # none ë“±: íŽ€ì¹˜ ì¹´ìš´íŠ¸ëŠ” ìœ ì§€. ë™ìž‘ì´ ì§§ì•„ punchâ†’noneâ†’punch íŒ¨í„´ì´ í”í•¨.
+                            # none 등: 펀치 카운트는 유지. 동작이 짧아 punch→none→punch 패턴이 흔함.
                             if pred not in (None, "none"):
                                 punch_l_count = 0
                                 punch_r_count = 0
-                            other_punch_pred = None
-                            other_punch_count = 0
+                                other_punch_pred = None
+                                other_punch_count = 0
 
-                # ê°€ë“œ ì¤‘ì—ëŠ” íŽ€ì¹˜ UDP ë¬´ì‹œ (MLì´ ì–´í¼ë¡œ íŠ€ì–´ë„ ê²Œìž„ ê°€ë“œ ìœ ì§€)
+                # 가드 중에는 펀치 UDP 무시 (ML이 어퍼로 튀어도 게임 가드 유지)
                 if guarding and action and action in PUNCH_LABELS:
                     action = None
 
                 if action and action in PUNCH_LABELS:
-                    # ê°™ì€ ì† ì—°ì† ë°©ì§€: Lâ†’L ë˜ëŠ” Râ†’Rë§Œ ë§‰ìŒ (Lâ†’Râ†’L ì½¤ë³´ í—ˆìš©)
+                    # 같은 손 연속 방지: L→L 또는 R→R만 막음 (L→R→L 콤보 허용)
                     side_time = last_punch_l_send_time if "l" in action else last_punch_r_send_time
                     if (now - side_time) < COOLDOWN_SEC:
                         action = None
@@ -1447,7 +1447,7 @@ def main():
                     elif action in PUNCH_LABELS and "r" in action:
                         last_sent_side = "r"
 
-                # ìƒë‹¨ ì¤‘ì•™ì— í˜„ìž¬ ë™ìž‘ í‘œì‹œ
+                # 상단 중앙에 현재 동작 표시
                 pred_display = pred if pred else "none"
                 conf_display = confidence if pred else 0.0
                 font = cv2.FONT_HERSHEY_DUPLEX
@@ -1496,7 +1496,7 @@ def main():
                     return (lm[0], lm[1])
 
                 def _lm_to_frame(lm):
-                    """MediaPipe ì¢Œí‘œ(letterbox ì •ì‚¬ê°) â†’ frame_small ì¢Œí‘œë¡œ ë³€í™˜."""
+                    """MediaPipe 좌표(letterbox 정사각형) → frame_small 좌표로 변환."""
                     x_norm, y_norm = _get_lm_xy(lm)
                     top = (mp_square_side - process_h) // 2
                     left = (mp_square_side - process_w) // 2
@@ -1517,14 +1517,14 @@ def main():
 
                 if gui_enabled:
                     try:
-                        cv2.imshow("Body Hero â€” ML Pose", frame_small)
+                        cv2.imshow("Body Hero — ML Pose", frame_small)
                         if cv2.waitKey(1) & 0xFF == ord("q"):
                             break
                     except Exception:
                         gui_enabled = False
                         print(
-                            "OpenCV highgui ì—†ìŒ â†’ í—¤ë“œë¦¬ìŠ¤ë¡œ ì „í™˜í–ˆìŠµë‹ˆë‹¤ (ì¢…ë£Œ: Ctrl+C).\n"
-                            "  ì°½ì´ í•„ìš”í•˜ë©´: pip uninstall opencv-python-headless -y && pip install opencv-python"
+                            "OpenCV highgui 없음 → 헤드리스로 전환했습니다 (종료: Ctrl+C).\n"
+                            "  창이 필요하다면: pip uninstall opencv-python-headless -y && pip install opencv-python"
                         )
                 elapsed = time.time() - t0
                 time.sleep(max(0.0, 1 / FPS_TARGET - elapsed))
@@ -1538,7 +1538,7 @@ def main():
                 cv2.destroyAllWindows()
             except Exception:
                 pass
-            if landmarker is not None and getattr(landmarker, "close", None):
+            if landmarker is not None and hasattr(landmarker, "close"):
                 try:
                     landmarker.close()
                 except BaseException:
@@ -1555,10 +1555,9 @@ def main():
                     spawned_server.kill()
                 except Exception:
                     pass
-            print("pose_server ìžë™ ì‹œìž‘ í”„ë¡œì„¸ìŠ¤ë¥¼ ì¢…ë£Œí–ˆìŠµë‹ˆë‹¤.")
-    print("ì¢…ë£Œ.")
+            print("pose_server 자동 시작 프로세스를 종료했습니다.")
+    print("종료.")
 
 
 if __name__ == "__main__":
     main()
-

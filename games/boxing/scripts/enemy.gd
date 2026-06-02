@@ -274,7 +274,8 @@ func _load_intro_frames(sf: SpriteFrames) -> void:
 	sf.add_animation("intro")
 	sf.set_animation_loop("intro", false)
 	for t: Texture2D in texs:
-		sf.add_frame("intro", t, 0.18)
+		sf.add_frame("intro", t, 1.0)
+	sf.set_animation_speed("intro", 1.0 / maxf(0.18, 0.001))
 
 
 func _load_rage_frames(sf: SpriteFrames) -> void:
@@ -284,7 +285,8 @@ func _load_rage_frames(sf: SpriteFrames) -> void:
 	sf.add_animation("rage")
 	sf.set_animation_loop("rage", false)
 	for t: Texture2D in texs:
-		sf.add_frame("rage", t, 0.15)
+		sf.add_frame("rage", t, 1.0)
+	sf.set_animation_speed("rage", 1.0 / maxf(0.15, 0.001))
 
 
 func _load_special_frames(sf: SpriteFrames) -> void:
@@ -294,7 +296,7 @@ func _load_special_frames(sf: SpriteFrames) -> void:
 	sf.add_animation("special")
 	sf.set_animation_loop("special", false)
 	for t: Texture2D in texs:
-		sf.add_frame("special", t, 0.2)
+		sf.add_frame("special", t, 1.0)
 	sf.set_animation_speed("special", 1.0 / maxf(0.2, 0.001))
 
 

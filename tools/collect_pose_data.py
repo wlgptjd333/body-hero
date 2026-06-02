@@ -1,15 +1,15 @@
-﻿"""
-í¬ì¦ˆ ë°ì´í„° ìˆ˜ì§‘: ì›¹ìº  + MediaPipe â†’ ì–´ê¹¨ ë„ˆë¹„ ì •ê·œí™” â†’ 2ì´ˆ ë…¹í™” í›„ ë¼ë²¨ë³„ ì €ìž¥.
+"""
+포즈 데이터 수집: 웹캠 + MediaPipe → 어깨 너비 정규화 → 2초 녹화 후 라벨별 저장.
 
-- ë²ˆí˜¸ í‚¤ ëˆ„ë¦„ â†’ 1ì´ˆ ì§€ì—°(ì† ì¹˜ìš°ëŠ” ì‹œê°„) â†’ 2ì´ˆ ë…¹í™”. (í•œ ë²ˆ ë…¹í™” = í•œ ë²ˆì˜ ë™ìž‘ë§Œ)
-- ê¸°ë³¸: ë…¹í™”ëœ ëª¨ë“  í”„ë ˆìž„ì„ **ëˆ„ë¥¸ í‚¤ì™€ ë™ì¼í•œ ë¼ë²¨**ë¡œ ì €ìž¥(none/ê°€ë“œ/íŽ€ì¹˜ ê³µí†µ). í•™ìŠµ íƒ€ìž„ë¼ì¸ì´ ë‹¨ìˆœí•´ì§.
-- ì˜µì…˜ `--impact-labeling`: ì˜ˆì „ ë°©ì‹ â€” none/drop ë¶„í• , íŽ€ì¹˜Â·ì–´í¼ëŠ” ìž„íŒ©íŠ¸ ì¶”ì • í›„ êµ¬ê°„ ë¼ë²¨,
-  ê°€ë“œëŠ” 21í”„ë ˆìž„ ì´í›„ ì²« ê°€ë“œ ìžì„¸ë¶€í„° guard(ê·¸ ì „ì€ none).
+- 번호 키 누름 → 1초 지연(손 치우는 시간) → 2초 녹화. (한 번 녹화 = 한 번의 동작만)
+- 기본: 녹화된 모든 프레임을 **누른 키와 동일한 라벨**로 저장(none/가드/펀치 공통). 학습 타임라인이 단순해짐.
+- 옵션 `--impact-labeling`: 예전 방식 — none/drop 분할, 펀치·어퍼는 임팩트 추정 후 구간 라벨,
+  가드는 21프레임 이후 첫 가드 자세부터 guard(그 전은 none).
 
-ì‹¤í–‰: cd tools â†’ python collect_pose_data.py [--impact-labeling] [--drop-frames 4] [--camera-index 1] [--camera-backend dshow]
-í‚¤: 0=none, 1=guard, 2=punch_l, 3=punch_r, 4=upper_l, 5=upper_r, 6=squat, Q=ì¢…ë£Œ ë° ì €ìž¥
-(ê¸°ë³¸) ê° ë…¹í™”Â·ë°±ìŠ¤íŽ˜ì´ìŠ¤ ì§í›„ pose_data.json + pose_recordings_meta.json ìžë™ ì €ìž¥ â€” Q ì „ í¬ëž˜ì‹œì—ë„ ë””ìŠ¤í¬ì™€ ë™ê¸°í™”.
-10ê°œ ì´ìƒ ë™ìž‘ ì‹œ: --key-map key_map.json ì‚¬ìš©.
+실행: cd tools → python collect_pose_data.py [--impact-labeling] [--drop-frames 4] [--camera-index 1] [--camera-backend dshow]
+키: 0=none, 1=guard, 2=punch_l, 3=punch_r, 4=upper_l, 5=upper_r, 6=squat, Q=종료 및 저장
+(기본) 각 녹화·백스페이스 직후 pose_data.json + pose_recordings_meta.json 자동 저장 — Q 전 크래시에도 디스크와 동기화.
+10개 이상 동작 시: --key-map key_map.json 사용.
 """
 import os
 import json
@@ -25,10 +25,10 @@ DEFAULT_OUTPUT = os.path.join(SCRIPT_DIR, "pose_data.json")
 
 def flush_pose_to_disk(data_path: str, meta_path: str, data: list, recordings_meta: list) -> tuple:
     """
-    pose_data + ë©”íƒ€ë¥¼ í•œ ì„¸íŠ¸ë¡œ ì €ìž¥.
-    1) ë‘ íŒŒì¼ ëª¨ë‘ .tmp ì— ì“´ ë’¤ 2) pose_data.json êµì²´ 3) ë©”íƒ€ êµì²´.
-    (ë©”íƒ€ë¥¼ ë¨¼ì € êµì²´í•˜ë©´ ë°ì´í„°ë³´ë‹¤ ë©”íƒ€ë§Œ ê¸¸ì–´ì§€ëŠ” ë¶ˆì¼ì¹˜ê°€ ìƒê¸°ê¸° ì‰¬ì›Œ data ë¨¼ì €.)
-    ì„±ê³µ ì‹œ (True, ""), ì‹¤íŒ¨ ì‹œ (False, ì—ëŸ¬ë¬¸ìžì—´).
+    pose_data + 메타를 한 세트로 저장.
+    1) 두 파일 모두 .tmp 에 쓴 뒤 2) pose_data.json 교체 3) 메타 교체.
+    (메타를 먼저 교체하면 데이터보다 메타만 길어지는 불일치가 생기기 쉬워 data 먼저.)
+    성공 시 (True, ""), 실패 시 (False, 에러문자열).
     """
     d_tmp = data_path + ".tmp"
     m_tmp = meta_path + ".tmp"
@@ -49,7 +49,7 @@ def flush_pose_to_disk(data_path: str, meta_path: str, data: list, recordings_me
                     pass
         return False, str(e)
 
-# ë¼ë²¨ ë§¤í•‘ (í‚¤ â†’ ì•¡ì…˜). 0=none, 1=guard, 2=punch_l, 3=punch_r, 4=upper_l, 5=upper_r, 6=squat
+# 라벨 매핑 (키 → 액션). 0=none, 1=guard, 2=punch_l, 3=punch_r, 4=upper_l, 5=upper_r, 6=squat
 LABELS = {
     ord("0"): "none",
     ord("1"): "guard",
@@ -61,20 +61,20 @@ LABELS = {
 }
 
 BASE_RECORD_FPS = 30
-BASE_CHUNK_FRAMES = 60  # 2ì´ˆ * 30fps â€” ë¶„í• /í˜¸í™˜ ë‹¨ìœ„
-MS_PER_FRAME = 1000 // BASE_RECORD_FPS  # MediaPipe detect_for_videoëŠ” íƒ€ìž„ìŠ¤íƒ¬í”„ê°€ í•­ìƒ ì¦ê°€í•´ì•¼ í•¨
-DELAY_AFTER_KEY_SEC = 1.0   # í‚¤ ëˆ„ë¥¸ ë’¤ ì´ ì‹œê°„ë§Œí¼ ì§€ì—° í›„ ë…¹í™” ì‹œìž‘ (ìžì„¸ ë§ê°€ì§ ë°©ì§€)
-IMPACT_WINDOW = 3           # ìž„íŒ©íŠ¸ë¡œ ì¸ì •í•  í”„ë ˆìž„ ìˆ˜ (ì¤‘ì•™ Â±1 = 3í”„ë ˆìž„)
-HOLD_FRAMES = 5             # ìž„íŒ©íŠ¸ ì§í›„ ìœ ì§€ êµ¬ê°„ (í•™ìŠµ í¬í•¨)
-WINDUP_DROP_FRAMES = 4      # ìž„íŒ©íŠ¸ ì „ ìœˆë“œì—… drop (í•™ìŠµ ì œì™¸)
-RECOVERY_DROP_FRAMES = 4    # ìœ ì§€ ì§í›„ íšŒìˆ˜ drop (í•™ìŠµ ì œì™¸), ê·¸ ë‹¤ìŒì€ none
-LABEL_DROP = "drop"         # í•™ìŠµ ì‹œ ì œì™¸í•  ë¼ë²¨ (ëª¨í˜¸ êµ¬ê°„)
+BASE_CHUNK_FRAMES = 60  # 2초 * 30fps — 분할/호환 단위
+MS_PER_FRAME = 1000 // BASE_RECORD_FPS  # MediaPipe detect_for_video는 타임스탬프가 항상 증가해야 함
+DELAY_AFTER_KEY_SEC = 1.0   # 키 누른 뒤 이 시간만큼 지연 후 녹화 시작 (자세 망가짐 방지)
+IMPACT_WINDOW = 3           # 임팩트로 인정할 프레임 수 (중앙 ±1 = 3프레임)
+HOLD_FRAMES = 5             # 임팩트 직후 유지 구간 (학습 포함)
+WINDUP_DROP_FRAMES = 4      # 임팩트 전 윈드업 drop (학습 제외)
+RECOVERY_DROP_FRAMES = 4    # 유지 직후 회수 drop (학습 제외), 그 다음은 none
+LABEL_DROP = "drop"         # 학습 시 제외할 라벨 (모호 구간)
 
 
 def _recording_counts_from_data(data, recordings_meta=None):
     """
-    ë™ìž‘ë³„ ë…¹í™” íšŸìˆ˜. recordings_metaê°€ ìžˆìœ¼ë©´ íŽ€ì¹˜ë¥˜ëŠ” 'ëˆ„ë¥¸ í‚¤' ê¸°ì¤€ìœ¼ë¡œ ì…ˆ(ëŠ¦ê²Œ íŽ€ì¹˜í•´ë„ punch_lë¡œ ì§‘ê³„).
-    ë‚˜ë¨¸ì§€(none/ê°€ë“œ) êµ¬ê°„ì€ 60í”„ë ˆìž„ ë‹¨ìœ„ë¡œ ë‹¤ìˆ˜ ë¼ë²¨ë¡œ ì§‘ê³„.
+    동작별 녹화 횟수. recordings_meta가 있으면 펀치류는 '누른 키' 기준으로 셈(늦게 펀치해도 punch_l로 집계).
+    나머지(none/가드) 구간은 60프레임 단위로 다수 라벨로 집계.
     """
     from collections import Counter
     counts = {}
@@ -99,17 +99,17 @@ def _recording_counts_from_data(data, recordings_meta=None):
 
 
 def _format_counts(counts):
-    """ë™ìž‘ë³„ ë…¹í™” íšŸìˆ˜ ë¬¸ìžì—´ (ê°€ë…ì„±)."""
+    """동작별 녹화 횟수 문자열 (가독성)."""
     order = ["none", "guard", "punch_l", "punch_r", "upper_l", "upper_r", "squat"]
     parts = [f"{l}:{counts[l]}" for l in order if counts.get(l)]
     for k, v in counts.items():
         if k not in order:
             parts.append(f"{k}:{v}")
-    return "  ".join(parts) if parts else "(ì—†ìŒ)"
+    return "  ".join(parts) if parts else "(없음)"
 
 
 def _wrap_text_for_display(text, max_chars_per_line=42):
-    """ë¬¸ìžì—´ì„ ê³µë°± ë‹¨ìœ„ë¡œ ìž˜ë¼ ìµœëŒ€ max_chars_per_line ê¸€ìžì”© ì—¬ëŸ¬ ì¤„ë¡œ. OpenCV putTextìš©."""
+    """문자열을 공백 단위로 잘라 최대 max_chars_per_line 글자씩 여러 줄로. OpenCV putText용."""
     if not text or len(text) <= max_chars_per_line:
         return [text] if text else []
     parts = text.split()
@@ -117,7 +117,7 @@ def _wrap_text_for_display(text, max_chars_per_line=42):
     current = []
     current_len = 0
     for p in parts:
-        need = len(p) + (2 if current else 0)  # ê³µë°± 2ì¹¸
+        need = len(p) + (2 if current else 0)  # 공백 2칸
         if current and current_len + need > max_chars_per_line:
             lines.append("  ".join(current))
             current = [p]
@@ -129,34 +129,34 @@ def _wrap_text_for_display(text, max_chars_per_line=42):
         lines.append("  ".join(current))
     return lines
 
-# ì •ê·œí™”ëœ flat ëžœë“œë§ˆí¬ì—ì„œ ì¸ë±ìŠ¤ (33ì  * 3 = 99, ê° ëžœë“œë§ˆí¬ x,y,z ìˆœ)
-# 11=ì™¼ìª½ì–´ê¹¨, 12=ì˜¤ë¥¸ìª½ì–´ê¹¨, 15=ì™¼ìª½ì†ëª©, 16=ì˜¤ë¥¸ìª½ì†ëª©
+# 정규화된 flat 랜드마크에서 인덱스 (33점 * 3 = 99, 각 랜드마크 x,y,z 순)
+# 11=왼쪽어깨, 12=오른쪽어깨, 15=왼쪽손목, 16=오른쪽손목
 IDX = {"nose_x": 0, "nose_y": 1, "l_sh_x": 33, "l_sh_y": 34, "r_sh_x": 36, "r_sh_y": 37,
        "l_wr_x": 45, "l_wr_y": 46, "l_wr_z": 47, "r_wr_x": 48, "r_wr_y": 49, "r_wr_z": 50}
 
-# 0~20í”„ë ˆìž„(ì¸ë±ìŠ¤ 0~20)ì€ ìž„íŒ©íŠ¸/ê°€ë“œ ì‹œìž‘ í›„ë³´ì—ì„œ ì œì™¸. 21ë²ˆì§¸ í”„ë ˆìž„(ì¸ë±ìŠ¤ 21)ë¶€í„°ë§Œ í—ˆìš©.
+# 0~20프레임(인덱스 0~20)은 임팩트/가드 시작 후보에서 제외. 21번째 프레임(인덱스 21)부터만 허용.
 MIN_IMPACT_FRAME = 21
 
-# ì–´í¼ì»·: ì†ì´ ì–¼êµ´(ì½”) ë†’ì´ ê·¼ì²˜ì— ë„ë‹¬í•œ ìˆœê°„ì„ ìž„íŒ©íŠ¸ë¡œ ì”€. ì´ë§Œí¼ ì•„ëž˜ì—¬ë„ "ì–¼êµ´ ì£¼ë³€"ìœ¼ë¡œ ì¸ì •.
+# 어퍼컷: 손이 얼굴(코) 높이 근처에 도달한 순간을 임팩트로 씀. 이만큼 아래여도 "얼굴 주변"으로 인정.
 UPPER_FACE_LEVEL_MARGIN = 0.06
 
-# íŽ€ì¹˜ ìž„íŒ©íŠ¸: êµ¬ê°„ ë‚´ ì†ëª© z ìµœì†Œì— ì²˜ìŒ ë„ë‹¬í•œ í”„ë ˆìž„(ì•žìœ¼ë¡œ ë»—ìŒ).
-PUNCH_Z_NEAR_MARGIN = 0.02  # zê°€ ì´ë§Œí¼ ì´ìƒì´ë©´ "ì•„ì§ ë»—ê¸° ì „"ìœ¼ë¡œ ë´„
+# 펀치 임팩트: 구간 내 손목 z 최소에 처음 도달한 프레임(앞으로 뻗음).
+PUNCH_Z_NEAR_MARGIN = 0.02  # z가 이만큼 이상이면 "아직 뻗기 전"으로 봄
 
-# ê°€ë“œ íŒì • (íŽ€ì¹˜Â·ì–´í¼ì™€ ë³„ë„)
+# 가드 판정 (펀치·어퍼와 별도)
 GUARD_WRIST_ABOVE_SHOULDER_MARGIN = 0.06
 GUARD_WRIST_X_DIFF_MAX = 0.80
 
 
 def _valid_impact_indices(n: int):
-    """ìž„íŒ©íŠ¸ í›„ë³´ë¡œ ì“¸ ìˆ˜ ìžˆëŠ” ì¸ë±ìŠ¤ (MIN_IMPACT_FRAME ì´ìƒ). ë¹„ë©´ ë§ˆì§€ë§‰ í”„ë ˆìž„ë§Œ ë°˜í™˜."""
+    """임팩트 후보로 쓸 수 있는 인덱스 (MIN_IMPACT_FRAME 이상). 비면 마지막 프레임만 반환."""
     start = min(MIN_IMPACT_FRAME, n)
     r = list(range(start, n))
     return r if r else [n - 1]
 
 
 def _impact_frame_punch_l(frames_flat):
-    """ì™¼ì† íŽ€ì¹˜: 21í”„ë ˆìž„ ì´í›„ ì¤‘ ì™¼ì†ëª©(l_wr) z ìµœì†Œì— ì²˜ìŒ ë„ë‹¬í•œ í”„ë ˆìž„."""
+    """왼손 펀치: 21프레임 이후 중 왼손목(l_wr) z 최소에 처음 도달한 프레임."""
     if not frames_flat:
         return 0
     n = len(frames_flat)
@@ -170,7 +170,7 @@ def _impact_frame_punch_l(frames_flat):
 
 
 def _impact_frame_punch_r(frames_flat):
-    """ì˜¤ë¥¸ì† íŽ€ì¹˜: 21í”„ë ˆìž„ ì´í›„ ì¤‘ ì˜¤ë¥¸ì†ëª©(r_wr) z ìµœì†Œì— ì²˜ìŒ ë„ë‹¬í•œ í”„ë ˆìž„."""
+    """오른손 펀치: 21프레임 이후 중 오른손목(r_wr) z 최소에 처음 도달한 프레임."""
     if not frames_flat:
         return 0
     n = len(frames_flat)
@@ -184,7 +184,7 @@ def _impact_frame_punch_r(frames_flat):
 
 
 def _impact_frame_upper_l(frames_flat):
-    """ì™¼ì† ì–´í¼: 21í”„ë ˆìž„ ì´í›„ ì¤‘ ì™¼ì†ì´ ì–¼êµ´(ì½”) ë†’ì´ ê·¼ì²˜ì— ì²˜ìŒ ë„ë‹¬í•œ í”„ë ˆìž„."""
+    """왼손 어퍼: 21프레임 이후 중 왼손이 얼굴(코) 높이 근처에 처음 도달한 프레임."""
     if not frames_flat:
         return 0
     n = len(frames_flat)
@@ -194,12 +194,12 @@ def _impact_frame_upper_l(frames_flat):
         wr_y = frames_flat[i][IDX["l_wr_y"]]
         if wr_y <= nose_y + UPPER_FACE_LEVEL_MARGIN:
             return i
-    # ë„ë‹¬í•œ í”„ë ˆìž„ì´ ì—†ìœ¼ë©´ ê¸°ì¡´ì²˜ëŸ¼ ê°€ìž¥ ìœ„(y ìµœì†Œ)ì¸ í”„ë ˆìž„
+    # 도달한 프레임이 없으면 기존처럼 가장 위(y 최소)인 프레임
     return min(indices, key=lambda i: frames_flat[i][IDX["l_wr_y"]])
 
 
 def _impact_frame_upper_r(frames_flat):
-    """ì˜¤ë¥¸ì† ì–´í¼: 21í”„ë ˆìž„ ì´í›„ ì¤‘ ì˜¤ë¥¸ì†ì´ ì–¼êµ´(ì½”) ë†’ì´ ê·¼ì²˜ì— ì²˜ìŒ ë„ë‹¬í•œ í”„ë ˆìž„."""
+    """오른손 어퍼: 21프레임 이후 중 오른손이 얼굴(코) 높이 근처에 처음 도달한 프레임."""
     if not frames_flat:
         return 0
     n = len(frames_flat)
@@ -213,27 +213,27 @@ def _impact_frame_upper_r(frames_flat):
 
 
 def _is_guard_pose(flat):
-    """ì •ê·œí™”ëœ ëžœë“œë§ˆí¬ 1í”„ë ˆìž„ì´ 'ê°€ë“œ ìžì„¸'(ì–‘ì† ì˜¬ë¦¬ê³  ê°€ê¹Œì´)ì¸ì§€ íŒë³„.
-    ì–¼êµ´ì„ ê°€ë¦¬ë©´ ì½”ê°€ í”ë“¤ë¦¬ë¯€ë¡œ, ë†’ì´ ê¸°ì¤€ì„ ì–´ê¹¨ì„ ìœ¼ë¡œ í•¨."""
-    sh_y = (flat[IDX["l_sh_y"]] + flat[IDX["r_sh_y"]]) * 0.5  # ì–´ê¹¨ ì¤‘ì‹¬ ë†’ì´
+    """정규화된 랜드마크 1프레임이 '가드 자세'(양손 올리고 가까이)인지 판별.
+    얼굴을 가리면 코가 흔들리므로, 높이 기준을 어깨선으로 함."""
+    sh_y = (flat[IDX["l_sh_y"]] + flat[IDX["r_sh_y"]]) * 0.5  # 어깨 중심 높이
     l_wr_y, r_wr_y = flat[IDX["l_wr_y"]], flat[IDX["r_wr_y"]]
     l_wr_x, r_wr_x = flat[IDX["l_wr_x"]], flat[IDX["r_wr_x"]]
-    # ì–‘ì†ì´ ì–´ê¹¨ì„ ë³´ë‹¤ ìœ„(ë˜ëŠ” ë¹„ìŠ·) â†’ ì–¼êµ´ ê°€ë ¤ë„ ì•ˆì •
+    # 양손이 어깨선보다 위(또는 비슷) → 얼굴 가려도 안정
     both_high = (l_wr_y < sh_y + GUARD_WRIST_ABOVE_SHOULDER_MARGIN and
                  r_wr_y < sh_y + GUARD_WRIST_ABOVE_SHOULDER_MARGIN)
-    # ì–‘ì†ì´ ê°€ê¹Œì´ ëª¨ì—¬ ìžˆìŒ
+    # 양손이 가까이 모여 있음
     both_close = abs(l_wr_x - r_wr_x) < GUARD_WRIST_X_DIFF_MAX
     return both_high and both_close
 
 
 def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_frames=None, recovery_drop_frames=None, hold_until_end=False):
     """
-    ë…¹í™”ëœ 60í”„ë ˆìž„ì— ë¼ë²¨ ë¶€ì—¬. ìž„íŒ©íŠ¸/ê°€ë“œ ì‹œìž‘ì€ 21í”„ë ˆìž„(ì¸ë±ìŠ¤ 21) ì´í›„ì—ì„œë§Œ ì¸ì •.
-    - none: ì „ë¶€ none.
-    - guard: 21í”„ë ˆìž„ ì´í›„ ì²« _is_guard_pose í”„ë ˆìž„ë¶€í„° ëê¹Œì§€ guard.
-    - íŽ€ì¹˜(punch_l/r): 21í”„ë ˆìž„ ì´í›„ ì†ëª© z ìµœì†Œ(ì•žìœ¼ë¡œ ë»—ìŒ) = ìž„íŒ©íŠ¸.
-    - ì–´í¼: 21í”„ë ˆìž„ ì´í›„ ì¤‘ í•´ë‹¹ ì†ì´ ì–¼êµ´(ì½”) ë†’ì´ ê·¼ì²˜ì— ì²˜ìŒ ë„ë‹¬í•œ í”„ë ˆìž„ = ìž„íŒ©íŠ¸.
-    ìœˆë“œì—…=drop, ìž„íŒ©íŠ¸ ì „í›„ 3í”„ë ˆìž„+ëê¹Œì§€=í•´ë‹¹ ë™ìž‘. hold_until_end=Trueë©´ ëê¹Œì§€ ë™ìž‘.
+    녹화된 60프레임에 라벨 부여. 임팩트/가드 시작은 21프레임(인덱스 21) 이후에서만 인정.
+    - none: 전부 none.
+    - guard: 21프레임 이후 첫 _is_guard_pose 프레임부터 끝까지 guard.
+    - 펀치(punch_l/r): 21프레임 이후 손목 z 최소(앞으로 뻗음) = 임팩트.
+    - 어퍼: 21프레임 이후 중 해당 손이 얼굴(코) 높이 근처에 처음 도달한 프레임 = 임팩트.
+    윈드업=drop, 임팩트 전후 3프레임+끝까지=해당 동작. hold_until_end=True면 끝까지 동작.
     """
     if not frames_flat:
         return [], None
@@ -243,7 +243,7 @@ def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_fra
     n = len(frames_flat)
     if label == "none":
         return [{"label": "none", "landmarks": flat} for flat in frames_flat], None
-    # ê°€ë“œ: 21í”„ë ˆìž„ ì´í›„ì—ì„œë§Œ ê°€ë“œ ì‹œìž‘ íƒìƒ‰. í•œ ë²ˆ ì¸ì‹ë˜ë©´ ê·¸ í”„ë ˆìž„ë¶€í„° ëê¹Œì§€ ì „ë¶€ guard.
+    # 가드: 21프레임 이후에서만 가드 시작 탐색. 한 번 인식되면 그 프레임부터 끝까지 전부 guard.
     if label == "guard":
         guard_start = None
         for i, flat in enumerate(frames_flat):
@@ -274,7 +274,7 @@ def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_fra
     half = IMPACT_WINDOW // 2
     action_low = max(0, idx - half)
     if hold_until_end:
-        action_high = n  # ìž„íŒ©íŠ¸ ì´í›„ ë‚¨ì€ í”„ë ˆìž„ ì „ë¶€ í•´ë‹¹ ë™ìž‘
+        action_high = n  # 임팩트 이후 남은 프레임 전부 해당 동작
         rdf = 0
     else:
         action_high = min(n, idx + half + 1 + hf)
@@ -294,7 +294,7 @@ def _label_recorded_frames(label, frames_flat, hold_frames=None, windup_drop_fra
 
 
 def _label_recorded_frames_uniform(label: str, frames_flat: list) -> tuple:
-    """ë…¹í™” Ní”„ë ˆìž„ ì „ë¶€ë¥¼ ëˆ„ë¥¸ í‚¤(label)ë¡œ í†µì¼. ë©”íƒ€ì—ëŠ” impact_idxë¥¼ ë„£ì§€ ì•ŠìŒ(í•™ìŠµì´ ì „ êµ¬ê°„ ì‚¬ìš©)."""
+    """녹화 N프레임 전부를 누른 키(label)로 통일. 메타에는 impact_idx를 넣지 않음(학습이 전 구간 사용)."""
     if not frames_flat:
         return [], None
     out = [{"label": label, "landmarks": flat} for flat in frames_flat]
@@ -330,7 +330,7 @@ POSE_CONNECTIONS = (
 def _download_pose_model(model_path, model_url, fallback_url=None):
     if os.path.isfile(model_path):
         return
-    print("Pose Landmarker ëª¨ë¸ ë‹¤ìš´ë¡œë“œ ì¤‘...")
+    print("Pose Landmarker 모델 다운로드 중...")
     import urllib.request
     urls = [model_url]
     if fallback_url:
@@ -338,69 +338,69 @@ def _download_pose_model(model_path, model_url, fallback_url=None):
     for url in urls:
         try:
             urllib.request.urlretrieve(url, model_path)
-            print("ë‹¤ìš´ë¡œë“œ ì™„ë£Œ:", model_path)
+            print("다운로드 완료:", model_path)
             return
         except Exception as e:
-            print("  ì‹œë„ ì‹¤íŒ¨:", url[:50], "...", e)
+            print("  시도 실패:", url[:50], "...", e)
     raise SystemExit(1)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="í¬ì¦ˆ ë°ì´í„° ìˆ˜ì§‘ (ê¸°ì¡´ ë°ì´í„° ì´ì–´ì„œ ì €ìž¥). ê¸°ë³¸ì€ 60í”„ë ˆìž„ ì „ë¶€ ëˆ„ë¥¸ í‚¤ ë¼ë²¨."
+        description="포즈 데이터 수집 (기존 데이터 이어서 저장). 기본은 60프레임 전부 누른 키 라벨."
     )
     parser.add_argument(
         "--impact-labeling",
         action="store_true",
-        help="ìž„íŒ©íŠ¸/none/drop ë¶„í•  ë¼ë²¨(êµ¬ ë°©ì‹). ê¸°ë³¸ì€ ë…¹í™” ì „ í”„ë ˆìž„ì„ ëˆ„ë¥¸ í‚¤ë¡œ í†µì¼.",
+        help="임팩트/none/drop 분할 라벨(구 방식). 기본은 녹화 전 프레임을 누른 키로 통일.",
     )
     parser.add_argument(
         "--drop-frames",
         type=int,
         default=4,
-        help="--impact-labeling ì¼ ë•Œë§Œ ì‚¬ìš©: ìœˆë“œì—… drop í”„ë ˆìž„ ìˆ˜ (ê¸°ë³¸ 4)",
+        help="--impact-labeling 일 때만 사용: 윈드업 drop 프레임 수 (기본 4)",
     )
-    parser.add_argument("--key-map", type=str, default=None, help="í‚¤â†’ë¼ë²¨ JSON (ì˜ˆ: {\"0\":\"none\",\"1\":\"guard\",\"8\":\"extra1\",\"a\":\"extra2\"}). 10ê°œ ì´ìƒ ë™ìž‘ ì‹œ ì‚¬ìš©.")
+    parser.add_argument("--key-map", type=str, default=None, help="키→라벨 JSON (예: {\"0\":\"none\",\"1\":\"guard\",\"8\":\"extra1\",\"a\":\"extra2\"}). 10개 이상 동작 시 사용.")
     parser.add_argument(
         "--autosave",
         action="store_true",
-        help="ë…¹í™”/ë°±ìŠ¤íŽ˜ì´ìŠ¤ ì§í›„ ë””ìŠ¤í¬ ìžë™ ì €ìž¥ (ê¸°ë³¸: ì €ìž¥ ì•ˆ í•¨, Q ì¢…ë£Œ ì‹œë§Œ ì €ìž¥)",
+        help="녹화/백스페이스 직후 디스크 자동 저장 (기본: 저장 안 함, Q 종료 시만 저장)",
     )
     parser.add_argument(
         "--duration",
         type=float,
         default=20.0,
-        help="1íšŒ ë…¹í™” ê¸¸ì´(ì´ˆ). 2ë³´ë‹¤ í¬ë©´ 2ì´ˆ ë‹¨ìœ„ë¡œ ìžë™ë¶„í•  (ê¸°ë³¸ 20)",
+        help="1회 녹화 길이(초). 2보다 크면 2초 단위로 자동분할 (기본 20)",
     )
     parser.add_argument(
         "--camera-index",
         type=int,
         default=0,
         metavar="N",
-        help="OpenCV ì¹´ë©”ë¼ ì¸ë±ìŠ¤ (ê¸°ë³¸ 0). USBê°€ ì•ˆ ë³´ì´ë©´ 1Â·2 ë˜ëŠ” ëª©ë¡ ìƒˆë¡œê³ ì¹¨ìœ¼ë¡œ í™•ì¸.",
+        help="OpenCV 카메라 인덱스 (기본 0). USB가 안 보이면 1·2 또는 목록 새로고침으로 확인.",
     )
     parser.add_argument(
         "--camera-backend",
         choices=["auto", "default", "dshow", "msmf"],
         default="auto",
-        help="Windowsì—ì„œ USB ì›¹ìº  ì¸ì‹ ë¬¸ì œ ì‹œ dshow ê¶Œìž¥ (ê²Œìž„ ì„¤ì •ê³¼ ë™ì¼ ì˜µì…˜).",
+        help="Windows에서 USB 웹캠 인식 문제 시 dshow 권장 (게임 설정과 동일 옵션).",
     )
     parser.add_argument(
         "--full-model",
         action="store_true",
-        help="Full Pose Landmarker ì‚¬ìš© (ë” ì •í™•, ë” ëŠë¦¼). ê¸°ë³¸ì€ Lite.",
+        help="Full Pose Landmarker 사용 (더 정확, 더 느림). 기본은 Lite.",
     )
     args = parser.parse_args()
 
     if args.duration < 2.0:
         args.duration = 2.0
-        print("[ê²½ê³ ] ìµœì†Œ ë…¹í™” ê¸¸ì´ëŠ” 2ì´ˆìž…ë‹ˆë‹¤. 2ì´ˆë¡œ ì„¤ì •í•©ë‹ˆë‹¤.")
+        print("[경고] 최소 녹화 길이는 2초입니다. 2초로 설정합니다.")
     remaining = args.duration * BASE_RECORD_FPS % BASE_CHUNK_FRAMES
     if remaining != 0:
         adjusted = round(args.duration / 2.0) * 2.0
         if adjusted < 2.0:
             adjusted = 2.0
-        print(f"[ê²½ê³ ] ë…¹í™” ê¸¸ì´ëŠ” 2ì´ˆ ë‹¨ìœ„ì—¬ì•¼ í•©ë‹ˆë‹¤. {args.duration}ì´ˆ â†’ {adjusted:.0f}ì´ˆë¡œ ì¡°ì •.")
+        print(f"[경고] 녹화 길이는 2초 단위여야 합니다. {args.duration}초 → {adjusted:.0f}초로 조정.")
         args.duration = adjusted
 
     record_sec = args.duration
@@ -415,9 +415,9 @@ def main():
             for k, v in km.items():
                 if isinstance(k, str) and len(k) == 1 and isinstance(v, str):
                     labels_map[ord(k)] = v
-            print(f"í‚¤ë§µ ë¡œë“œ: {args.key_map} ({len(km)}ê°œ)")
+            print(f"키맵 로드: {args.key_map} ({len(km)}개)")
         except Exception as e:
-            print(f"í‚¤ë§µ ë¡œë“œ ì‹¤íŒ¨: {e}")
+            print(f"키맵 로드 실패: {e}")
 
     use_full = args.full_model
     model_path = MODEL_PATH_FULL if use_full else MODEL_PATH_LITE
@@ -442,18 +442,18 @@ def main():
     cap, cap_backend_label = open_cv_video_capture(args.camera_index, args.camera_backend)
     if not cap.isOpened():
         print(
-            "ì›¹ìº ì„ ì—´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤. --camera-index ë˜ëŠ” --camera-backend dshow ë¥¼ ë°”ê¿” ë³´ì„¸ìš”. "
+            "웹캠을 열 수 없습니다. --camera-index 또는 --camera-backend dshow 를 바꿔 보세요. "
             "(python list_cameras.py)"
         )
         return
     print(
-        f"ì¹´ë©”ë¼: index={args.camera_index}, backend={args.camera_backend} â†’ ì‹¤ì œ: {cap_backend_label}"
+        f"카메라: index={args.camera_index}, backend={args.camera_backend} → 실제: {cap_backend_label}"
     )
 
     out_path = os.environ.get("POSE_DATA_OUTPUT", DEFAULT_OUTPUT)
     data = []
     recordings_meta = []
-    load_ok = True  # ê¸°ì¡´ íŒŒì¼ì„ ì •ìƒ ë¡œë“œí–ˆìœ¼ë©´ True
+    load_ok = True  # 기존 파일을 정상 로드했으면 True
     if os.path.isfile(out_path):
         try:
             with open(out_path, "r", encoding="utf-8") as f:
@@ -474,7 +474,7 @@ def main():
             data = []
             load_ok = False
     meta_path = os.path.join(SCRIPT_DIR, "pose_recordings_meta.json")
-    # Q ì¢…ë£Œ ì‹œÂ·ìžë™ ì €ìž¥ ì‹œ ë™ì¼ ê²½ë¡œ ì‚¬ìš© (ê¸°ì¡´ íŒŒì¼ í˜•ì‹ ì˜¤ë¥˜ ì‹œ _new_session)
+    # Q 종료 시·자동 저장 시 동일 경로 사용 (기존 파일 형식 오류 시 _new_session)
     save_data_path = out_path
     save_meta_path = meta_path
     if not load_ok and os.path.isfile(out_path):
@@ -482,7 +482,7 @@ def main():
         save_data_path = base + "_new_session" + ext
         mb, me = os.path.splitext(meta_path)
         save_meta_path = mb + "_new_session" + me
-        print(f"[ì°¸ê³ ] ê¸°ì¡´ pose_data í˜•ì‹ ì˜¤ë¥˜ â†’ ì´ë²ˆ ì„¸ì…˜ ì €ìž¥ ê²½ë¡œ: {save_data_path}")
+        print(f"[참고] 기존 pose_data 형식 오류 → 이번 세션 저장 경로: {save_data_path}")
 
     if os.path.isfile(meta_path) and data:
         try:
@@ -498,58 +498,58 @@ def main():
     process_w, process_h = 640, 480
     cooldown = 0.0
     cooldown_sec = 0.0
-    video_ts_ms = 0  # MediaPipeì— ë„˜ê¸°ëŠ” íƒ€ìž„ìŠ¤íƒ¬í”„ (ì „ì²´ì—ì„œ ë‹¨ì¡° ì¦ê°€ í•„ìˆ˜)
+    video_ts_ms = 0  # MediaPipe에 넘기는 타임스탬프 (전체에서 단조 증가 필수)
 
     counts_str = ""
     last_data_len = -1
     if data:
         counts_str = _format_counts(_recording_counts_from_data(data, recordings_meta))
         last_data_len = len(data)
-        print(f"ê¸°ì¡´ ë°ì´í„° ë¶ˆëŸ¬ì˜´: {out_path} ({len(data)}í”„ë ˆìž„, ë©”íƒ€ {len(recordings_meta)}ê°œ). ì¶”ê°€ ë…¹í™” í›„ Që¡œ ì¢…ë£Œ ì‹œ ì €ìž¥ë©ë‹ˆë‹¤.")
+        print(f"기존 데이터 불러옴: {out_path} ({len(data)}프레임, 메타 {len(recordings_meta)}개). 추가 녹화 후 Q로 종료 시 저장됩니다.")
         if autosave_enabled:
-            print("  (ìžë™ ì €ìž¥ ì¼¬: ë…¹í™”Â·ë°±ìŠ¤íŽ˜ì´ìŠ¤ë§ˆë‹¤ ë””ìŠ¤í¬ì— ë°˜ì˜ â€” Q ì „ í¬ëž˜ì‹œ ëŒ€ë¹„)")
-        print(f"ë™ìž‘ë³„ ë…¹í™” íšŸìˆ˜(ë©”íƒ€Â·í‚¤ ëˆ„ë¥¸ íšŒì°¨): {counts_str}")
+            print("  (자동 저장 켬: 녹화·백스페이스마다 디스크에 반영 — Q 전 크래시 대비)")
+        print(f"동작별 녹화 횟수(메타·키 누른 회차): {counts_str}")
         print(
-            "  â€» ìœ„ ìˆ«ìžëŠ” pose_recordings_meta.json ì˜ ë…¹í™” íšŸìˆ˜ìž…ë‹ˆë‹¤. "
+            "  ※ 위 숫자는 pose_recordings_meta.json 의 녹화 횟수입니다. "
             + (
-                "í”„ë ˆìž„ë§ˆë‹¤ ì°ížŒ ë¼ë²¨(ìž„íŒ©íŠ¸Â·drop)ê³¼ ë‹¤ë¥¼ ìˆ˜ ìžˆìŠµë‹ˆë‹¤. "
+                "프레임마다 찍힌 라벨(임팩트·drop)과 다를 수 있습니다. "
                 if args.impact_labeling
-                else "ì „ì²´ í†µì¼ ëª¨ë“œì—ì„œëŠ” í”„ë ˆìž„ ë¼ë²¨ì´ í‚¤ì™€ ê°™ì•„ íšŸìˆ˜ê°€ ë§žìŠµë‹ˆë‹¤. "
+                else "전체 통일 모드에서는 프레임 라벨이 키와 같아 횟수가 맞습니다. "
             )
-            + "ë°ì´í„° ì ê²€: python report_pose_lr_balance.py / ë¼ë²¨ ìž¬ìƒì„±: python relabel_pose_with_collect.py"
+            + "데이터 점검: python report_pose_lr_balance.py / 라벨 재생성: python relabel_pose_with_collect.py"
         )
     if args.impact_labeling:
-        print(f"í˜„ìž¬ ì„¤ì •: ë¼ë²¨=ìž„íŒ©íŠ¸ ë¶„í•  | ìœˆë“œì—… drop={args.drop_frames}í”„ë ˆìž„ (íŽ€ì¹˜/ì–´í¼ëŠ” ëê¹Œì§€ ìœ ì§€)")
+        print(f"현재 설정: 라벨=임팩트 분할 | 윈드업 drop={args.drop_frames}프레임 (펀치/어퍼는 끝까지 유지)")
     else:
-        print("í˜„ìž¬ ì„¤ì •: ë¼ë²¨=60í”„ë ˆìž„ ì „ë¶€ ëˆ„ë¥¸ í‚¤ë¡œ í†µì¼ (ë©”íƒ€ì— impact_idx ì—†ìŒ â†’ í•™ìŠµì´ ì „ êµ¬ê°„ ì‚¬ìš©)")
+        print("현재 설정: 라벨=60프레임 전부 누른 키로 통일 (메타에 impact_idx 없음 → 학습이 전 구간 사용)")
     print("=" * 60)
-    print(f"ìžë™ ì €ìž¥: {'ì¼¬' if autosave_enabled else 'ë”'} (Aí‚¤ë¡œ ì „í™˜)")
-    dur_str = f"{args.duration}ì´ˆ" if args.duration > 2 else "2ì´ˆ"
-    print(f"ë…¹í™” ê¸¸ì´: {dur_str} (Tí‚¤ë¡œ 2ì´ˆâ†”{dur_str} ì „í™˜, 2ì´ˆ ì´ˆê³¼ ì‹œ ìžë™ë¶„í• )")
+    print(f"자동 저장: {'켬' if autosave_enabled else '끔'} (A키로 전환)")
+    dur_str = f"{args.duration}초" if args.duration > 2 else "2초"
+    print(f"녹화 길이: {dur_str} (T키로 2초↔{dur_str} 전환, 2초 초과 시 자동분할)")
     if args.impact_labeling:
-        print("í¬ì¦ˆ ë°ì´í„° ìˆ˜ì§‘ (ìž„íŒ©íŠ¸/ê°€ë“œ êµ¬ê°„ ë¼ë²¨ë§) â€” ì¢Œìš° íŽ€ì¹˜ í†µí•©")
+        print("포즈 데이터 수집 (임팩트/가드 구간 라벨링) — 좌우 펀치 통합")
     else:
-        print("í¬ì¦ˆ ë°ì´í„° ìˆ˜ì§‘ (ì „ í”„ë ˆìž„ ë‹¨ì¼ ë¼ë²¨) â€” ì¢Œìš° íŽ€ì¹˜ í†µí•©")
+        print("포즈 데이터 수집 (전 프레임 단일 라벨) — 좌우 펀치 통합")
     key_line = "  " + "  ".join(f"[{chr(c)}]{labels_map[c]}" for c in sorted(labels_map.keys()))
     print(key_line)
     print()
-    print("  ì‚¬ìš©ë²•: ë™ìž‘ì„ í•œ ë’¤ â†’ í•´ë‹¹ ë²ˆí˜¸ í‚¤ë¥¼ ëˆ„ë¥´ì„¸ìš”.")
-    print("  â†’ 1ì´ˆ ì§€ì—° í›„ ë…¹í™” (í‚¤ ëˆ„ë¥´ëŠ” ìˆœê°„ì€ ë…¹í™”ì— ì•ˆ ë“¤ì–´ê°).")
+    print("  사용법: 동작을 한 뒤 → 해당 번호 키를 누르세요.")
+    print("  → 1초 지연 후 녹화 (키 누르는 순간은 녹화에 안 들어감).")
     if args.impact_labeling:
-        print("  - íŽ€ì¹˜/ì–´í¼: ë™ìž‘ì„ ë»—ì€ ì±„ë¡œ ëê¹Œì§€ ìœ ì§€í•˜ë©° ë…¹í™” (íšŒìˆ˜í•˜ì§€ ë§ˆì„¸ìš”). ìž„íŒ©íŠ¸ ì´í›„ ëê¹Œì§€ í•´ë‹¹ ë¼ë²¨, ìœˆë“œì—…ë§Œ drop.")
-        print("  - none/ê°€ë“œ: í•´ë‹¹ êµ¬ê°„ë§Œ ë¼ë²¨(ê°€ë“œëŠ” ìžì„¸ ì¸ì‹ í›„ guard).")
-        print("  í•œ ë²ˆ ë…¹í™” = í•œ ë²ˆì˜ ë™ìž‘ë§Œ (ì—°ì†ìœ¼ë¡œ ê°™ì€ íŽ€ì¹˜ë§Œ ë°˜ë³µí•˜ì§€ ë§ ê²ƒ).")
+        print("  - 펀치/어퍼: 동작을 뻗은 채로 끝까지 유지하며 녹화 (회수하지 마세요). 임팩트 이후 끝까지 해당 라벨, 윈드업만 drop.")
+        print("  - none/가드: 해당 구간만 라벨(가드는 자세 인식 후 guard).")
+        print("  한 번 녹화 = 한 번의 동작만 (연속으로 같은 펀치만 반복하지 말 것).")
         print()
-        print("  [íŒ] íŽ€ì¹˜/ì–´í¼: ì²˜ìŒ 1ì´ˆëŠ” ì‚´ì§ ì›€ì§ì´ë‹¤ê°€ ëŠ¦ê²Œ íŽ€ì¹˜í•˜ë©´(ì˜ˆ: ë§ˆì§€ë§‰ 20í”„ë ˆìž„ë§Œ íŽ€ì¹˜)")
-        print("       none ë‹¤ì–‘ì„±â†‘, íŽ€ì¹˜ êµ¬ê°„ ê¸¸ì´ ìžì—° ì¡°ì ˆ â†’ í•™ìŠµì— ë„ì›€.")
+        print("  [팁] 펀치/어퍼: 처음 1초는 살짝 움직이다가 늦게 펀치하면(예: 마지막 20프레임만 펀치)")
+        print("       none 다양성↑, 펀치 구간 길이 자연 조절 → 학습에 도움.")
     else:
-        print("  - ê° ë…¹í™”ì˜ ëª¨ë“  í”„ë ˆìž„ì´ ëˆ„ë¥¸ í‚¤ì™€ ê°™ì€ ë¼ë²¨ë¡œ ì €ìž¥ë©ë‹ˆë‹¤ (none/ê°€ë“œ/íŽ€ì¹˜ ê³µí†µ).")
-        print("  - êµ¬ ë°©ì‹(ìž„íŒ©íŠ¸Â·dropÂ·ê°€ë“œ ì‹œìž‘ íƒìƒ‰): python collect_pose_data.py --impact-labeling")
-        print("  í•œ ë²ˆ ë…¹í™” = í•œ ë²ˆì˜ ë™ìž‘ë§Œ (ì—°ì†ìœ¼ë¡œ ê°™ì€ íŽ€ì¹˜ë§Œ ë°˜ë³µí•˜ì§€ ë§ ê²ƒ).")
+        print("  - 각 녹화의 모든 프레임이 누른 키와 같은 라벨로 저장됩니다 (none/가드/펀치 공통).")
+        print("  - 구 방식(임팩트·drop·가드 시작 탐색): python collect_pose_data.py --impact-labeling")
+        print("  한 번 녹화 = 한 번의 동작만 (연속으로 같은 펀치만 반복하지 말 것).")
     print()
-    print("  Q: ì¢…ë£Œ(ì €ìž¥ í™•ì¸) | Backspace: ë°©ê¸ˆ ë…¹í™” 1íšŒ ì‚­ì œ | T: ë…¹í™”ê¸¸ì´ ì „í™˜ | A: ìžë™ì €ìž¥ ì „í™˜")
+    print("  Q: 종료(저장 확인) | Backspace: 방금 녹화 1회 삭제 | T: 녹화길이 전환 | A: 자동저장 전환")
     print()
-    print("  [ì°¸ê³ ] í•™ìŠµ ë°ì´í„° ê¶Œìž¥: ë™ìž‘ë‹¹ 40~60íšŒ ë…¹í™”(ì‹¤ìš©), 60~100íšŒ(ì¡¸ì—…ìž‘í’ˆ ê¶Œìž¥). noneì€ 30íšŒë§Œ í•´ë„ ë¨.")
+    print("  [참고] 학습 데이터 권장: 동작당 40~60회 녹화(실용), 60~100회(졸업작품 권장). none은 30회만 해도 됨.")
     print("=" * 60)
 
     try:
@@ -566,14 +566,14 @@ def main():
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q") or key == ord("Q"):
                 break
-            # Backspace: ë°©ê¸ˆ ë…¹í™”í•œ 1íšŒë¶„ ì‚­ì œ (ì €ìž¥ ì „ì´ë¯€ë¡œ Q ëˆ„ë¥´ë©´ ë°˜ì˜ë¨)
+            # Backspace: 방금 녹화한 1회분 삭제 (저장 전이므로 Q 누르면 반영됨)
             if key == 8 and data and recordings_meta and cooldown <= 0:
                 rec = recordings_meta[-1]
                 start = rec["start_index"]
                 count = rec.get("frame_count", record_frames)
                 data = data[:start]
                 recordings_meta = recordings_meta[:-1]
-                print(f"  [ì‚­ì œ] ë§ˆì§€ë§‰ ë…¹í™” 1íšŒ ì œê±° ({rec.get('label', '?')}, {count}í”„ë ˆìž„). ì´ {len(data)}ê°œ.")
+                print(f"  [삭제] 마지막 녹화 1회 제거 ({rec.get('label', '?')}, {count}프레임). 총 {len(data)}개.")
                 last_data_len = len(data)
                 cooldown = 0.0
                 if autosave_enabled:
@@ -581,9 +581,9 @@ def main():
                         save_data_path, save_meta_path, data, recordings_meta
                     )
                     if ok_a:
-                        print("  [ìžë™ì €ìž¥] ë””ìŠ¤í¬ ë°˜ì˜ ì™„ë£Œ (ë°±ìŠ¤íŽ˜ì´ìŠ¤)")
+                        print("  [자동저장] 디스크 반영 완료 (백스페이스)")
                     else:
-                        print(f"  [ìžë™ì €ìž¥ ì‹¤íŒ¨] {err_a}")
+                        print(f"  [자동저장 실패] {err_a}")
                 continue
             if key == ord("t") or key == ord("T"):
                 if record_sec == 2.0:
@@ -591,20 +591,20 @@ def main():
                 else:
                     record_sec = 2.0
                 record_frames = max(60, int(record_sec * BASE_RECORD_FPS))
-                sec_str = f"{record_sec}초" if record_sec > 2 else "2초"
-                print(f"  [모드 전환] 녹화 길이: {sec_str} ({record_frames}프레임)")
+                sec_str = f"{record_sec}" if record_sec > 2 else "2"
+                print(f"  [ ]  : {sec_str} ({record_frames})")
                 continue
             if key == ord("a") or key == ord("A"):
                 autosave_enabled = not autosave_enabled
-                print(f"  [ìžë™ì €ìž¥] {'ì¼¬' if autosave_enabled else 'ë”'}")
+                print(f"  [자동저장] {'켬' if autosave_enabled else '끔'}")
                 continue
             if key in labels_map and cooldown <= 0:
                 label = labels_map[key]
                 cooldown = cooldown_sec
-                sec_str = f"{record_sec}ì´ˆ" if record_sec > 2 else "2ì´ˆ"
-                print(f"  [{label}] 1ì´ˆ ì§€ì—° í›„ {sec_str} ë…¹í™” ì‹œìž‘...")
+                sec_str = f"{record_sec}초" if record_sec > 2 else "2초"
+                print(f"  [{label}] 1초 지연 후 {sec_str} 녹화 시작...")
 
-                # â”€â”€ 1ì´ˆ ì§€ì—° êµ¬ê°„: í™”ë©´ì— ê°€ë…ì„± ìžˆê²Œ í‘œì‹œ â”€â”€
+                # ── 1초 지연 구간: 화면에 가독성 있게 표시 ──
                 skip_record = False
                 delay_start = time.time()
                 while True:
@@ -618,7 +618,7 @@ def main():
                     remaining_delay = max(0.0, DELAY_AFTER_KEY_SEC - elapsed_delay)
                     if remaining_delay <= 0:
                         break
-                    # ì§€ì—° ì§„í–‰ë¥  ë°” (ìƒë‹¨)
+                    # 지연 진행률 바 (상단)
                     bar_w = process_w - 40
                     fill = int(bar_w * (elapsed_delay / DELAY_AFTER_KEY_SEC))
                     cv2.rectangle(frame_small, (20, 18), (process_w - 20, 38), (60, 60, 60), -1)
@@ -649,7 +649,7 @@ def main():
                     if result.pose_landmarks and len(result.pose_landmarks) > 0:
                         lm = result.pose_landmarks[0]
                         frames_flat.append(normalize_landmarks_flat(lm))
-                    # ë…¹í™” êµ¬ê°„: í”„ë ˆìž„ ë‹¨ìœ„ ì§„í–‰ë¥ 
+                    # 녹화 구간: 프레임 단위 진행률
                     n_frame = len(frames_flat)
                     progress = n_frame / record_frames if record_frames else 0
                     bar_w = process_w - 40
@@ -657,7 +657,7 @@ def main():
                     cv2.rectangle(frame_small, (20, 18), (process_w - 20, 38), (60, 60, 60), -1)
                     cv2.rectangle(frame_small, (20, 18), (20 + fill, 38), (0, 255, 100), -1)
                     cv2.rectangle(frame_small, (20, 18), (process_w - 20, 38), (200, 200, 200), 2)
-                    # 10í”„ë ˆìž„ ë‹¨ìœ„ ëˆˆê¸ˆ (20, 30, 40, 50, 60)
+                    # 10프레임 단위 눈금 (20, 30, 40, 50, 60)
                     for t in range(10, record_frames, 10):
                         x = 20 + int(bar_w * t / record_frames)
                         if 20 < x < process_w - 20:
@@ -665,7 +665,7 @@ def main():
                     cv2.putText(frame_small, f"RECORD {int(record_sec)}s", (20, 52), cv2.FONT_HERSHEY_DUPLEX, 0.8, (0, 255, 200), 2)
                     cv2.putText(frame_small, f"{n_frame}/{record_frames}", (process_w // 2 - 45, 90), cv2.FONT_HERSHEY_DUPLEX, 1.2, (0, 255, 100), 3)
                     cv2.putText(frame_small, label, (20, 120), cv2.FONT_HERSHEY_DUPLEX, 0.7, (255, 255, 255), 2)
-                    # ë…¹í™” ì¤‘ì—ë„ ë¼ˆëŒ€ í‘œì‹œ (í‰ìƒì‹œì™€ ë™ì¼)
+                    # 녹화 중에도 뼈대 표시 (평상시와 동일)
                     if result.pose_landmarks and len(result.pose_landmarks) > 0:
                         lm = result.pose_landmarks[0]
                         h, w = frame_small.shape[0], frame_small.shape[1]
@@ -684,16 +684,16 @@ def main():
 
                 if recording_aborted:
                     continue
-                # í¬ì¦ˆ ì†ì‹¤ë¡œ 60í”„ë ˆìž„ ë¯¸ë§Œì´ë©´ íŒ¨ë”©(ë§ˆì§€ë§‰ í”„ë ˆìž„ ë³µì œ) ë˜ëŠ” í•´ë‹¹ íšŒì°¨ ìŠ¤í‚µ â†’ 60í”„ë ˆìž„ ë‹¨ìœ„ ìœ ì§€
+                # 포즈 손실로 60프레임 미만이면 패딩(마지막 프레임 복제) 또는 해당 회차 스킵 → 60프레임 단위 유지
                 if len(frames_flat) < record_frames:
                     shortfall = record_frames - len(frames_flat)
                     if len(frames_flat) >= 50:
                         last = frames_flat[-1] if frames_flat else None
                         while len(frames_flat) < record_frames and last is not None:
                             frames_flat.append(last)
-                        print(f"  [ê²½ê³ ] í¬ì¦ˆ ì†ì‹¤ë¡œ {shortfall}í”„ë ˆìž„ ë¶€ì¡± â†’ ë§ˆì§€ë§‰ í”„ë ˆìž„ìœ¼ë¡œ íŒ¨ë”©í•˜ì—¬ {record_frames}í”„ë ˆìž„ ìœ ì§€")
+                        print(f"  [경고] 포즈 손실로 {shortfall}프레임 부족 → 마지막 프레임으로 패딩하여 {record_frames}프레임 유지")
                     else:
-                        print(f"  [ìŠ¤í‚µ] í”„ë ˆìž„ ìˆ˜ ë¶€ì¡± ({len(frames_flat)}/{record_frames}). í•´ë‹¹ íšŒì°¨ ì €ìž¥ ì•ˆ í•¨. ë‹¤ì‹œ ë…¹í™”í•´ ì£¼ì„¸ìš”.")
+                        print(f"  [스킵] 프레임 수 부족 ({len(frames_flat)}/{record_frames}). 해당 회차 저장 안 함. 다시 녹화해 주세요.")
                         continue
                 if record_frames > BASE_CHUNK_FRAMES:
                     chunks = [frames_flat[i:i+BASE_CHUNK_FRAMES] for i in range(0, record_frames, BASE_CHUNK_FRAMES)]
@@ -715,7 +715,7 @@ def main():
                                 rec_entry["guard_start_idx"] = impact_idx
                         recordings_meta.append(rec_entry)
                         data.extend(labeled)
-                    print(f"  â†’ {len(chunks)}íšŒ ë¶„í•  ì €ìž¥ (ì „ì²´ {len(frames_flat)}í”„ë ˆìž„ â†’ {BASE_CHUNK_FRAMES}í”„ë ˆìž„ x {len(chunks)}íšŒ) | ì´ {len(data)}ê°œ")
+                    print(f"  → {len(chunks)}회 분할 저장 (전체 {len(frames_flat)}프레임 → {BASE_CHUNK_FRAMES}프레임 x {len(chunks)}회) | 총 {len(data)}개")
                 else:
                     if args.impact_labeling:
                         labeled, impact_idx = _label_recorded_frames(
@@ -733,20 +733,20 @@ def main():
                             rec_entry["guard_start_idx"] = impact_idx
                     recordings_meta.append(rec_entry)
                     data.extend(labeled)
-                    print(f"  â†’ ì €ìž¥: {len(labeled)}í”„ë ˆìž„ ì „ì²´ '{label}' í†µì¼ | ì´ {len(data)}ê°œ")
+                    print(f"  → 저장: {len(labeled)}프레임 전체 '{label}' 통일 | 총 {len(data)}개")
                 counts_str = _format_counts(_recording_counts_from_data(data, recordings_meta))
                 last_data_len = len(data)
-                print(f"  ë™ìž‘ë³„ ë…¹í™” íšŸìˆ˜: {counts_str}")
+                print(f"  동작별 녹화 횟수: {counts_str}")
                 if autosave_enabled:
                     ok_a, err_a = flush_pose_to_disk(
                         save_data_path, save_meta_path, data, recordings_meta
                     )
                     if ok_a:
-                        print(f"  [ìžë™ì €ìž¥] ë””ìŠ¤í¬ ë°˜ì˜ ì™„ë£Œ ({save_data_path})")
+                        print(f"  [자동저장] 디스크 반영 완료 ({save_data_path})")
                     else:
-                        print(f"  [ìžë™ì €ìž¥ ì‹¤íŒ¨] {err_a}")
+                        print(f"  [자동저장 실패] {err_a}")
 
-            # í‰ìƒì‹œ: ë¼ì´ë¸Œ ìŠ¤ì¼ˆë ˆí†¤ë§Œ í‘œì‹œ (íƒ€ìž„ìŠ¤íƒ¬í”„ëŠ” í•­ìƒ ì¦ê°€í•´ì•¼ í•¨)
+            # 평상시: 라이브 스켈레톤만 표시 (타임스탬프는 항상 증가해야 함)
             video_ts_ms += MS_PER_FRAME
             result = landmarker.detect_for_video(make_mp_image(rgb), video_ts_ms)
             lm = None
@@ -795,14 +795,14 @@ def main():
             save_data_path, save_meta_path, data, recordings_meta
         )
         if ok_q:
-            print(f"\nì €ìž¥ ì™„ë£Œ: {save_data_path} (ì´ {len(data)}í”„ë ˆìž„)")
+            print(f"\n저장 완료: {save_data_path} (총 {len(data)}프레임)")
             print(
-                f"ë…¹í™” ë©”íƒ€: {save_meta_path} ({len(recordings_meta)}ê°œ, ìœ ì§€Â·ìž¬ë¼ë²¨ìš©)"
+                f"녹화 메타: {save_meta_path} ({len(recordings_meta)}개, 유지·재라벨용)"
             )
         else:
-            print(f"\nì €ìž¥ ì‹¤íŒ¨: {err_q}")
+            print(f"\n저장 실패: {err_q}")
     else:
-        print("\nìˆ˜ì§‘ëœ ë°ì´í„° ì—†ìŒ. ì €ìž¥í•˜ì§€ ì•ŠìŒ.")
+        print("\n수집된 데이터 없음. 저장하지 않음.")
 
 
 if __name__ == "__main__":
