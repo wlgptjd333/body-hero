@@ -86,18 +86,17 @@ graph TD
 
 ## 스테이지 구성
 
-| 스테이지 | 보스 | 테마 |
-|----------|------|------|
-| Stage 1 | — | 햄버거 몬스터 |
-| Stage 2 | — | 콜라 아레나 |
-| Stage 3 | — | 감자튀김 몬스터 |
-| Stage 4 | — | 피자 몬스터 |
-| Stage 5 | — | 치킨 몬스터 |
-| Stage 6 | — | 마라탕 몬스터 |
-| **BOSS** | **마라탕 보스** | 보스 페이즈 + 버프 선택 |
-| Training | — | 트레이닝 모드 (무한 리스폰) |
+| 스테이지 | 몬스터 | 특징 |
+|----------|--------|------|
+| Stage 1 | 불고기 햄버거 | 느리지만 묵직한 펀치 |
+| Stage 2 | 콜라 몬스터 | 빠르고 강력한 공격 |
+| Stage 3 | 감자튀김 몬스터 | 날카로운 연속 공격 |
+| Stage 4 | 피자 몬스터 | 강한 내구도, 둔한 움직임 |
+| Stage 5 | 치킨 몬스터 | 모든 스탯 극한 |
+| **Stage 6 (BOSS)** | **마라탕 보스** | 보스 페이즈 + 버프 선택 |
+| Training | 트레이닝 더미 | 무한 리스폰 연습 모드 |
 
-> 총 **8개 씬**: 스테이지 1~6 + 보스 + 트레이닝
+> 총 **7개 씬**: 스테이지 1~6(보스 포함) + 트레이닝
 
 <!-- 스크린샷 자리 -->
 <!-- ![메인 메뉴](assets/textures/bg/bg_bodyhero_main_menu.png) -->
@@ -123,13 +122,13 @@ graph TD
 body-hero/
 ├── project.godot              # Godot 4.6 프로젝트
 ├── games/boxing/
-│   ├── scenes/                # 스테이지 1~6 + 보스 + training (8개)
+│   ├── scenes/                # 스테이지 1~6(보스) + training (7개)
 │   │   ├── stage_1.tscn       #   햄버거
 │   │   ├── stage_2.tscn       #   콜라
 │   │   ├── stage_3.tscn       #   감자튀김
 │   │   ├── stage_4.tscn       #   피자
 │   │   ├── stage_5.tscn       #   치킨
-│   │   ├── stage_6.tscn       #   마라탕
+│   │   ├── stage_6.tscn       #   마라탕 보스
 │   │   └── training.tscn      #   트레이닝 모드
 │   └── scripts/               # 게임 로직
 │       ├── enemy.gd           #   적 FSM (IDLE/ATTACK/EVADE/HIT/DEAD)
