@@ -55,6 +55,12 @@ graph TD
 | upper_r (오른어퍼) | 99.4% | 98.4% |
 | squat (스쿼트) | 99.9% | 100.0% |
 
+### ML 모델 구조
+
+- Conv1D(64, k=3) → BatchNorm → Dropout(0.25) → GlobalAveragePooling → Dropout(0.3) → Dense(7)
+- 파라미터: 19,783개
+- 모델 파일: `pose_classifier_seq_len4.keras` (269 KB)
+
 ## 게임 플레이
 
 ### 🥊 웹캠 ML (권장)
@@ -97,8 +103,6 @@ graph TD
 | ML 프레임워크 | Python 3.10 + TensorFlow/Keras 2.16+ |
 | 포즈 추정 | MediaPipe Pose 0.10+ |
 | 통신 | UDP (localhost) |
-| 아키텍처 | Conv1D(64, k=3) → GAP → Dense(7) |
-| 파라미터 | ~20K |
 | 테스트 | GUT (Godot Unit Test) |
 
 ## 프로젝트 구조
@@ -166,14 +170,21 @@ Godot 4.6으로 `project.godot` 열고 **F5** 실행.
 - 첫 실행 시 `tools/python_embed/`가 없으면 GitHub Releases에서 자동 다운로드 + 설치합니다.
 - 인터넷이 없는 환경에서는 `tools/python_ml_env.zip`을 직접 `tools/` 폴더에 넣으면 오프라인 설치 가능합니다.
 
-## ML 데이터 수집 → 학습
+## ML 데이터 수집 → 학습 → 추론
 
 ```bash
 cd tools
-python_embed\python.exe collect_pose_data.py          # 데이터 수집
-python_embed\python.exe train_pose_classifier_seq.py  # 4프레임 시퀀스 모델 학습
-python_embed\python.exe pose_server.py                # ML 서버 실행
+python_embed\python.exe collect_pose_data.py          # 1) 데이터 수집
+python_embed\python.exe train_pose_classifier_seq.py  # 2) 모델 학습
+python_embed\python.exe udp_send_webcam_ml.py         # 3) 게임 연동 (웹캠 ML 브리지)
 ```
+
+| 스크립트 | 용도 |
+|----------|------|
+| `collect_pose_data.py` | 웹캠으로 포즈 데이터 녹화·저장 |
+| `train_pose_classifier_seq.py` | 녹화 데이터로 4프레임 시퀀스 모델 학습 |
+| `udp_send_webcam_ml.py` | 학습된 모델 로드 → 실시간 추론 → UDP로 게임 전송 |
+| `pose_server.py` | (선택) HTTP 추론 서버. 로컬 추론이 기본이므로 직접 실행할 필요 없음 |
 
 개발자 참고: `tools/build_python_embed.bat`로 python_embed 환경을 빌드한 후 위 명령을 실행하세요.
 
