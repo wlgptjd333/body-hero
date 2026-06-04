@@ -1,15 +1,13 @@
 """
 연속 프레임(시퀀스) 포즈 분류: pose_data.json + pose_recordings_meta.json 그대로 사용.
-녹화 구간별로 슬라이딩 윈도우해 (seq_len 프레임) → Conv1D+GAP → 동작 분류.
+녹화 구간별로 슬라이딩 윈도우해 (seq_len=4) → Conv1D+GAP → 동작 분류.
 
-저장 경로 (로드 우선순위, ADR-0002):
-  --seq-len 4 (기본) → pose_classifier_seq_len4.keras  (게임/추론 측 우선 로드)
-  --seq-len 8        → pose_classifier_seq.keras       (폴백)
+저장 경로 (ADR-0002):
+  --seq-len 4 (기본, 권장) → pose_classifier_seq_len4.keras
   그 외 길이는 --model 로 직접 지정.
 
 실행:
   python train_pose_classifier_seq.py                       # 기본 4프레임 학습 (권장, ADR-0002)
-  python train_pose_classifier_seq.py --seq-len 8           # 8프레임
 
 증강 (ADR-0002):
   - Gaussian noise(0.03) + scale ±20% + 좌우반전(flip) + L/R 라벨 스왑
@@ -19,9 +17,9 @@ Architecture (ADR-0002):
   - Conv1D(64, k=3) → BN → Dropout(0.25) → GlobalAveragePooling1D → Dropout(0.3) → Dense(7)
   - LSTM 불필요: 4프레임에서는 Conv1D의 temporal blending으로 충분, LSTM은 over-parameterization.
 
-게임/추론 측(udp_send_webcam_ml.py / pose_server.py / test_pose_live.py)은
-pose_classifier_seq_len4.keras → seq.keras 순으로 우선 로드합니다.
-학습 종료 시 저장 파일이 게임 우선 모델과 다르면 콘솔에 경고를 출력합니다.
+게임/추론 측(udp_send_webcam_ml.py / pose_server.py)은
+pose_classifier_seq_len4.keras를 로드합니다.
+학습 종료 시 저장 파일이 게임 모델과 다르면 콘솔에 경고를 출력합니다.
 """
 import os
 import json
@@ -35,7 +33,6 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_DATA = os.path.join(SCRIPT_DIR, "pose_data.json")
 DEFAULT_META = os.path.join(SCRIPT_DIR, "pose_recordings_meta.json")
 DEFAULT_MODEL = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
-DEFAULT_MODEL_LEN8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
 
 from pose_class_names import POSE_CLASS_NAMES
 
@@ -198,9 +195,7 @@ def main():
     )
     args = parser.parse_args()
 
-    # seq_len에 따라 자동 파일명 라우팅 (게임 로드 우선순위와 일치, ADR-0002)
-    if args.seq_len == 8 and os.path.abspath(args.model) == os.path.abspath(DEFAULT_MODEL):
-        args.model = DEFAULT_MODEL_LEN8
+    # ADR-0002: seq_len=4 고정 (Conv1D+GAP)
 
     class_names = ALL_CLASS_NAMES.copy()
     num_classes = len(class_names)
@@ -393,24 +388,20 @@ def main():
 def _warn_if_runtime_uses_other_model(saved_path: str) -> None:
     """게임/추론 측이 실제로 로드할 모델과 방금 저장한 모델이 다르면 경고.
 
-    우선순위: pose_classifier_seq_len4.keras → seq.keras (ADR-0002).
+    ADR-0002: 게임은 pose_classifier_seq_len4.keras만 로드합니다.
     다른 파일을 학습해 저장하면 게임에 반영되지 않을 수 있어 경고.
     """
     try:
         saved_abs = os.path.abspath(saved_path)
-        priority_paths = [
-            os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras"),
-            os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras"),
-        ]
-        runtime_pref = next((p for p in priority_paths if os.path.isfile(p)), priority_paths[0])
-        runtime_abs = os.path.abspath(runtime_pref)
+        runtime_path = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
+        runtime_abs = os.path.abspath(runtime_path)
         if saved_abs == runtime_abs:
             return
         print()
-        print("⚠ 학습한 모델 파일이 게임 실행 시 우선 로드되는 파일과 다릅니다.")
+        print("⚠ 학습한 모델 파일이 게임 실행 시 로드되는 파일과 다릅니다.")
         print(f"   - 방금 저장: {saved_abs}")
-        print(f"   - 게임 우선 로드: {runtime_abs}")
-        print("   우선순위: seq_len4 → seq (ADR-0002)")
+        print(f"   - 게임 로드: {runtime_abs}")
+        print("   게임은 pose_classifier_seq_len4.keras만 로드합니다 (ADR-0002).")
     except Exception:
         pass
 

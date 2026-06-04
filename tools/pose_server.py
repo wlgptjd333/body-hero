@@ -11,11 +11,9 @@ import threading
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-_MODEL_SEQ_4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
-_MODEL_SEQ_8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
-DEFAULT_MODEL = _MODEL_SEQ_4 if os.path.isfile(_MODEL_SEQ_4) else _MODEL_SEQ_8
+DEFAULT_MODEL = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
 DEFAULT_MODEL_SINGLE = os.path.join(SCRIPT_DIR, "pose_classifier.keras")
-SEQ_LEN = 4 if DEFAULT_MODEL == _MODEL_SEQ_4 else 8
+SEQ_LEN = 4
 from pose_class_names import GUARD_INDEX, POSE_CLASS_NAMES
 
 CLASS_NAMES = list(POSE_CLASS_NAMES)

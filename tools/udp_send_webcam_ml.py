@@ -48,19 +48,10 @@ from pose_normalize import normalize_landmarks_flat, shoulder_center_and_width
 from pose_class_names import GUARD_INDEX, POSE_CLASS_NAMES
 from cv_capture import open_cv_video_capture
 
-# 로컬 추론용 (pose_server와 동일). 시퀀스 길이는 로드한 모델 입력(time)에서 자동 설정.
-# 우선순위: seq_len=4 → 8 (ADR-0002).
-_MODEL_SEQ_4 = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
-_MODEL_SEQ_8 = os.path.join(SCRIPT_DIR, "pose_classifier_seq.keras")
-if os.path.exists(_MODEL_SEQ_4):
-    MODEL_SEQ_PATH = _MODEL_SEQ_4
-    SEQ_LEN = 4
-elif os.path.exists(_MODEL_SEQ_8):
-    MODEL_SEQ_PATH = _MODEL_SEQ_8
-    SEQ_LEN = 8
-else:
-    MODEL_SEQ_PATH = _MODEL_SEQ_4  # 없으면 기본 경로 유지(학습 전)
-    SEQ_LEN = 4
+# 로컬 추론용. 시퀀스 길이는 로드한 모델 입력(time)에서 자동 설정.
+# ADR-0002: seq_len=4 (Conv1D+GAP)
+MODEL_SEQ_PATH = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4.keras")
+SEQ_LEN = 4
 MODEL_SINGLE_PATH = os.path.join(SCRIPT_DIR, "pose_classifier.keras")
 CLASS_NAMES = list(POSE_CLASS_NAMES)
 # ML·UDP 라벨 = POSE_CLASS_NAMES (punch_l/r …)
@@ -103,7 +94,7 @@ _skip_guard_single: bool = False
 _punch_confidence_override: Optional[float] = None
 
 # 속도/정확도 프리셋 (런타임에서 상수들을 덮어씀)
-SPEED_PROFILES = ("precise", "balanced", "classic", "rapid", "max_speed")
+SPEED_PROFILES = ("precise", "balanced", "rapid", "max_speed")
 
 class RemappedLandmark:
     __slots__ = ("x", "y", "z", "visibility")
@@ -455,7 +446,7 @@ def _ensure_pose_server(auto_spawn: bool):
         print("      (자동 시작을 쓰려면 --no-auto-server 옵션을 빼세요)")
         return False, None
     if not os.path.isfile(MODEL_SEQ_PATH):
-        print("로컬 추론 불가 + pose_classifier_seq.keras 없음 → pose_server를 시작할 수 없습니다.")
+        print("로컬 추론 불가 + 모델 파일 없음 → pose_server를 시작할 수 없습니다.")
         return False, None
     if not os.path.isfile(POSE_SERVER_SCRIPT):
         print("pose_server.py를 찾을 수 없습니다:", POSE_SERVER_SCRIPT)
@@ -531,7 +522,7 @@ def main():
     parser.add_argument(
         "--seq-model",
         default=None,
-        help="시퀀스 모델 경로(기본 tools/pose_classifier_seq.keras). seq_len4/6/8 모델을 바꿔 끼워 첫 반응 속도 튜닝 가능",
+        help="시퀀스 모델 경로(기본 tools/pose_classifier_seq_len4.keras). 다른 모델을 바꿔 끼워 첫 반응 속도 튜닝 가능",
     )
     parser.add_argument(
         "--profile",
@@ -659,23 +650,6 @@ def main():
         PUNCH_CONFIDENCE_THRESHOLD = 0.85
         UPPER_MOTION_MEAN_ABS_MIN = 0.0015
         UPPER_L_MOTION_RELAX = 0.55
-    elif args.profile == "classic":
-        # 초기버전 LSTM 모델 사용 + 낮은 thresholds
-        if not args.seq_model:
-            classic_path = os.path.join(SCRIPT_DIR, "pose_classifier_seq_len4_classic.keras")
-            if os.path.isfile(classic_path):
-                MODEL_SEQ_PATH = classic_path
-        PUNCH_CONFIRM_FRAMES = 1
-        OTHER_PUNCH_CONFIRM_FRAMES = 1
-        UPPER_PUNCH_CONFIRM_FRAMES = 1
-        SQUAT_CONFIRM_FRAMES = 1
-        COOLDOWN_SEC = 0.04
-        MIN_GAP_BETWEEN_ANY_PUNCH_SEC = 0.02
-        CONFIDENCE_THRESHOLD = 0.75
-        UPPER_CONFIDENCE_THRESHOLD = 0.65
-        PUNCH_CONFIDENCE_THRESHOLD = 0.55
-        UPPER_MOTION_MEAN_ABS_MIN = 0.0005
-        UPPER_L_MOTION_RELAX = 0.40
     elif args.profile == "rapid":
         PUNCH_CONFIRM_FRAMES = 1
         OTHER_PUNCH_CONFIRM_FRAMES = 1

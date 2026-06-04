@@ -21,12 +21,12 @@ FILES_TO_ARCHIVE = [
     "pose_data.json",
     "pose_recordings_meta.json",
     "pose_classifier.keras",
-    "pose_classifier_seq.keras",
     "pose_classifier_seq_len4.keras",
     "training_history.json",
     "training_history_seq.json",
     "classification_report.txt",
     "classification_report_seq.txt",
+    "classification_report_seq_holdout.txt",
 ]
 
 
