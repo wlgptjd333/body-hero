@@ -34,7 +34,8 @@ ZIP을 푼 후 게임을 실행하고, 웹캠 ML을 사용하며,
 3. 게임 실행
 ---------------------------------------------------------------------
 
-  압축 해제한 폴더에서 "Body Hero.exe"를 더블클릭하세요.
+  압축 해제한 폴더(또는 이 README가 있는 tools 폴더의 상위 폴더)에서
+  "Body Hero.exe"를 더블클릭하세요.
 
   ※ 첫 실행 시 Windows Defender가 차단할 수 있습니다.
      "추가 정보"를 클릭한 뒤 "실행"을 눌러주세요.
@@ -97,7 +98,7 @@ ZIP을 푼 후 게임을 실행하고, 웹캠 ML을 사용하며,
 
   5-5. 웹캠 ML이 자동으로 안 켜질 때
   ----------------
-    1) cmd(명령 프롬프트)를 열고 tools 폴더로 이동:
+    1) cmd(명령 프롬프트)를 열고 이 폴더(tools)로 이동:
          cd C:\Games\BodyHero\tools
          (실제 압축 해제 경로로 바꾸세요)
     2) 수동 실행:
@@ -114,10 +115,11 @@ ZIP을 푼 후 게임을 실행하고, 웹캠 ML을 사용하며,
 
   6-1. 폴더 구조
   ----------------
-    BodyHero/
+    BodyHero/                          ← 압축 해제한 폴더
     ├── Body Hero.exe                  ← Godot 게임 실행 파일
-    ├── README.txt                     ← 이 파일
-    └── tools/
+    ├── README.txt                     ← 설치 가이드 (루트에도 동일 내용 포함)
+    └── tools/                         ← 이 README가 있는 폴더
+        ├── README.txt                 ← 이 파일
         ├── run_python.bat             ← Python 헬퍼
         ├── python_embed/              ← Python 3.10 + TensorFlow + MediaPipe
         │   └── python.exe             ← Python 실행 파일
@@ -135,9 +137,8 @@ ZIP을 푼 후 게임을 실행하고, 웹캠 ML을 사용하며,
     본 게임에는 Python 임베디드 환경이 포함되어 있습니다.
     따로 Python을 설치하거나 PATH를 설정할 필요가 없습니다.
 
-    모든 Python 명령은 run_python.bat를 통해 실행하세요:
+    모든 Python 명령은 이 폴더(tools)에서 run_python.bat를 통해 실행하세요:
 
-      cd tools
       run_python.bat [스크립트명] [옵션]
 
     예시:
@@ -146,7 +147,6 @@ ZIP을 푼 후 게임을 실행하고, 웹캠 ML을 사용하며,
 
   6-3. 포즈 데이터 수집
   ----------------
-      cd tools
       run_python.bat collect_pose_data.py
 
     실행 후 화면 안내에 따라:
@@ -162,7 +162,6 @@ ZIP을 푼 후 게임을 실행하고, 웹캠 ML을 사용하며,
 
   6-4. 모델 학습
   ----------------
-      cd tools
       run_python.bat train_pose_classifier_seq.py
 
     학습 완료 후 생성되는 파일:
@@ -172,7 +171,6 @@ ZIP을 푼 후 게임을 실행하고, 웹캠 ML을 사용하며,
 
   6-5. 학습 결과 검증
   ----------------
-      cd tools
       run_python.bat validate_recording_holdout.py
 
     결과:
@@ -180,7 +178,6 @@ ZIP을 푼 후 게임을 실행하고, 웹캠 ML을 사용하며,
 
   6-6. 웹캠 ML 단독 테스트 (게임 없이)
   ----------------
-      cd tools
       run_python.bat udp_send_webcam_ml.py --headless --profile balanced
 
     옵션:

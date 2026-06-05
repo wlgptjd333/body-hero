@@ -6,7 +6,7 @@ $ProgressPreference = "SilentlyContinue"
 $Version = "3.10.11"
 $ToolsDir = Join-Path $PSScriptRoot ".." -Resolve | Join-Path -ChildPath "tools"
 $EmbedDir = Join-Path $ToolsDir "python_embed"
-$ZipOut  = Join-Path $ToolsDir "python_ml_env.zip"
+$ZipOut  = Join-Path $ToolsDir "python_embed.zip"
 $TempZip = Join-Path $env:TEMP "python-embed.zip"
 
 Write-Host "[1/6] Cleaning existing python_embed..."
@@ -83,7 +83,7 @@ if sys.platform == "win32":
 "@ | Set-Content -Path $SiteCustomize -Encoding UTF8
 Write-Host "  $SiteCustomize created"
 
-Write-Host "[6/6] Packaging python_ml_env.zip..."
+Write-Host "[6/6] Packaging python_embed.zip..."
 if (Test-Path $ZipOut) { Remove-Item -Force $ZipOut }
 # Use embedded Python's zipfile module (Compress-Archive drops root files like ._pth)
 & $PythonExe -c @"
@@ -102,9 +102,9 @@ Write-Host ""
 Write-Host "============================================================"
 Write-Host "Build complete!"
 Write-Host ""
-Write-Host "Created: tools\python_ml_env.zip"
+Write-Host "Created: tools\python_embed.zip"
 Write-Host ""
 Write-Host "Upload to GitHub Releases:"
 Write-Host "  gh release create v1.0.0 --title \"v1.0.0\" --notes \"Initial release\""
-Write-Host "  gh release upload v1.0.0 tools\python_ml_env.zip"
+Write-Host "  gh release upload v1.0.0 tools\python_embed.zip"
 Write-Host ""

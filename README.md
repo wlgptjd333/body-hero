@@ -168,7 +168,7 @@ git clone https://github.com/wlgptjd333/body-hero.git
 Godot 4.6으로 `project.godot` 열고 **F5** 실행.
 
 - 첫 실행 시 `tools/python_embed/`가 없으면 GitHub Releases에서 자동 다운로드 + 설치합니다.
-- 인터넷이 없는 환경에서는 `tools/python_ml_env.zip`을 직접 `tools/` 폴더에 넣으면 오프라인 설치 가능합니다.
+- 인터넷이 없는 환경에서는 `tools/python_embed.zip`을 직접 `tools/` 폴더에 넣으면 오프라인 설치 가능합니다.
 
 ## ML 데이터 수집 → 학습 → 추론
 

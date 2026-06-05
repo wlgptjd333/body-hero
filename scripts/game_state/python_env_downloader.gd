@@ -1,10 +1,10 @@
 extends RefCounted
-## GitHub Releases에서 python_ml_env.zip 다운로드 + ZIPReader 압축풀기.
+## GitHub Releases에서 python_embed.zip 다운로드 + ZIPReader 압축풀기.
 ## 로컬에 zip이 있으면 인터넷 없이도 설치 가능.
 
 signal download_completed(success: bool)
 
-const RELEASE_URL := "https://github.com/wlgptjd333/body-hero/releases/latest/download/python_ml_env.zip"
+const RELEASE_URL := "https://github.com/wlgptjd333/body-hero/releases/latest/download/python_embed.zip"
 
 var _parent: Node
 var _target_dir: String
@@ -14,7 +14,7 @@ var _zip_path: String
 func download(target_dir: String, parent: Node) -> void:
 	_parent = parent
 	_target_dir = target_dir
-	_zip_path = target_dir.path_join("python_ml_env.zip")
+	_zip_path = target_dir.path_join("python_embed.zip")
 
 	DirAccess.make_dir_recursive_absolute(target_dir)
 
