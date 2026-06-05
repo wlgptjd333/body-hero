@@ -10,7 +10,7 @@
 
 ### 1. 다운로드
 
-[GitHub Releases](https://github.com/wlgptjd333/body-hero/releases) 페이지에서 **BodyHero-v1.0.0-final.zip**을 다운로드합니다.
+[GitHub Releases](https://github.com/wlgptjd333/body-hero/releases) 페이지에서 **BodyHero-v1.0.0.zip**을 다운로드합니다.
 
 ### 2. 실행
 
