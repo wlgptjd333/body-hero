@@ -281,7 +281,7 @@ ZIP을 푼 후 게임을 실행하고, 웹캠 ML을 사용하며,
   정확도        : 99.22% (recording-based holdout 20%)
 
   GitHub        : https://github.com/wlgptjd333/body-hero
-  라이선스      : MIT License © 2026 Jihyeseong (지혜성)
+  라이선스      : MIT License © 2026 JiHyesung
 
   ※ 협성대학교 졸업작품으로 제작되었습니다.
 

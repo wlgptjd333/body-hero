@@ -200,6 +200,6 @@ godot --headless -s addons/gut/gut_cmdln.gd -d --path .
 
 ## 라이선스
 
-MIT License © 2026 Jihyeseong (지혜성)
+MIT License © 2026 JiHyesung
 
 > 이 프로젝트는 **협성대학교 졸업작품**으로 제작되었습니다.
