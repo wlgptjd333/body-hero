@@ -4,7 +4,7 @@ extends RefCounted
 
 signal download_completed(success: bool)
 
-const RELEASE_URL := "https://github.com/wlgptjd333/body-hero/releases/latest/download/python_embed.zip"
+const RELEASE_URL := "https://github.com/wlgptjd333/body-hero/releases/download/python-embed-v1.0/python_embed.zip"
 
 var _parent: Node
 var _target_dir: String
