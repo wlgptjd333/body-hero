@@ -400,10 +400,12 @@ def _low_chamber_straight_punch_ambiguous(
     """같은 쪽 손목이 어깨보다 충분히 아래면 직선 펀치 라벨을 UDP로 확정하지 않음(어퍼 윈드업과 구분)."""
     if not flat or len(flat) < 99 or pred not in ("punch_l", "punch_r"):
         return False
+    # v1.1: 영상을 좌우 반전해 처리하므로 사용자 왼손은 MediaPipe 16번, 오른손은 15번 손목이다
+    # (학습 데이터에서 punch_l일 때 16번, punch_r일 때 15번 손목이 크게 움직임). 이전 코드는 좌우가 뒤바뀌어 있었다.
     if pred == "punch_l":
-        w_y, s_y = flat[46], flat[34]  # LEFT_WRIST y, LEFT_SHOULDER y
+        w_y, s_y = flat[49], flat[37]  # 16번 손목 y, 12번 어깨 y
     else:
-        w_y, s_y = flat[49], flat[37]  # RIGHT_WRIST y, RIGHT_SHOULDER y
+        w_y, s_y = flat[46], flat[34]  # 15번 손목 y, 11번 어깨 y
     return bool(w_y > s_y + margin)
 
 
@@ -627,7 +629,8 @@ def main():
         MODEL_SEQ_PATH = args.seq_model
 
     if args.profile == "precise":
-        PUNCH_CONFIRM_FRAMES = 2
+        # v1.1: 직선 펀치 확정 2→3프레임. 어퍼컷을 올리는 도중 팔이 펀치처럼 보이는 구간에서 펀치가 먼저 확정되는 것을 줄인다.
+        PUNCH_CONFIRM_FRAMES = 3
         OTHER_PUNCH_CONFIRM_FRAMES = 2
         UPPER_PUNCH_CONFIRM_FRAMES = 2
         SQUAT_CONFIRM_FRAMES = 3
