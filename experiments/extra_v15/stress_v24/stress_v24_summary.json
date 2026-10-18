@@ -1,0 +1,1178 @@
+{
+ "GAP 4프레임": {
+  "clean_idle_fa": {
+   "precise": 42,
+   "u95": 31
+  },
+  "glitch1_idle_fa": {
+   "precise": 55,
+   "u95": 39
+  },
+  "intrude1_idle_fa": {
+   "precise": 69,
+   "u95": 49
+  },
+  "glitch2_idle_fa": {
+   "precise": 57,
+   "u95": 39
+  },
+  "intrude2_idle_fa": {
+   "precise": 99,
+   "u95": 69
+  },
+  "jitter0.03_acc": 89.42,
+  "jitter0.03_idle_fa": {
+   "precise": 47,
+   "u95": 31
+  },
+  "jitter0.03_trans": {
+   "precise": [
+    84.7,
+    4.8,
+    153
+   ],
+   "u95": [
+    82.7,
+    3.1,
+    168
+   ]
+  },
+  "jitter0.06_acc": 89.33,
+  "jitter0.06_idle_fa": {
+   "precise": 61,
+   "u95": 37
+  },
+  "jitter0.06_trans": {
+   "precise": [
+    84.4,
+    5.8,
+    156
+   ],
+   "u95": [
+    83.9,
+    2.6,
+    167
+   ]
+  },
+  "jitter0.1_acc": 88.83,
+  "jitter0.1_idle_fa": {
+   "precise": 91,
+   "u95": 57
+  },
+  "jitter0.1_trans": {
+   "precise": [
+    87.0,
+    4.9,
+    160
+   ],
+   "u95": [
+    85.5,
+    3.1,
+    183
+   ]
+  },
+  "yaw20_acc": 89.77,
+  "yaw20_idle_fa": {
+   "precise": 45,
+   "u95": 31
+  },
+  "yaw40_acc": 89.89,
+  "yaw40_idle_fa": {
+   "precise": 56,
+   "u95": 41
+  },
+  "fps15_acc": 89.68,
+  "fps15_idle_fa": {
+   "precise": 36,
+   "u95": 25
+  },
+  "fps15_trans": {
+   "precise": [
+    82.9,
+    3.9,
+    248
+   ],
+   "u95": [
+    79.3,
+    3.2,
+    255
+   ]
+  },
+  "step_trans": {
+   "precise": [
+    84.4,
+    4.8,
+    151
+   ],
+   "u95": [
+    82.4,
+    3.2,
+    166
+   ]
+  },
+  "brief3_trans": {
+   "precise": [
+    48.4,
+    7.9,
+    95
+   ],
+   "u95": [
+    40.7,
+    5.3,
+    105
+   ]
+  },
+  "brief4_trans": {
+   "precise": [
+    63.1,
+    6.3,
+    100
+   ],
+   "u95": [
+    53.2,
+    4.5,
+    103
+   ]
+  },
+  "brief5_trans": {
+   "precise": [
+    73.8,
+    5.4,
+    106
+   ],
+   "u95": [
+    68.7,
+    3.4,
+    110
+   ]
+  },
+  "brief6_trans": {
+   "precise": [
+    74.9,
+    5.2,
+    107
+   ],
+   "u95": [
+    70.7,
+    3.3,
+    112
+   ]
+  },
+  "brief8_trans": {
+   "precise": [
+    77.1,
+    5.2,
+    111
+   ],
+   "u95": [
+    73.0,
+    3.1,
+    116
+   ]
+  },
+  "interp4_trans": {
+   "precise": [
+    74.4,
+    13.6,
+    222
+   ],
+   "u95": [
+    75.3,
+    8.0,
+    231
+   ]
+  },
+  "interp8_trans": {
+   "precise": [
+    64.0,
+    24.4,
+    322
+   ],
+   "u95": [
+    66.3,
+    17.8,
+    336
+   ]
+  }
+ },
+ "GAP 3프레임": {
+  "clean_idle_fa": {
+   "precise": 39,
+   "u95": 25
+  },
+  "glitch1_idle_fa": {
+   "precise": 51,
+   "u95": 29
+  },
+  "intrude1_idle_fa": {
+   "precise": 56,
+   "u95": 35
+  },
+  "glitch2_idle_fa": {
+   "precise": 53,
+   "u95": 34
+  },
+  "intrude2_idle_fa": {
+   "precise": 96,
+   "u95": 68
+  },
+  "jitter0.03_acc": 87.96,
+  "jitter0.03_idle_fa": {
+   "precise": 43,
+   "u95": 27
+  },
+  "jitter0.03_trans": {
+   "precise": [
+    82.6,
+    3.7,
+    159
+   ],
+   "u95": [
+    75.2,
+    2.6,
+    167
+   ]
+  },
+  "jitter0.06_acc": 87.76,
+  "jitter0.06_idle_fa": {
+   "precise": 53,
+   "u95": 31
+  },
+  "jitter0.06_trans": {
+   "precise": [
+    82.7,
+    4.4,
+    165
+   ],
+   "u95": [
+    76.4,
+    2.6,
+    185
+   ]
+  },
+  "jitter0.1_acc": 87.22,
+  "jitter0.1_idle_fa": {
+   "precise": 87,
+   "u95": 41
+  },
+  "jitter0.1_trans": {
+   "precise": [
+    85.2,
+    4.2,
+    168
+   ],
+   "u95": [
+    78.7,
+    3.2,
+    189
+   ]
+  },
+  "yaw20_acc": 88.41,
+  "yaw20_idle_fa": {
+   "precise": 41,
+   "u95": 28
+  },
+  "yaw40_acc": 89.13,
+  "yaw40_idle_fa": {
+   "precise": 50,
+   "u95": 32
+  },
+  "fps15_acc": 88.17,
+  "fps15_idle_fa": {
+   "precise": 34,
+   "u95": 20
+  },
+  "fps15_trans": {
+   "precise": [
+    79.5,
+    3.4,
+    229
+   ],
+   "u95": [
+    71.4,
+    1.9,
+    227
+   ]
+  },
+  "step_trans": {
+   "precise": [
+    81.9,
+    3.9,
+    155
+   ],
+   "u95": [
+    74.8,
+    2.2,
+    168
+   ]
+  },
+  "brief3_trans": {
+   "precise": [
+    37.2,
+    6.2,
+    80
+   ],
+   "u95": [
+    27.3,
+    3.7,
+    94
+   ]
+  },
+  "brief4_trans": {
+   "precise": [
+    65.3,
+    4.0,
+    89
+   ],
+   "u95": [
+    58.7,
+    2.1,
+    98
+   ]
+  },
+  "brief5_trans": {
+   "precise": [
+    68.2,
+    4.0,
+    92
+   ],
+   "u95": [
+    60.5,
+    2.5,
+    100
+   ]
+  },
+  "brief6_trans": {
+   "precise": [
+    70.4,
+    4.0,
+    95
+   ],
+   "u95": [
+    63.1,
+    2.5,
+    103
+   ]
+  },
+  "brief8_trans": {
+   "precise": [
+    73.5,
+    3.9,
+    101
+   ],
+   "u95": [
+    66.1,
+    2.5,
+    109
+   ]
+  },
+  "interp4_trans": {
+   "precise": [
+    73.5,
+    10.3,
+    229
+   ],
+   "u95": [
+    70.5,
+    5.1,
+    248
+   ]
+  },
+  "interp8_trans": {
+   "precise": [
+    67.7,
+    16.2,
+    334
+   ],
+   "u95": [
+    67.4,
+    8.3,
+    352
+   ]
+  }
+ },
+ "LSTM 3프레임": {
+  "clean_idle_fa": {
+   "precise": 54,
+   "u95": 31
+  },
+  "glitch1_idle_fa": {
+   "precise": 66,
+   "u95": 40
+  },
+  "intrude1_idle_fa": {
+   "precise": 105,
+   "u95": 68
+  },
+  "glitch2_idle_fa": {
+   "precise": 70,
+   "u95": 45
+  },
+  "intrude2_idle_fa": {
+   "precise": 144,
+   "u95": 112
+  },
+  "jitter0.03_acc": 89.12,
+  "jitter0.03_idle_fa": {
+   "precise": 53,
+   "u95": 36
+  },
+  "jitter0.03_trans": {
+   "precise": [
+    86.4,
+    4.2,
+    141
+   ],
+   "u95": [
+    86.1,
+    2.9,
+    143
+   ]
+  },
+  "jitter0.06_acc": 88.92,
+  "jitter0.06_idle_fa": {
+   "precise": 68,
+   "u95": 46
+  },
+  "jitter0.06_trans": {
+   "precise": [
+    87.3,
+    4.0,
+    140
+   ],
+   "u95": [
+    86.7,
+    3.1,
+    153
+   ]
+  },
+  "jitter0.1_acc": 88.78,
+  "jitter0.1_idle_fa": {
+   "precise": 108,
+   "u95": 78
+  },
+  "jitter0.1_trans": {
+   "precise": [
+    88.3,
+    4.5,
+    141
+   ],
+   "u95": [
+    87.5,
+    3.7,
+    145
+   ]
+  },
+  "yaw20_acc": 89.34,
+  "yaw20_idle_fa": {
+   "precise": 56,
+   "u95": 37
+  },
+  "yaw40_acc": 89.75,
+  "yaw40_idle_fa": {
+   "precise": 71,
+   "u95": 46
+  },
+  "fps15_acc": 89.22,
+  "fps15_idle_fa": {
+   "precise": 40,
+   "u95": 26
+  },
+  "fps15_trans": {
+   "precise": [
+    85.5,
+    3.5,
+    206
+   ],
+   "u95": [
+    83.2,
+    2.9,
+    205
+   ]
+  },
+  "step_trans": {
+   "precise": [
+    87.2,
+    3.5,
+    138
+   ],
+   "u95": [
+    85.0,
+    2.9,
+    130
+   ]
+  },
+  "brief3_trans": {
+   "precise": [
+    62.8,
+    4.8,
+    85
+   ],
+   "u95": [
+    56.0,
+    2.9,
+    77
+   ]
+  },
+  "brief4_trans": {
+   "precise": [
+    77.5,
+    4.2,
+    89
+   ],
+   "u95": [
+    75.3,
+    2.6,
+    84
+   ]
+  },
+  "brief5_trans": {
+   "precise": [
+    79.8,
+    3.9,
+    92
+   ],
+   "u95": [
+    76.7,
+    2.4,
+    86
+   ]
+  },
+  "brief6_trans": {
+   "precise": [
+    80.4,
+    3.9,
+    94
+   ],
+   "u95": [
+    77.1,
+    2.5,
+    87
+   ]
+  },
+  "brief8_trans": {
+   "precise": [
+    82.4,
+    3.7,
+    98
+   ],
+   "u95": [
+    79.5,
+    2.5,
+    89
+   ]
+  },
+  "interp4_trans": {
+   "precise": [
+    71.9,
+    18.4,
+    211
+   ],
+   "u95": [
+    73.1,
+    14.4,
+    207
+   ]
+  },
+  "interp8_trans": {
+   "precise": [
+    61.6,
+    29.3,
+    310
+   ],
+   "u95": [
+    63.9,
+    25.0,
+    303
+   ]
+  }
+ },
+ "LSTM 4프레임": {
+  "clean_idle_fa": {
+   "precise": 65,
+   "u95": 46
+  },
+  "glitch1_idle_fa": {
+   "precise": 70,
+   "u95": 51
+  },
+  "intrude1_idle_fa": {
+   "precise": 110,
+   "u95": 86
+  },
+  "glitch2_idle_fa": {
+   "precise": 78,
+   "u95": 58
+  },
+  "intrude2_idle_fa": {
+   "precise": 146,
+   "u95": 118
+  },
+  "jitter0.03_acc": 88.45,
+  "jitter0.03_idle_fa": {
+   "precise": 64,
+   "u95": 49
+  },
+  "jitter0.03_trans": {
+   "precise": [
+    85.3,
+    5.7,
+    144
+   ],
+   "u95": [
+    85.2,
+    3.9,
+    153
+   ]
+  },
+  "jitter0.06_acc": 88.41,
+  "jitter0.06_idle_fa": {
+   "precise": 80,
+   "u95": 57
+  },
+  "jitter0.06_trans": {
+   "precise": [
+    85.6,
+    5.4,
+    142
+   ],
+   "u95": [
+    85.2,
+    4.3,
+    154
+   ]
+  },
+  "jitter0.1_acc": 87.98,
+  "jitter0.1_idle_fa": {
+   "precise": 124,
+   "u95": 80
+  },
+  "jitter0.1_trans": {
+   "precise": [
+    86.3,
+    5.9,
+    154
+   ],
+   "u95": [
+    84.4,
+    4.9,
+    158
+   ]
+  },
+  "yaw20_acc": 88.73,
+  "yaw20_idle_fa": {
+   "precise": 65,
+   "u95": 50
+  },
+  "yaw40_acc": 88.66,
+  "yaw40_idle_fa": {
+   "precise": 65,
+   "u95": 53
+  },
+  "fps15_acc": 88.63,
+  "fps15_idle_fa": {
+   "precise": 49,
+   "u95": 36
+  },
+  "fps15_trans": {
+   "precise": [
+    84.9,
+    4.3,
+    240
+   ],
+   "u95": [
+    82.7,
+    3.9,
+    241
+   ]
+  },
+  "step_trans": {
+   "precise": [
+    85.8,
+    5.1,
+    145
+   ],
+   "u95": [
+    85.2,
+    4.0,
+    153
+   ]
+  },
+  "brief3_trans": {
+   "precise": [
+    55.4,
+    7.7,
+    89
+   ],
+   "u95": [
+    51.7,
+    6.6,
+    95
+   ]
+  },
+  "brief4_trans": {
+   "precise": [
+    67.5,
+    6.9,
+    95
+   ],
+   "u95": [
+    63.4,
+    6.5,
+    98
+   ]
+  },
+  "brief5_trans": {
+   "precise": [
+    75.9,
+    5.9,
+    100
+   ],
+   "u95": [
+    74.2,
+    4.6,
+    104
+   ]
+  },
+  "brief6_trans": {
+   "precise": [
+    77.6,
+    5.1,
+    102
+   ],
+   "u95": [
+    75.8,
+    4.5,
+    106
+   ]
+  },
+  "brief8_trans": {
+   "precise": [
+    79.2,
+    4.8,
+    105
+   ],
+   "u95": [
+    78.3,
+    4.1,
+    111
+   ]
+  },
+  "interp4_trans": {
+   "precise": [
+    75.8,
+    14.0,
+    213
+   ],
+   "u95": [
+    77.0,
+    11.0,
+    224
+   ]
+  },
+  "interp8_trans": {
+   "precise": [
+    63.7,
+    26.5,
+    303
+   ],
+   "u95": [
+    66.8,
+    21.3,
+    315
+   ]
+  }
+ },
+ "LSTM 2프레임": {
+  "clean_idle_fa": {
+   "precise": 51,
+   "u95": 36
+  },
+  "glitch1_idle_fa": {
+   "precise": 67,
+   "u95": 45
+  },
+  "intrude1_idle_fa": {
+   "precise": 128,
+   "u95": 94
+  },
+  "glitch2_idle_fa": {
+   "precise": 72,
+   "u95": 49
+  },
+  "intrude2_idle_fa": {
+   "precise": 123,
+   "u95": 98
+  },
+  "jitter0.03_acc": 90.2,
+  "jitter0.03_idle_fa": {
+   "precise": 57,
+   "u95": 38
+  },
+  "jitter0.03_trans": {
+   "precise": [
+    89.3,
+    2.8,
+    96
+   ],
+   "u95": [
+    88.3,
+    3.1,
+    109
+   ]
+  },
+  "jitter0.06_acc": 89.9,
+  "jitter0.06_idle_fa": {
+   "precise": 68,
+   "u95": 46
+  },
+  "jitter0.06_trans": {
+   "precise": [
+    89.8,
+    3.1,
+    98
+   ],
+   "u95": [
+    88.3,
+    3.4,
+    103
+   ]
+  },
+  "jitter0.1_acc": 89.36,
+  "jitter0.1_idle_fa": {
+   "precise": 105,
+   "u95": 77
+  },
+  "jitter0.1_trans": {
+   "precise": [
+    90.8,
+    3.2,
+    102
+   ],
+   "u95": [
+    89.8,
+    2.6,
+    113
+   ]
+  },
+  "yaw20_acc": 90.41,
+  "yaw20_idle_fa": {
+   "precise": 54,
+   "u95": 36
+  },
+  "yaw40_acc": 88.61,
+  "yaw40_idle_fa": {
+   "precise": 78,
+   "u95": 57
+  },
+  "fps15_acc": 90.36,
+  "fps15_idle_fa": {
+   "precise": 43,
+   "u95": 34
+  },
+  "fps15_trans": {
+   "precise": [
+    88.3,
+    2.6,
+    158
+   ],
+   "u95": [
+    86.6,
+    2.9,
+    162
+   ]
+  },
+  "step_trans": {
+   "precise": [
+    89.0,
+    2.6,
+    98
+   ],
+   "u95": [
+    88.3,
+    2.8,
+    107
+   ]
+  },
+  "brief3_trans": {
+   "precise": [
+    76.9,
+    4.5,
+    64
+   ],
+   "u95": [
+    73.8,
+    4.0,
+    63
+   ]
+  },
+  "brief4_trans": {
+   "precise": [
+    79.5,
+    4.2,
+    65
+   ],
+   "u95": [
+    76.4,
+    3.7,
+    65
+   ]
+  },
+  "brief5_trans": {
+   "precise": [
+    81.5,
+    3.4,
+    67
+   ],
+   "u95": [
+    78.4,
+    3.4,
+    67
+   ]
+  },
+  "brief6_trans": {
+   "precise": [
+    83.6,
+    3.1,
+    70
+   ],
+   "u95": [
+    79.7,
+    3.1,
+    69
+   ]
+  },
+  "brief8_trans": {
+   "precise": [
+    85.2,
+    2.8,
+    74
+   ],
+   "u95": [
+    82.6,
+    2.8,
+    75
+   ]
+  },
+  "interp4_trans": {
+   "precise": [
+    73.1,
+    19.0,
+    172
+   ],
+   "u95": [
+    75.0,
+    15.5,
+    185
+   ]
+  },
+  "interp8_trans": {
+   "precise": [
+    65.1,
+    27.3,
+    260
+   ],
+   "u95": [
+    67.8,
+    23.5,
+    276
+   ]
+  }
+ },
+ "MLP 1프레임": {
+  "clean_idle_fa": {
+   "precise": 48,
+   "u95": 29
+  },
+  "glitch1_idle_fa": {
+   "precise": 48,
+   "u95": 31
+  },
+  "intrude1_idle_fa": {
+   "precise": 58,
+   "u95": 33
+  },
+  "glitch2_idle_fa": {
+   "precise": 60,
+   "u95": 35
+  },
+  "intrude2_idle_fa": {
+   "precise": 187,
+   "u95": 155
+  },
+  "jitter0.03_acc": 87.04,
+  "jitter0.03_idle_fa": {
+   "precise": 49,
+   "u95": 32
+  },
+  "jitter0.03_trans": {
+   "precise": [
+    84.4,
+    5.4,
+    100
+   ],
+   "u95": [
+    82.9,
+    3.9,
+    104
+   ]
+  },
+  "jitter0.06_acc": 86.7,
+  "jitter0.06_idle_fa": {
+   "precise": 69,
+   "u95": 43
+  },
+  "jitter0.06_trans": {
+   "precise": [
+    84.3,
+    5.5,
+    95
+   ],
+   "u95": [
+    82.9,
+    4.6,
+    111
+   ]
+  },
+  "jitter0.1_acc": 86.24,
+  "jitter0.1_idle_fa": {
+   "precise": 110,
+   "u95": 61
+  },
+  "jitter0.1_trans": {
+   "precise": [
+    86.1,
+    5.1,
+    103
+   ],
+   "u95": [
+    83.3,
+    4.3,
+    114
+   ]
+  },
+  "yaw20_acc": 87.37,
+  "yaw20_idle_fa": {
+   "precise": 49,
+   "u95": 36
+  },
+  "yaw40_acc": 87.82,
+  "yaw40_idle_fa": {
+   "precise": 57,
+   "u95": 41
+  },
+  "fps15_acc": 87.09,
+  "fps15_idle_fa": {
+   "precise": 38,
+   "u95": 26
+  },
+  "fps15_trans": {
+   "precise": [
+    83.3,
+    4.5,
+    124
+   ],
+   "u95": [
+    80.7,
+    3.4,
+    137
+   ]
+  },
+  "step_trans": {
+   "precise": [
+    84.4,
+    4.9,
+    97
+   ],
+   "u95": [
+    82.3,
+    3.7,
+    99
+   ]
+  },
+  "brief3_trans": {
+   "precise": [
+    71.6,
+    5.6,
+    44
+   ],
+   "u95": [
+    67.7,
+    3.6,
+    40
+   ]
+  },
+  "brief4_trans": {
+   "precise": [
+    73.3,
+    5.1,
+    46
+   ],
+   "u95": [
+    69.6,
+    3.3,
+    42
+   ]
+  },
+  "brief5_trans": {
+   "precise": [
+    74.5,
+    5.0,
+    46
+   ],
+   "u95": [
+    71.3,
+    3.1,
+    44
+   ]
+  },
+  "brief6_trans": {
+   "precise": [
+    75.4,
+    4.8,
+    48
+   ],
+   "u95": [
+    72.7,
+    3.1,
+    47
+   ]
+  },
+  "brief8_trans": {
+   "precise": [
+    78.1,
+    4.3,
+    55
+   ],
+   "u95": [
+    74.8,
+    3.3,
+    52
+   ]
+  },
+  "interp4_trans": {
+   "precise": [
+    68.8,
+    20.4,
+    176
+   ],
+   "u95": [
+    69.9,
+    16.2,
+    180
+   ]
+  },
+  "interp8_trans": {
+   "precise": [
+    59.6,
+    30.1,
+    271
+   ],
+   "u95": [
+    61.7,
+    25.0,
+    277
+   ]
+  }
+ }
+}

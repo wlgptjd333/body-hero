@@ -1,0 +1,36 @@
+{
+ "GAP 4프레임": {
+  "base": 0.005,
+  "by_position_oldest_to_newest": [
+   0.0416,
+   0.117,
+   0.1283,
+   0.0681
+  ]
+ },
+ "LSTM 3프레임": {
+  "base": 0.0023,
+  "by_position_oldest_to_newest": [
+   0.138,
+   0.4048,
+   0.1115
+  ]
+ },
+ "LSTM 4프레임": {
+  "base": 0.0013,
+  "by_position_oldest_to_newest": [
+   0.0363,
+   0.2017,
+   0.1108,
+   0.0291
+  ]
+ },
+ "GAP 3프레임": {
+  "base": 0.0051,
+  "by_position_oldest_to_newest": [
+   0.0843,
+   0.3204,
+   0.145
+  ]
+ }
+}

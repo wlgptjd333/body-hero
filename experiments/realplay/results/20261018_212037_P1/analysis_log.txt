@@ -1,0 +1,40 @@
+세션: C:\Users\User\Documents\body-hero-submission\thesis_hwp\실플레이_실험\results\20261018_212037_P1
+  [통과] 좌표 형식: 프레임당 [99]개 값, 유한값 예
+  [통과] [연습 (분석 안 함)] 프레임률 27.6 FPS, 사람 인식 100.0%, 최대 프레임 간격 53 ms
+  [통과] [정자세 대기] 프레임률 28.9 FPS, 사람 인식 100.0%, 최대 프레임 간격 50 ms
+  [통과] [준비 자세 대기 (왼발 앞)] 프레임률 29.3 FPS, 사람 인식 100.0%, 최대 프레임 간격 50 ms
+  [통과] [준비 자세 대기 (오른발 앞)] 프레임률 29.2 FPS, 사람 인식 100.0%, 최대 프레임 간격 181 ms
+  [통과] [움직이며 대기] 프레임률 29.4 FPS, 사람 인식 100.0%, 최대 프레임 간격 50 ms
+  [통과] [지시 동작] 프레임률 29.3 FPS, 사람 인식 100.0%, 최대 프레임 간격 194 ms
+  [통과] [빠른 잽] 프레임률 29.2 FPS, 사람 인식 100.0%, 최대 프레임 간격 197 ms
+  [통과] [좌우 연타] 프레임률 29.2 FPS, 사람 인식 100.0%, 최대 프레임 간격 195 ms
+  [통과] [비스듬히 서기] 프레임률 29.3 FPS, 사람 인식 100.0%, 최대 프레임 간격 49 ms
+  [통과] [지시 동작] 지시 64개 / 계획 64개
+  [통과] [빠른 잽] 지시 24개 / 계획 24개
+  [통과] [좌우 연타] 지시 12개 / 계획 12개
+  [통과] [비스듬히 서기] 지시 20개 / 계획 20개
+  [통과] 입력 전송 184건 / 수신 184건, 전송→수신 시간차 중앙값 0.0 ms (최대 0.3 ms)
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1792326859.915784   12584 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1792326862.569684   12584 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+WARNING:tensorflow:From C:\Users\User\Documents\body-hero\.venv_thesis_ml\Lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+  모델 평가 완료: 게임 v1.1 모델
+  모델 평가 완료: gap_g_seed44 (9/29 실험 모델, 배포본 아님)
+  모델 평가 완료: GAP 4프레임
+  모델 평가 완료: LSTM 3프레임
+  모델 평가 완료: LSTM 4프레임
+  모델 평가 완료: GAP 3프레임
+  모델 평가 완료: GAP 2프레임
+  모델 평가 완료: LSTM 2프레임
+  모델 평가 완료: MLP 1프레임
+  모델 평가 완료: GAP(확장) 4프레임
+  모델 평가 완료: GRU 4프레임
+  모델 평가 완료: GAP 6프레임
+  모델 평가 완료: GAP 8프레임
+  모델 평가 완료: LSTM 6프레임
+  모델 평가 완료: LSTM 8프레임
+  모델 평가 완료: 게임 v1.0.0 배포 모델 (논문 4.3절 평가 기준 모델)
+저장: C:\Users\User\Documents\body-hero-submission\thesis_hwp\실플레이_실험\results\20261018_212037_P1\결과요약.md

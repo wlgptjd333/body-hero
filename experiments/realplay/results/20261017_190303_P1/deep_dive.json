@@ -1,0 +1,147 @@
+{
+ "rest_seconds_total": 268.0,
+ "results": {
+  "게임 파이프라인": {
+   "rest_fa": {
+    "punch_r": 7,
+    "upper_r": 1,
+    "punch_l": 1
+   },
+   "resp_wrong_pairs": {
+    "upper_r→punch_r": 5,
+    "upper_l→punch_l": 8,
+    "punch_r→upper_r": 1,
+    "punch_l→punch_r": 1
+   },
+   "miss": {
+    "upper_r": 5,
+    "upper_l": 8,
+    "punch_r": 2,
+    "punch_l": 1
+   },
+   "lat_on": {
+    "upper_l": 408,
+    "punch_l": 302,
+    "punch_r": 204,
+    "upper_r": 279,
+    "guard": 368,
+    "squat": 29
+   },
+   "n": {
+    "upper_l": 21,
+    "punch_l": 45,
+    "punch_r": 47,
+    "upper_r": 19,
+    "guard": 9,
+    "squat": 5
+   }
+  },
+  "배포 모델 (GAP 4프레임, 게임 v1.0.0)": {
+   "rest_fa": {
+    "punch_r": 15,
+    "upper_r": 1,
+    "punch_l": 5
+   },
+   "resp_wrong_pairs": {
+    "upper_r→punch_r": 7,
+    "upper_l→punch_l": 11,
+    "punch_r→upper_r": 1,
+    "punch_l→punch_r": 1
+   },
+   "miss": {
+    "upper_l": 1,
+    "punch_r": 2
+   },
+   "n": {
+    "upper_l": 21,
+    "punch_l": 45,
+    "punch_r": 47,
+    "upper_r": 19,
+    "guard": 9,
+    "squat": 5
+   },
+   "lat_on": {
+    "upper_l": 207,
+    "punch_l": 170,
+    "punch_r": 86,
+    "upper_r": 173,
+    "guard": 279,
+    "squat": 448
+   },
+   "seeds": 1
+  },
+  "GAP 4프레임": {
+   "rest_fa": {
+    "punch_r": 104,
+    "punch_l": 38,
+    "upper_r": 4
+   },
+   "resp_wrong_pairs": {
+    "upper_l→punch_l": 34,
+    "punch_r→upper_r": 5,
+    "upper_r→punch_r": 19,
+    "upper_l→punch_r": 6,
+    "punch_l→punch_r": 2
+   },
+   "miss": {
+    "upper_l": 5,
+    "punch_r": 13
+   },
+   "n": {
+    "upper_l": 21,
+    "punch_l": 45,
+    "punch_r": 47,
+    "upper_r": 19,
+    "guard": 9,
+    "squat": 5
+   },
+   "lat_on": {
+    "upper_l": 191,
+    "punch_l": 140,
+    "punch_r": 109,
+    "upper_r": 182,
+    "guard": 258,
+    "squat": 269
+   },
+   "seeds": 5
+  },
+  "LSTM 3프레임": {
+   "rest_fa": {
+    "punch_l": 407,
+    "punch_r": 112,
+    "upper_r": 5
+   },
+   "resp_wrong_pairs": {
+    "upper_l→punch_l": 61,
+    "punch_r→upper_r": 4,
+    "upper_r→punch_r": 35,
+    "punch_r→punch_l": 23,
+    "upper_r→punch_l": 7,
+    "upper_l→punch_r": 4,
+    "punch_l→punch_r": 13
+   },
+   "miss": {
+    "upper_l": 5,
+    "punch_r": 5,
+    "punch_l": 43
+   },
+   "n": {
+    "upper_l": 21,
+    "punch_l": 45,
+    "punch_r": 47,
+    "upper_r": 19,
+    "guard": 9,
+    "squat": 5
+   },
+   "lat_on": {
+    "upper_l": 170,
+    "punch_l": 67,
+    "punch_r": 69,
+    "upper_r": 145,
+    "guard": 215,
+    "squat": 251
+   },
+   "seeds": 5
+  }
+ }
+}

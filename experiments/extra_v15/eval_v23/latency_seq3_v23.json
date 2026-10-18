@@ -1,0 +1,11 @@
+{
+ "classifier_ms": {
+  "gap_seq4": 0.425,
+  "lstm_seq4": 0.591,
+  "gap_seq3": 0.432,
+  "lstm_seq3": 0.65,
+  "gap_seq2": 0.45,
+  "lstm_seq2": 0.537
+ },
+ "mediapipe_ms": {}
+}

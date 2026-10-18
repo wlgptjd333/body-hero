@@ -1,0 +1,20 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1792326037.844911   15160 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1792326040.383342   15160 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+Pose Landmarker: Lite
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+가드 보조 모델(Keras) 추가 로드 중…
+가드 보조 모델 로드 완료.
+카메라 열림: index=0 backend=dshow (CAP_DSHOW)
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+WARNING: Logging before InitGoogle() is written to STDERR
+W0000 00:00:1792326043.013773   16540 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1792326043.032925   11652 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+추론: 로컬 모델 (pose_server 불필요). 가드 폴백 O (시퀀스 4프레임)
+로컬 가중치 준비 완료 (0.1초)
+웹캠 + ML(시퀀스) 판정 → Godot UDP
+카메라: index=0 backend=dshow → CAP_DSHOW
+설정: 해상도 480x360, 시퀀스 4프레임, FPS 목표 30
+펀치: 직선은 연속 3프레임 확정, softmax 하한 0.88 (어퍼 2프레임·0.90)
+W0000 00:00:1792326043.100785    3132 landmark_projection_calculator.cc:81] Using NORM_RECT without IMAGE_DIMENSIONS is only supported for the square ROI. Provide IMAGE_DIMENSIONS or use PROJECTION_MATRIX.

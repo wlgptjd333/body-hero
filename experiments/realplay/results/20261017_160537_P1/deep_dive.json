@@ -1,0 +1,227 @@
+{
+ "rest_seconds_total": 229.0,
+ "results": {
+  "게임 파이프라인": {
+   "rest_fa": {
+    "punch_r": 6
+   },
+   "resp_wrong_pairs": {
+    "upper_r→punch_r": 7,
+    "upper_l→punch_l": 3,
+    "punch_r→upper_r": 1
+   },
+   "miss": {
+    "upper_r": 7,
+    "upper_l": 2,
+    "punch_r": 2
+   },
+   "lat_on": {
+    "punch_r": 284,
+    "upper_r": 362,
+    "upper_l": 458,
+    "guard": 340,
+    "punch_l": 378,
+    "squat": 207
+   },
+   "n": {
+    "upper_r": 17,
+    "upper_l": 17,
+    "punch_r": 39,
+    "squat": 8,
+    "guard": 8,
+    "punch_l": 29
+   }
+  },
+  "배포 모델 (GAP 4프레임, 게임 v1.0.0)": {
+   "rest_fa": {
+    "punch_r": 11,
+    "punch_l": 2
+   },
+   "resp_wrong_pairs": {
+    "upper_l→punch_l": 4,
+    "upper_r→punch_r": 6,
+    "punch_l→punch_r": 1
+   },
+   "miss": {
+    "punch_r": 1
+   },
+   "n": {
+    "upper_r": 17,
+    "upper_l": 17,
+    "punch_r": 39,
+    "squat": 8,
+    "guard": 8,
+    "punch_l": 29
+   },
+   "lat_on": {
+    "upper_r": 228,
+    "upper_l": 269,
+    "punch_r": 131,
+    "guard": 229,
+    "punch_l": 224,
+    "squat": 53
+   },
+   "seeds": 1
+  },
+  "GAP 4프레임": {
+   "rest_fa": {
+    "punch_r": 24,
+    "punch_l": 17
+   },
+   "resp_wrong_pairs": {
+    "upper_l→punch_l": 11,
+    "punch_r→upper_r": 5,
+    "upper_r→punch_r": 6,
+    "punch_l→punch_r": 1
+   },
+   "miss": {
+    "punch_r": 7,
+    "squat": 1
+   },
+   "n": {
+    "upper_r": 17,
+    "upper_l": 17,
+    "punch_r": 39,
+    "squat": 8,
+    "guard": 8,
+    "punch_l": 29
+   },
+   "lat_on": {
+    "upper_r": 192,
+    "upper_l": 210,
+    "punch_r": 143,
+    "guard": 224,
+    "punch_l": 188,
+    "squat": 71
+   },
+   "seeds": 5
+  },
+  "LSTM 3프레임": {
+   "rest_fa": {
+    "punch_r": 61,
+    "punch_l": 77
+   },
+   "resp_wrong_pairs": {
+    "upper_l→punch_l": 45,
+    "upper_l→punch_r": 10,
+    "upper_r→punch_r": 50,
+    "punch_r→punch_l": 1
+   },
+   "miss": {},
+   "n": {
+    "upper_r": 17,
+    "upper_l": 17,
+    "punch_r": 39,
+    "squat": 8,
+    "guard": 8,
+    "punch_l": 29
+   },
+   "lat_on": {
+    "upper_r": 188,
+    "upper_l": 191,
+    "punch_r": 112,
+    "guard": 187,
+    "punch_l": 120,
+    "squat": 41
+   },
+   "seeds": 5
+  },
+  "LSTM 2프레임": {
+   "rest_fa": {
+    "punch_r": 56,
+    "punch_l": 92
+   },
+   "resp_wrong_pairs": {
+    "upper_l→punch_l": 57,
+    "upper_r→punch_r": 55,
+    "upper_l→punch_r": 7,
+    "upper_r→punch_l": 1,
+    "punch_r→punch_l": 3,
+    "punch_r→upper_r": 1
+   },
+   "miss": {},
+   "n": {
+    "upper_r": 17,
+    "upper_l": 17,
+    "punch_r": 39,
+    "squat": 8,
+    "guard": 8,
+    "punch_l": 29
+   },
+   "lat_on": {
+    "upper_r": 173,
+    "upper_l": 178,
+    "punch_r": 90,
+    "guard": 165,
+    "punch_l": 99,
+    "squat": 27
+   },
+   "seeds": 5
+  },
+  "MLP 1프레임": {
+   "rest_fa": {
+    "punch_r": 46,
+    "punch_l": 28
+   },
+   "resp_wrong_pairs": {
+    "upper_r→punch_r": 30,
+    "upper_l→punch_r": 3,
+    "upper_l→punch_l": 13
+   },
+   "miss": {
+    "punch_r": 1
+   },
+   "n": {
+    "upper_r": 17,
+    "upper_l": 17,
+    "punch_r": 39,
+    "squat": 8,
+    "guard": 8,
+    "punch_l": 29
+   },
+   "lat_on": {
+    "upper_r": 145,
+    "upper_l": 150,
+    "punch_r": 90,
+    "guard": 154,
+    "punch_l": 129,
+    "squat": 250
+   },
+   "seeds": 5
+  },
+  "LSTM 4프레임": {
+   "rest_fa": {
+    "punch_r": 75,
+    "punch_l": 74
+   },
+   "resp_wrong_pairs": {
+    "upper_l→punch_l": 21,
+    "upper_r→punch_r": 46,
+    "upper_l→punch_r": 8,
+    "punch_r→punch_l": 1,
+    "punch_r→upper_r": 3,
+    "punch_l→punch_r": 1
+   },
+   "miss": {
+    "punch_r": 2
+   },
+   "n": {
+    "upper_r": 17,
+    "upper_l": 17,
+    "punch_r": 39,
+    "squat": 8,
+    "guard": 8,
+    "punch_l": 29
+   },
+   "lat_on": {
+    "upper_r": 195,
+    "upper_l": 203,
+    "punch_r": 107,
+    "guard": 195,
+    "punch_l": 159,
+    "squat": 46
+   },
+   "seeds": 5
+  }
+ }
+}

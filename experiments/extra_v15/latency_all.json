@@ -1,0 +1,26 @@
+{
+ "classifier_ms": {
+  "mlp_seq1": 0.364,
+  "gap_seq2": 0.473,
+  "gap_seq4": 0.48,
+  "gapwide_seq4": 0.48,
+  "lstm_seq2": 0.602,
+  "lstm_seq4": 0.617,
+  "gru_seq4": 0.66,
+  "gap_seq6": 0.49,
+  "gap_seq8": 0.484,
+  "lstm_seq6": 0.682,
+  "lstm_seq8": 0.74
+ },
+ "mediapipe_ms": {
+  "640x480": {
+   "median": 12.68,
+   "p95": 14.08
+  },
+  "480x360": {
+   "median": 13.21,
+   "p95": 25.02
+  }
+ },
+ "mediapipe_version": "1.0.1"
+}

@@ -1,0 +1,119 @@
+{
+ "sweep": {
+  "MLP 1프레임": {
+   "0.7": {
+    "false_attacks": 74,
+    "onset_ms": 76.3,
+    "attack_miss_pct": 13.1
+   },
+   "0.8": {
+    "false_attacks": 61,
+    "onset_ms": 77.8,
+    "attack_miss_pct": 14.8
+   },
+   "0.88": {
+    "false_attacks": 48,
+    "onset_ms": 86.1,
+    "attack_miss_pct": 15.7
+   },
+   "0.95": {
+    "false_attacks": 29,
+    "onset_ms": 90.7,
+    "attack_miss_pct": 18.1
+   },
+   "0.98": {
+    "false_attacks": 20,
+    "onset_ms": 105.4,
+    "attack_miss_pct": 22.2
+   }
+  },
+  "MLP + 4프레임 평균": {
+   "0.7": {
+    "false_attacks": 65,
+    "onset_ms": 140.2,
+    "attack_miss_pct": 14.8
+   },
+   "0.8": {
+    "false_attacks": 49,
+    "onset_ms": 169.8,
+    "attack_miss_pct": 15.6
+   },
+   "0.88": {
+    "false_attacks": 38,
+    "onset_ms": 172.1,
+    "attack_miss_pct": 17.0
+   },
+   "0.95": {
+    "false_attacks": 24,
+    "onset_ms": 184.9,
+    "attack_miss_pct": 20.1
+   },
+   "0.98": {
+    "false_attacks": 19,
+    "onset_ms": 198.3,
+    "attack_miss_pct": 24.1
+   }
+  },
+  "GAP 4프레임": {
+   "0.7": {
+    "false_attacks": 81,
+    "onset_ms": 135.2,
+    "attack_miss_pct": 10.5
+   },
+   "0.8": {
+    "false_attacks": 61,
+    "onset_ms": 134.8,
+    "attack_miss_pct": 12.8
+   },
+   "0.88": {
+    "false_attacks": 42,
+    "onset_ms": 143.4,
+    "attack_miss_pct": 14.0
+   },
+   "0.95": {
+    "false_attacks": 31,
+    "onset_ms": 161.6,
+    "attack_miss_pct": 17.1
+   },
+   "0.98": {
+    "false_attacks": 23,
+    "onset_ms": 161.9,
+    "attack_miss_pct": 23.1
+   }
+  },
+  "LSTM 4프레임": {
+   "0.7": {
+    "false_attacks": 82,
+    "onset_ms": 127.5,
+    "attack_miss_pct": 10.6
+   },
+   "0.8": {
+    "false_attacks": 69,
+    "onset_ms": 134.1,
+    "attack_miss_pct": 11.4
+   },
+   "0.88": {
+    "false_attacks": 65,
+    "onset_ms": 143.4,
+    "attack_miss_pct": 12.8
+   },
+   "0.95": {
+    "false_attacks": 46,
+    "onset_ms": 150.3,
+    "attack_miss_pct": 14.5
+   },
+   "0.98": {
+    "false_attacks": 36,
+    "onset_ms": 149.3,
+    "attack_miss_pct": 19.6
+   }
+  }
+ },
+ "tuned_threshold_miss_le_5pct": {
+  "MLP 1프레임": null,
+  "MLP + 4프레임 평균": null,
+  "GAP 4프레임": null,
+  "LSTM 4프레임": null
+ },
+ "idle_recordings": 189
+}

@@ -1,0 +1,59 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1791391208.129188   25152 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1791391213.780391   25152 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+================================================================================
+BODY HERO - THESIS 2x2 EXPERIMENT
+================================================================================
+TensorFlow: 2.21.0
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+GPU: []
+Training seeds: [42, 43, 44, 45, 46]
+Total runs: 5
+Result directory: C:\Users\User\Documents\body-hero-submission\thesis_hwp\재실험_2x2_증강수정\results
+
+Loading data...
+Total frames: 66300
+Total recordings: 1105
+Pose array: (66300, 99)
+
+Existing recording split found.
+Reusing the original fixed split.
+
+FIXED RECORDING SPLIT
+---------------------
+Train recordings: 886
+Validation recordings: 219
+
+Preparing validation sets...
+
+seq_len=1
+X: (13140, 1, 99)
+Class counts: [2220 1560 2040 2040 1800 1860 1620]
+
+RESUME STATUS
+-------------
+Completed runs: 5 / 5
+Remaining runs: 0
+
+
+================================================================================
+SEQUENCE LENGTH: 1
+================================================================================
+Original training: (53160, 1, 99)
+
+
+SKIP: mlp_seq1_seed42
+
+
+SKIP: mlp_seq1_seed43
+
+
+SKIP: mlp_seq1_seed44
+
+
+SKIP: mlp_seq1_seed45
+
+
+SKIP: mlp_seq1_seed46
+ALL RUNS DONE

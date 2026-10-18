@@ -1,0 +1,23 @@
+{
+  "seed": 43,
+  "architecture": "lstm",
+  "seq_len": 2,
+  "accuracy": 0.9953563965637334,
+  "macro_f1": 0.9957423092897274,
+  "weighted_f1": 0.9953503024640036,
+  "mean_true_class_probability": 0.994283139705658,
+  "std_true_class_probability": 0.061075977981090546,
+  "f1_none": 0.9888991674375578,
+  "f1_guard": 0.9980443285528031,
+  "f1_punch_l": 0.9908393166625402,
+  "f1_punch_r": 0.9955290611028316,
+  "f1_upper_l": 0.9991527817000847,
+  "f1_upper_r": 0.9983588621444202,
+  "f1_squat": 0.9993726474278545,
+  "stability_n": 12864,
+  "mean_abs_probability_delta_pp": 0.2972599027089018,
+  "median_abs_probability_delta_pp": 1.1920928955078125e-05,
+  "p95_abs_probability_delta_pp": 0.05212008953094449,
+  "training_seconds": 886.3545835018158,
+  "epochs_trained": 59
+}

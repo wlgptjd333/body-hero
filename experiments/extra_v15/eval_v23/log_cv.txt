@@ -1,0 +1,69 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1792102977.381981   11656 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1792102983.056702   11656 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+WARNING:tensorflow:From C:\Users\User\Documents\body-hero\.venv_thesis_ml\Lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+gap_seq2_fold0 acc 90.72 fa 8 -> 2
+gap_seq2_fold1 acc 93.37 fa 19 -> 0
+WARNING:tensorflow:5 out of the last 13 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x000001E0BF86ECA0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+gap_seq2_fold2 acc 88.79 fa 24 -> 13
+WARNING:tensorflow:5 out of the last 13 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x000001E0BF86DBC0> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+gap_seq2_fold3 acc 87.54 fa 62 -> 1
+gap_seq2_fold4 acc 79.38 fa 45 -> 7
+gap_seq3_fold0 acc 92.41 fa 5 -> 2
+gap_seq3_fold1 acc 91.26 fa 45 -> 17
+gap_seq3_fold2 acc 88.54 fa 27 -> 7
+gap_seq3_fold3 acc 91.11 fa 26 -> 0
+gap_seq3_fold4 acc 77.17 fa 52 -> 13
+gap_seq4_fold0 acc 93.84 fa 3 -> 2
+gap_seq4_fold1 acc 91.44 fa 34 -> 12
+gap_seq4_fold2 acc 90.10 fa 26 -> 11
+gap_seq4_fold3 acc 90.11 fa 34 -> 4
+gap_seq4_fold4 acc 81.84 fa 25 -> 13
+gap_seq8_fold0 acc 95.78 fa 9 -> 4
+gap_seq8_fold1 acc 93.24 fa 23 -> 4
+gap_seq8_fold2 acc 93.30 fa 14 -> 9
+gap_seq8_fold3 acc 89.99 fa 16 -> 0
+gap_seq8_fold4 acc 80.88 fa 38 -> 12
+gru_seq4_fold0 acc 91.14 fa 3 -> 1
+gru_seq4_fold1 acc 93.60 fa 27 -> 16
+gru_seq4_fold2 acc 90.59 fa 29 -> 15
+gru_seq4_fold3 acc 86.47 fa 48 -> 13
+gru_seq4_fold4 acc 75.23 fa 64 -> 30
+lstm_seq2_fold0 acc 94.38 fa 12 -> 1
+lstm_seq2_fold1 acc 95.70 fa 29 -> 5
+lstm_seq2_fold2 acc 95.00 fa 39 -> 18
+lstm_seq2_fold3 acc 88.28 fa 37 -> 12
+lstm_seq2_fold4 acc 78.10 fa 29 -> 15
+lstm_seq3_fold0 acc 90.51 fa 1 -> 0
+lstm_seq3_fold1 acc 92.09 fa 42 -> 23
+lstm_seq3_fold2 acc 95.64 fa 40 -> 15
+lstm_seq3_fold3 acc 92.12 fa 5 -> 1
+lstm_seq3_fold4 acc 75.17 fa 54 -> 15
+lstm_seq4_fold0 acc 89.84 fa 3 -> 0
+lstm_seq4_fold1 acc 92.78 fa 55 -> 31
+lstm_seq4_fold2 acc 83.84 fa 16 -> 11
+lstm_seq4_fold3 acc 88.01 fa 44 -> 8
+lstm_seq4_fold4 acc 88.15 fa 28 -> 15
+lstm_seq8_fold0 acc 93.16 fa 3 -> 0
+lstm_seq8_fold1 acc 92.69 fa 41 -> 18
+lstm_seq8_fold2 acc 95.63 fa 23 -> 17
+lstm_seq8_fold3 acc 87.84 fa 14 -> 0
+lstm_seq8_fold4 acc 79.04 fa 16 -> 10
+mlp_seq1_fold0 acc 90.37 fa 5 -> 3
+mlp_seq1_fold1 acc 92.14 fa 43 -> 18
+mlp_seq1_fold2 acc 90.55 fa 45 -> 10
+mlp_seq1_fold3 acc 85.76 fa 60 -> 4
+mlp_seq1_fold4 acc 76.84 fa 47 -> 13
+gap_seq2 acc 87.96±5.28 pp_fa 23 / 189 onset 3.62 release 0.39 {0: 90.72, 1: 93.37, 2: 88.79, 3: 87.54, 4: 79.38}
+gap_seq3 acc 88.10±6.27 pp_fa 39 / 189 onset 4.18 release 0.85 {0: 92.41, 1: 91.26, 2: 88.54, 3: 91.11, 4: 77.17}
+gap_seq4 acc 89.47±4.53 pp_fa 42 / 189 onset 4.22 release 1.34 {0: 93.84, 1: 91.44, 2: 90.1, 3: 90.11, 4: 81.84}
+gap_seq8 acc 90.64±5.83 pp_fa 29 / 189 onset 6.27 release 3.16 {0: 95.78, 1: 93.24, 2: 93.3, 3: 89.99, 4: 80.88}
+gru_seq4 acc 87.41±7.27 pp_fa 75 / 189 onset 3.87 release 1.48 {0: 91.14, 1: 93.6, 2: 90.59, 3: 86.47, 4: 75.23}
+lstm_seq2 acc 90.29±7.43 pp_fa 51 / 189 onset 2.76 release 0.39 {0: 94.38, 1: 95.7, 2: 95.0, 3: 88.28, 4: 78.1}
+lstm_seq3 acc 89.11±8.01 pp_fa 54 / 189 onset 3.33 release 0.91 {0: 90.51, 1: 92.09, 2: 95.64, 3: 92.12, 4: 75.17}
+lstm_seq4 acc 88.52±3.25 pp_fa 65 / 189 onset 4.30 release 1.44 {0: 89.84, 1: 92.78, 2: 83.84, 3: 88.01, 4: 88.15}
+lstm_seq8 acc 89.67±6.58 pp_fa 45 / 189 onset 5.98 release 3.42 {0: 93.16, 1: 92.69, 2: 95.63, 3: 87.84, 4: 79.04}
+mlp_seq1 acc 87.13±6.22 pp_fa 48 / 189 onset 2.55 release 0.18 {0: 90.37, 1: 92.14, 2: 90.55, 3: 85.76, 4: 76.84}

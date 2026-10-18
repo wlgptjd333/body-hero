@@ -1,0 +1,74 @@
+{
+ "GAP 4프레임|fixed|conf2": {
+  "idle_fa": 1.6,
+  "onset_ms": 96.9,
+  "onset_frames": 2.91,
+  "miss_pct": 1.2
+ },
+ "GAP 4프레임|fixed|conf1": {
+  "idle_fa": 1.8,
+  "onset_ms": 60.3,
+  "onset_frames": 1.81,
+  "miss_pct": 1.1
+ },
+ "GAP 4프레임|cv|conf2": {
+  "idle_fa": 42,
+  "onset_ms": 145.3,
+  "onset_frames": 4.36,
+  "miss_pct": 14.2
+ },
+ "GAP 4프레임|cv|conf1": {
+  "idle_fa": 43,
+  "onset_ms": 109.2,
+  "onset_frames": 3.27,
+  "miss_pct": 13.4
+ },
+ "GAP 3프레임|fixed|conf2": {
+  "idle_fa": 2.8,
+  "onset_ms": 80.6,
+  "onset_frames": 2.42,
+  "miss_pct": 1.4
+ },
+ "GAP 3프레임|fixed|conf1": {
+  "idle_fa": 3.2,
+  "onset_ms": 48.4,
+  "onset_frames": 1.45,
+  "miss_pct": 1.4
+ },
+ "GAP 3프레임|cv|conf2": {
+  "idle_fa": 39,
+  "onset_ms": 143.0,
+  "onset_frames": 4.29,
+  "miss_pct": 18.4
+ },
+ "GAP 3프레임|cv|conf1": {
+  "idle_fa": 44,
+  "onset_ms": 108.3,
+  "onset_frames": 3.25,
+  "miss_pct": 17.6
+ },
+ "LSTM 3프레임|fixed|conf2": {
+  "idle_fa": 1.0,
+  "onset_ms": 69.0,
+  "onset_frames": 2.07,
+  "miss_pct": 0.0
+ },
+ "LSTM 3프레임|fixed|conf1": {
+  "idle_fa": 1.8,
+  "onset_ms": 35.7,
+  "onset_frames": 1.07,
+  "miss_pct": 0.0
+ },
+ "LSTM 3프레임|cv|conf2": {
+  "idle_fa": 54,
+  "onset_ms": 110.8,
+  "onset_frames": 3.32,
+  "miss_pct": 13.4
+ },
+ "LSTM 3프레임|cv|conf1": {
+  "idle_fa": 59,
+  "onset_ms": 78.5,
+  "onset_frames": 2.36,
+  "miss_pct": 12.7
+ }
+}

@@ -1,0 +1,134 @@
+{
+ "rest_seconds_total": 164.0,
+ "results": {
+  "게임 파이프라인": {
+   "rest_fa": {
+    "punch_r": 5
+   },
+   "resp_wrong_pairs": {
+    "upper_r→punch_r": 1,
+    "upper_l→punch_l": 7,
+    "upper_l→punch_r": 1
+   },
+   "miss": {
+    "upper_r": 1,
+    "upper_l": 7,
+    "punch_r": 2
+   },
+   "lat_on": {
+    "upper_r": 397,
+    "guard": 450,
+    "squat": 687,
+    "punch_l": 393,
+    "punch_r": 290,
+    "upper_l": 496
+   },
+   "n": {
+    "upper_r": 12,
+    "guard": 8,
+    "squat": 8,
+    "punch_l": 24,
+    "punch_r": 24,
+    "upper_l": 12
+   }
+  },
+  "배포 모델 (GAP 4프레임, 게임 v1.0.0)": {
+   "rest_fa": {
+    "punch_r": 11
+   },
+   "resp_wrong_pairs": {
+    "upper_r→punch_r": 1,
+    "upper_l→punch_l": 5,
+    "upper_l→punch_r": 1
+   },
+   "miss": {},
+   "n": {
+    "upper_r": 12,
+    "guard": 8,
+    "squat": 8,
+    "punch_l": 24,
+    "punch_r": 24,
+    "upper_l": 12
+   },
+   "lat_on": {
+    "upper_r": 279,
+    "guard": 448,
+    "squat": 592,
+    "punch_l": 288,
+    "punch_r": 200,
+    "upper_l": 401
+   },
+   "seeds": 1
+  },
+  "GAP 4프레임": {
+   "rest_fa": {
+    "punch_r": 24,
+    "upper_l": 9,
+    "punch_l": 9
+   },
+   "resp_wrong_pairs": {
+    "upper_l→punch_r": 3,
+    "upper_l→punch_l": 17,
+    "upper_r→punch_r": 2,
+    "punch_r→punch_l": 1
+   },
+   "miss": {
+    "squat": 3,
+    "punch_r": 2
+   },
+   "n": {
+    "upper_r": 12,
+    "guard": 8,
+    "squat": 8,
+    "punch_l": 24,
+    "punch_r": 24,
+    "upper_l": 12
+   },
+   "lat_on": {
+    "upper_r": 240,
+    "guard": 399,
+    "squat": 571,
+    "punch_l": 237,
+    "punch_r": 195,
+    "upper_l": 354
+   },
+   "seeds": 5
+  },
+  "LSTM 3프레임": {
+   "rest_fa": {
+    "punch_r": 84,
+    "punch_l": 222,
+    "upper_l": 9
+   },
+   "resp_wrong_pairs": {
+    "upper_l→punch_r": 6,
+    "upper_l→punch_l": 17,
+    "punch_r→punch_l": 14,
+    "upper_r→punch_l": 5,
+    "punch_l→punch_r": 2,
+    "upper_r→punch_r": 1
+   },
+   "miss": {
+    "punch_l": 27,
+    "punch_r": 3
+   },
+   "n": {
+    "upper_r": 12,
+    "guard": 8,
+    "squat": 8,
+    "punch_l": 24,
+    "punch_r": 24,
+    "upper_l": 12
+   },
+   "lat_on": {
+    "upper_r": 206,
+    "guard": 305,
+    "squat": 475,
+    "punch_l": 100,
+    "punch_r": 172,
+    "upper_l": 298
+   },
+   "seeds": 5
+  }
+ }
+}

@@ -1,0 +1,182 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1792240031.252246   11080 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1792240035.413679   11080 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+================================================================================
+BODY HERO - THESIS 2x2 EXPERIMENT
+================================================================================
+TensorFlow: 2.21.0
+GPU: []
+Training seeds: [42]
+Total runs: 1
+Result directory: C:\Users\User\Documents\body-hero-submission\thesis_hwp\재실험_2x2_증강수정\results
+
+Loading data...
+Total frames: 66300
+Total recordings: 1105
+Pose array: (66300, 99)
+
+Existing recording split found.
+Reusing the original fixed split.
+
+FIXED RECORDING SPLIT
+---------------------
+Train recordings: 886
+Validation recordings: 219
+실플레이 대기 녹화본 79개 추가 (학습 쪽)
+Epoch 1/120
+3438/3438 - 11s - 3ms/step - accuracy: 0.9187 - loss: 0.2559 - val_accuracy: 0.9035 - val_loss: 0.2795 - learning_rate: 0.0010
+Epoch 2/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9470 - loss: 0.1636 - val_accuracy: 0.9469 - val_loss: 0.1862 - learning_rate: 0.0010
+Epoch 3/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9547 - loss: 0.1433 - val_accuracy: 0.9692 - val_loss: 0.1473 - learning_rate: 0.0010
+Epoch 4/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9611 - loss: 0.1224 - val_accuracy: 0.9656 - val_loss: 0.1217 - learning_rate: 0.0010
+Epoch 5/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9611 - loss: 0.1215 - val_accuracy: 0.9663 - val_loss: 0.1541 - learning_rate: 0.0010
+Epoch 6/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9637 - loss: 0.1158 - val_accuracy: 0.9712 - val_loss: 0.1218 - learning_rate: 0.0010
+Epoch 7/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9643 - loss: 0.1130 - val_accuracy: 0.9754 - val_loss: 0.1327 - learning_rate: 0.0010
+Epoch 8/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9669 - loss: 0.1051 - val_accuracy: 0.9730 - val_loss: 0.1129 - learning_rate: 0.0010
+Epoch 9/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9692 - loss: 0.0979 - val_accuracy: 0.9778 - val_loss: 0.1084 - learning_rate: 0.0010
+Epoch 10/120
+3438/3438 - 10s - 3ms/step - accuracy: 0.9706 - loss: 0.0924 - val_accuracy: 0.9773 - val_loss: 0.1036 - learning_rate: 0.0010
+Epoch 11/120
+3438/3438 - 10s - 3ms/step - accuracy: 0.9719 - loss: 0.0897 - val_accuracy: 0.9792 - val_loss: 0.1002 - learning_rate: 0.0010
+Epoch 12/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9724 - loss: 0.0882 - val_accuracy: 0.9713 - val_loss: 0.1032 - learning_rate: 0.0010
+Epoch 13/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9728 - loss: 0.0863 - val_accuracy: 0.9793 - val_loss: 0.0919 - learning_rate: 0.0010
+Epoch 14/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9717 - loss: 0.0889 - val_accuracy: 0.9781 - val_loss: 0.1240 - learning_rate: 0.0010
+Epoch 15/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9743 - loss: 0.0828 - val_accuracy: 0.9814 - val_loss: 0.0907 - learning_rate: 0.0010
+Epoch 16/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9745 - loss: 0.0812 - val_accuracy: 0.9801 - val_loss: 0.0781 - learning_rate: 0.0010
+Epoch 17/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9746 - loss: 0.0822 - val_accuracy: 0.9778 - val_loss: 0.0849 - learning_rate: 0.0010
+Epoch 18/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9758 - loss: 0.0790 - val_accuracy: 0.9731 - val_loss: 0.0922 - learning_rate: 0.0010
+Epoch 19/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9752 - loss: 0.0788 - val_accuracy: 0.9833 - val_loss: 0.0853 - learning_rate: 0.0010
+Epoch 20/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9771 - loss: 0.0738 - val_accuracy: 0.9840 - val_loss: 0.0736 - learning_rate: 0.0010
+Epoch 21/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9762 - loss: 0.0756 - val_accuracy: 0.9866 - val_loss: 0.0550 - learning_rate: 0.0010
+Epoch 22/120
+3438/3438 - 10s - 3ms/step - accuracy: 0.9775 - loss: 0.0721 - val_accuracy: 0.9794 - val_loss: 0.0877 - learning_rate: 0.0010
+Epoch 23/120
+3438/3438 - 11s - 3ms/step - accuracy: 0.9782 - loss: 0.0699 - val_accuracy: 0.9819 - val_loss: 0.0660 - learning_rate: 0.0010
+Epoch 24/120
+3438/3438 - 10s - 3ms/step - accuracy: 0.9781 - loss: 0.0685 - val_accuracy: 0.9801 - val_loss: 0.0881 - learning_rate: 0.0010
+Epoch 25/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9774 - loss: 0.0707 - val_accuracy: 0.9838 - val_loss: 0.0694 - learning_rate: 0.0010
+Epoch 26/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9778 - loss: 0.0705 - val_accuracy: 0.9839 - val_loss: 0.0796 - learning_rate: 0.0010
+Epoch 27/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9787 - loss: 0.0682 - val_accuracy: 0.9869 - val_loss: 0.0743 - learning_rate: 0.0010
+Epoch 28/120
+
+Epoch 28: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+3438/3438 - 9s - 3ms/step - accuracy: 0.9781 - loss: 0.0689 - val_accuracy: 0.9853 - val_loss: 0.0603 - learning_rate: 0.0010
+Epoch 29/120
+3438/3438 - 10s - 3ms/step - accuracy: 0.9829 - loss: 0.0572 - val_accuracy: 0.9847 - val_loss: 0.0610 - learning_rate: 5.0000e-04
+Epoch 30/120
+3438/3438 - 10s - 3ms/step - accuracy: 0.9829 - loss: 0.0558 - val_accuracy: 0.9838 - val_loss: 0.0719 - learning_rate: 5.0000e-04
+Epoch 31/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9832 - loss: 0.0536 - val_accuracy: 0.9876 - val_loss: 0.0585 - learning_rate: 5.0000e-04
+Epoch 32/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9839 - loss: 0.0522 - val_accuracy: 0.9881 - val_loss: 0.0575 - learning_rate: 5.0000e-04
+Epoch 33/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9830 - loss: 0.0539 - val_accuracy: 0.9837 - val_loss: 0.0651 - learning_rate: 5.0000e-04
+Epoch 34/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9841 - loss: 0.0527 - val_accuracy: 0.9860 - val_loss: 0.0548 - learning_rate: 5.0000e-04
+Epoch 35/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9834 - loss: 0.0533 - val_accuracy: 0.9864 - val_loss: 0.0667 - learning_rate: 5.0000e-04
+Epoch 36/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9840 - loss: 0.0514 - val_accuracy: 0.9889 - val_loss: 0.0613 - learning_rate: 5.0000e-04
+Epoch 37/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9833 - loss: 0.0521 - val_accuracy: 0.9890 - val_loss: 0.0666 - learning_rate: 5.0000e-04
+Epoch 38/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9842 - loss: 0.0518 - val_accuracy: 0.9844 - val_loss: 0.0692 - learning_rate: 5.0000e-04
+Epoch 39/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9841 - loss: 0.0509 - val_accuracy: 0.9873 - val_loss: 0.0621 - learning_rate: 5.0000e-04
+Epoch 40/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9843 - loss: 0.0499 - val_accuracy: 0.9825 - val_loss: 0.0671 - learning_rate: 5.0000e-04
+Epoch 41/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9840 - loss: 0.0509 - val_accuracy: 0.9905 - val_loss: 0.0514 - learning_rate: 5.0000e-04
+Epoch 42/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9842 - loss: 0.0494 - val_accuracy: 0.9821 - val_loss: 0.0659 - learning_rate: 5.0000e-04
+Epoch 43/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9840 - loss: 0.0502 - val_accuracy: 0.9877 - val_loss: 0.0594 - learning_rate: 5.0000e-04
+Epoch 44/120
+3438/3438 - 10s - 3ms/step - accuracy: 0.9846 - loss: 0.0488 - val_accuracy: 0.9897 - val_loss: 0.0633 - learning_rate: 5.0000e-04
+Epoch 45/120
+3438/3438 - 10s - 3ms/step - accuracy: 0.9846 - loss: 0.0491 - val_accuracy: 0.9893 - val_loss: 0.0581 - learning_rate: 5.0000e-04
+Epoch 46/120
+3438/3438 - 10s - 3ms/step - accuracy: 0.9843 - loss: 0.0497 - val_accuracy: 0.9890 - val_loss: 0.0522 - learning_rate: 5.0000e-04
+Epoch 47/120
+3438/3438 - 10s - 3ms/step - accuracy: 0.9843 - loss: 0.0499 - val_accuracy: 0.9833 - val_loss: 0.0658 - learning_rate: 5.0000e-04
+Epoch 48/120
+
+Epoch 48: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+3438/3438 - 10s - 3ms/step - accuracy: 0.9844 - loss: 0.0489 - val_accuracy: 0.9897 - val_loss: 0.0515 - learning_rate: 5.0000e-04
+Epoch 49/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9866 - loss: 0.0424 - val_accuracy: 0.9855 - val_loss: 0.0509 - learning_rate: 2.5000e-04
+Epoch 50/120
+3438/3438 - 8s - 2ms/step - accuracy: 0.9866 - loss: 0.0431 - val_accuracy: 0.9858 - val_loss: 0.0589 - learning_rate: 2.5000e-04
+Epoch 51/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9868 - loss: 0.0421 - val_accuracy: 0.9847 - val_loss: 0.0614 - learning_rate: 2.5000e-04
+Epoch 52/120
+3438/3438 - 9s - 2ms/step - accuracy: 0.9875 - loss: 0.0410 - val_accuracy: 0.9867 - val_loss: 0.0582 - learning_rate: 2.5000e-04
+Epoch 53/120
+3438/3438 - 9s - 2ms/step - accuracy: 0.9867 - loss: 0.0425 - val_accuracy: 0.9871 - val_loss: 0.0665 - learning_rate: 2.5000e-04
+Epoch 54/120
+3438/3438 - 9s - 2ms/step - accuracy: 0.9867 - loss: 0.0427 - val_accuracy: 0.9872 - val_loss: 0.0567 - learning_rate: 2.5000e-04
+Epoch 55/120
+3438/3438 - 9s - 2ms/step - accuracy: 0.9871 - loss: 0.0411 - val_accuracy: 0.9865 - val_loss: 0.0584 - learning_rate: 2.5000e-04
+Epoch 56/120
+
+Epoch 56: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+3438/3438 - 9s - 3ms/step - accuracy: 0.9872 - loss: 0.0408 - val_accuracy: 0.9859 - val_loss: 0.0649 - learning_rate: 2.5000e-04
+Epoch 57/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9881 - loss: 0.0383 - val_accuracy: 0.9864 - val_loss: 0.0604 - learning_rate: 1.2500e-04
+Epoch 58/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9880 - loss: 0.0377 - val_accuracy: 0.9871 - val_loss: 0.0597 - learning_rate: 1.2500e-04
+Epoch 59/120
+3438/3438 - 9s - 2ms/step - accuracy: 0.9882 - loss: 0.0382 - val_accuracy: 0.9860 - val_loss: 0.0600 - learning_rate: 1.2500e-04
+Epoch 60/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9881 - loss: 0.0381 - val_accuracy: 0.9871 - val_loss: 0.0608 - learning_rate: 1.2500e-04
+Epoch 61/120
+3438/3438 - 8s - 2ms/step - accuracy: 0.9882 - loss: 0.0385 - val_accuracy: 0.9860 - val_loss: 0.0567 - learning_rate: 1.2500e-04
+Epoch 62/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9881 - loss: 0.0382 - val_accuracy: 0.9882 - val_loss: 0.0539 - learning_rate: 1.2500e-04
+Epoch 63/120
+
+Epoch 63: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+3438/3438 - 8s - 2ms/step - accuracy: 0.9882 - loss: 0.0372 - val_accuracy: 0.9870 - val_loss: 0.0609 - learning_rate: 1.2500e-04
+Epoch 64/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9889 - loss: 0.0363 - val_accuracy: 0.9865 - val_loss: 0.0615 - learning_rate: 6.2500e-05
+Epoch 65/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9885 - loss: 0.0366 - val_accuracy: 0.9861 - val_loss: 0.0592 - learning_rate: 6.2500e-05
+Epoch 66/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9886 - loss: 0.0365 - val_accuracy: 0.9869 - val_loss: 0.0590 - learning_rate: 6.2500e-05
+Epoch 67/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9888 - loss: 0.0376 - val_accuracy: 0.9863 - val_loss: 0.0609 - learning_rate: 6.2500e-05
+Epoch 68/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9885 - loss: 0.0373 - val_accuracy: 0.9872 - val_loss: 0.0577 - learning_rate: 6.2500e-05
+Epoch 69/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9890 - loss: 0.0358 - val_accuracy: 0.9868 - val_loss: 0.0600 - learning_rate: 6.2500e-05
+Epoch 70/120
+
+Epoch 70: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+3438/3438 - 9s - 3ms/step - accuracy: 0.9883 - loss: 0.0371 - val_accuracy: 0.9861 - val_loss: 0.0614 - learning_rate: 6.2500e-05
+Epoch 71/120
+3438/3438 - 9s - 3ms/step - accuracy: 0.9879 - loss: 0.0381 - val_accuracy: 0.9866 - val_loss: 0.0583 - learning_rate: 3.1250e-05
+Epoch 71: early stopping
+Restoring model weights from the end of the best epoch: 49.
+{"seed": 42, "added_idle_recordings": 79, "added_from": ["20261017_180725_P1"], "val_accuracy_fixed_split": 98.55, "train_seconds": 653, "keras": "3.15.1", "tensorflow": "2.21.0", "config": "재실험_2x2_증강수정/run_experiment.py와 같음(GAP 4프레임, 고정 분할, 실제 거울상 증강)"}

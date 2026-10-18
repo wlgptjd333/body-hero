@@ -1,0 +1,51 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1792102977.381981    9868 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1792102983.056697    9868 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+gap_seq3_seed42 98.79
+WARNING:tensorflow:From C:\Users\User\Documents\body-hero\.venv_thesis_ml\Lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+gap_seq3_seed43 99.3
+WARNING:tensorflow:5 out of the last 13 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x0000025A2D6FF600> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+gap_seq3_seed44 98.49
+WARNING:tensorflow:5 out of the last 13 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x0000025A38B19C60> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+gap_seq3_seed45 98.76
+gap_seq3_seed46 98.67
+gap_seq6_seed42 98.73
+gap_seq6_seed43 98.53
+gap_seq6_seed44 98.53
+gap_seq6_seed45 98.77
+gap_seq6_seed46 98.42
+gap_seq8_seed42 98.41
+gap_seq8_seed43 98.36
+gap_seq8_seed44 98.84
+gap_seq8_seed45 99.3
+gap_seq8_seed46 98.85
+gru_seq4_seed42 99.81
+gru_seq4_seed43 99.46
+gru_seq4_seed44 99.65
+gru_seq4_seed45 99.33
+gru_seq4_seed46 99.38
+lstm_seq3_seed42 99.59
+lstm_seq3_seed43 99.5
+lstm_seq3_seed44 99.8
+lstm_seq3_seed45 99.69
+lstm_seq3_seed46 99.65
+lstm_seq6_seed42 99.8
+lstm_seq6_seed43 99.54
+lstm_seq6_seed44 99.67
+lstm_seq6_seed45 99.8
+lstm_seq6_seed46 99.69
+lstm_seq8_seed42 99.79
+lstm_seq8_seed43 99.41
+lstm_seq8_seed44 99.47
+lstm_seq8_seed45 99.4
+lstm_seq8_seed46 99.73
+gap_seq3 acc 98.80±0.30 params 19783 ema_dip 0.014 onset_pp 2.49 release 0.84 pp_fa 2.8 lat 0.50
+gap_seq6 acc 98.60±0.15 params 19783 ema_dip 0.018 onset_pp 4.13 release 2.28 pp_fa 2.0 lat 0.49
+gap_seq8 acc 98.75±0.38 params 19783 ema_dip 0.015 onset_pp 5.14 release 3.49 pp_fa 2.0 lat 0.51
+gru_seq4 acc 99.53±0.20 params 44743 ema_dip 0.006 onset_pp 2.73 release 1.65 pp_fa 2.4 lat 0.67
+lstm_seq3 acc 99.65±0.11 params 52807 ema_dip 0.004 onset_pp 2.27 release 1.03 pp_fa 1.0 lat 0.62
+lstm_seq6 acc 99.70±0.11 params 52807 ema_dip 0.004 onset_pp 3.60 release 2.97 pp_fa 2.0 lat 0.68
+lstm_seq8 acc 99.56±0.19 params 52807 ema_dip 0.005 onset_pp 4.38 release 4.03 pp_fa 1.0 lat 0.70

@@ -1,0 +1,12 @@
+{
+ "seed": 43,
+ "added_idle_recordings": 79,
+ "added_from": [
+  "20261017_180725_P1"
+ ],
+ "val_accuracy_fixed_split": 99.47,
+ "train_seconds": 930,
+ "keras": "3.15.1",
+ "tensorflow": "2.21.0",
+ "config": "재실험_2x2_증강수정/run_experiment.py와 같음(GAP 4프레임, 고정 분할, 실제 거울상 증강)"
+}

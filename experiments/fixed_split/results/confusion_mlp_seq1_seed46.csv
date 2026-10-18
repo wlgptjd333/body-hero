@@ -1,0 +1,8 @@
+﻿,none,guard,punch_l,punch_r,upper_l,upper_r,squat
+none,2184,0,21,9,6,0,0
+guard,0,1557,1,0,2,0,0
+punch_l,8,0,2029,2,0,0,1
+punch_r,0,1,0,2030,0,9,0
+upper_l,1,0,0,0,1799,0,0
+upper_r,1,0,1,0,0,1858,0
+squat,0,0,0,0,0,0,1620

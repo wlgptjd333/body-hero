@@ -1,0 +1,66 @@
+{
+ "GAP 4프레임, 확인 2|fixed": {
+  "intrude1": 3.0,
+  "intrude2": 13.6,
+  "interp4_hit_pct": 93.2,
+  "interp4_wrong_pct": 5.6,
+  "interp8_hit_pct": 80.8,
+  "interp8_wrong_pct": 19.1
+ },
+ "GAP 4프레임, 확인 2|cv": {
+  "intrude1": 69.0,
+  "intrude2": 99.0,
+  "interp4_hit_pct": 74.4,
+  "interp4_wrong_pct": 13.6,
+  "interp8_hit_pct": 64.0,
+  "interp8_wrong_pct": 24.4
+ },
+ "GAP 4프레임, 확인 1|fixed": {
+  "intrude1": 4.6,
+  "intrude2": 20.4,
+  "interp4_hit_pct": 83.7,
+  "interp4_wrong_pct": 16.0,
+  "interp8_hit_pct": 74.4,
+  "interp8_wrong_pct": 25.4
+ },
+ "GAP 4프레임, 확인 1|cv": {
+  "intrude1": 79.0,
+  "intrude2": 142.0,
+  "interp4_hit_pct": 64.8,
+  "interp4_wrong_pct": 24.4,
+  "interp8_hit_pct": 60.2,
+  "interp8_wrong_pct": 29.5
+ },
+ "LSTM 3프레임, 확인 2|fixed": {
+  "intrude1": 5.4,
+  "intrude2": 29.8,
+  "interp4_hit_pct": 79.2,
+  "interp4_wrong_pct": 20.8,
+  "interp8_hit_pct": 66.5,
+  "interp8_wrong_pct": 33.5
+ },
+ "LSTM 3프레임, 확인 2|cv": {
+  "intrude1": 105.0,
+  "intrude2": 144.0,
+  "interp4_hit_pct": 71.9,
+  "interp4_wrong_pct": 18.4,
+  "interp8_hit_pct": 61.6,
+  "interp8_wrong_pct": 29.3
+ },
+ "LSTM 3프레임, 확인 1|fixed": {
+  "intrude1": 23.0,
+  "intrude2": 40.4,
+  "interp4_hit_pct": 63.4,
+  "interp4_wrong_pct": 36.6,
+  "interp8_hit_pct": 59.4,
+  "interp8_wrong_pct": 40.6
+ },
+ "LSTM 3프레임, 확인 1|cv": {
+  "intrude1": 159.0,
+  "intrude2": 215.0,
+  "interp4_hit_pct": 61.7,
+  "interp4_wrong_pct": 29.5,
+  "interp8_hit_pct": 58.0,
+  "interp8_wrong_pct": 33.3
+ }
+}

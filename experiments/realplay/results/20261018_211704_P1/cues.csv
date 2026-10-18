@@ -1,0 +1,11 @@
+block,idx,cue,t_cue,t_end,flag
+practice,practice-1,punch_l,518213.2221116,518217.2221116,0
+practice,practice-2,upper_l,518217.3250336,518221.3250336,0
+practice,practice-3,upper_r,518221.404402,518225.404402,0
+practice,practice-4,upper_r,518225.4880735,518229.4880735,0
+practice,practice-5,guard,518229.5625228,518233.5625228,0
+practice,practice-6,punch_l,518233.6592214,518237.6592214,0
+practice,practice-7,squat,518237.7373708,518241.7373708,0
+practice,practice-8,upper_l,518241.8223301,518245.8223301,0
+practice,practice-9,punch_r,518245.8949365,518249.8949365,0
+practice,practice-10,punch_r,518249.9738293,518253.9738293,1
