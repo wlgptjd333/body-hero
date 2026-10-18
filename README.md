@@ -10,7 +10,7 @@
 
 ### 1. 다운로드
 
-[GitHub Releases](https://github.com/wlgptjd333/body-hero/releases) 페이지에서 **BodyHero-v1.0.0.zip**을 다운로드합니다.
+[GitHub Releases](https://github.com/wlgptjd333/body-hero/releases) 페이지에서 **BodyHero-v1.1.0.zip**을 다운로드합니다. (v1.1.0: 동작 인식 모델 교체와 판정 개선. 바뀐 내용은 `tools/MODEL_v1.1.md`)
 
 ### 2. 실행
 
