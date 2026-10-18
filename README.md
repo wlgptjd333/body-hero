@@ -1,8 +1,37 @@
 # Body Hero
 
-> 웹캠 1인칭 헬스 복싱 게임 — **당신의 주먹이 곧 조이패드!**
+> 웹캠 하나로 즐기는 2D 복싱 체감형 운동 게임 — **당신의 주먹이 곧 조이패드!**
 >
-> Godot 4.6 + MediaPipe Pose + 실시간 AI 동작 인식
+> Godot 4.6 · MediaPipe Pose · 경량 1D-CNN(4프레임 Conv1D+GAP) 실시간 동작 인식
+
+[![release](https://img.shields.io/github/v/release/wlgptjd333/body-hero?label=release)](https://github.com/wlgptjd333/body-hero/releases/latest)
+![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-blue)
+![engine](https://img.shields.io/badge/Godot-4.6-478cbf)
+
+전용 컨트롤러나 VR 장비 없이, 일반 USB·노트북 웹캠만으로 펀치·어퍼컷·가드·스쿼트를 인식해 몬스터와 싸웁니다.
+
+## 🥊 7가지 동작
+
+| | |
+|:---:|:---:|
+| <img src="docs/images/actions/none.jpg" width="380"><br>**대기 (None)** | <img src="docs/images/actions/guard.jpg" width="380"><br>**가드 (Guard)** · 받는 데미지 감소 |
+| <img src="docs/images/actions/punch_l.jpg" width="380"><br>**왼손 펀치 (Punch L)** · 보통 데미지 | <img src="docs/images/actions/punch_r.jpg" width="380"><br>**오른손 펀치 (Punch R)** · 보통 데미지 |
+| <img src="docs/images/actions/upper_l.jpg" width="380"><br>**왼손 어퍼컷 (Upper L)** · 강한 데미지 | <img src="docs/images/actions/upper_r.jpg" width="380"><br>**오른손 어퍼컷 (Upper R)** · 강한 데미지 |
+| <img src="docs/images/actions/squat.jpg" width="380"><br>**스쿼트 (Squat)** · 체력 회복 | |
+
+> 💡 **어퍼컷 요령:** 팔꿈치를 직각에 가깝게 유지한 채 아래에서 위로 올리면 펀치로 잘못 인식되는 경우가 줄어듭니다.
+
+## 🆕 v1.1.0 바뀐 점
+
+| 항목 | v1.0.0 (졸업작품 시연) | v1.1.0 |
+|---|---|---|
+| 동작 인식 모델 | 시연용 4프레임 Conv1D+GAP | 같은 구조를 논문 반복 비교 실험 설정으로 다시 학습 |
+| 정밀(Precise) 직선 펀치 확정 | 2프레임 | **3프레임** |
+| 어퍼컷 정답 (같은 기록 재생) | 37.3% | **91.0%** |
+| 다른 공격이 먼저 나간 비율 | 24.8% | **4.0%** |
+
+- 실험자 1명의 실제 플레이 기록 기준입니다. 자세한 내용은 [`tools/MODEL_v1.1.md`](tools/MODEL_v1.1.md)를 보세요.
+- 더 빠른 반응을 원하면 설정에서 **균형(Balanced, 2프레임)** 프로필을 고르세요.
 
 ## 🎮 게임 다운로드 및 실행
 
@@ -69,41 +98,48 @@ graph LR
 
 ```mermaid
 graph TD
-    A["웹캠 프레임"] -->|"30 FPS"| B["MediaPipe Pose 추론 (~33ms)"]
+    A["웹캠 프레임"] -->|"30 FPS"| B["MediaPipe Pose 추론"]
     B -->|"33 landmarks x 3 coords"| C["어깨 중심 정규화"]
-    C -->|"99 features"| D["4프레임 시퀀스 버퍼 (132ms)"]
-    D -->|"(4, 99)"| E["Conv1D 64, k=3 (~3ms)"]
+    C -->|"99 features"| D["4프레임 시퀀스 버퍼"]
+    D -->|"(4, 99)"| E["Conv1D 64, k=3"]
     E --> F["GlobalAveragePooling1D"]
     F --> G["Dense 7 Softmax"]
-    G -->|"액션 분류"| H["Confidence 필터 + EMA 스무딩"]
+    G -->|"액션 분류"| H["4단계 후처리<br/>EMA · 히스테리시스 · 어퍼컷 게이팅 · 재무장/쿨다운"]
     H -->|"UDP"| I["Godot player.play_action"]
 ```
 
 ## 성능 및 AI 인식률
 
+졸업논문 4장의 측정값입니다. 실험 스크립트와 결과는 [`experiments/`](experiments/)에 있습니다.
+
 | 지표 | 수치 |
 |------|------|
-| **포즈 인식 정확도** | **99.22%** (recording-based holdout 20%) |
-| 참고: 내부 검증 | 99.90% (random split, 비교용) |
-| **모델 파라미터** | **19,783** (~20K, 경량화) |
-| **학습 시간** | ~6분 (CPU) |
-| **첫 액션 반응 시간** | ~165ms (seq_buf 132ms + confirm 33ms) |
-| **후속 액션 반응** | ~33ms (버퍼 가득, 1프레임) |
-| **게임 엔진 프레임** | 60 FPS |
-| **ML 파이프라인 프레임** | 30 FPS |
-| **none recall** | 99.3% (false positive 거의 제거) |
+| **분류 정확도** | **99.03%** (녹화 단위 20% 홀드아웃, Macro F1 99.07%) |
+| 처음 보는 녹화 묶음 (5겹 교차검증) | 87~91% |
+| **모델 파라미터** | **19,783** |
+| 처리 시간 (포즈 추정 + 분류) | 프레임당 약 11 ms |
+| ML 파이프라인 / 게임 화면 | 30 FPS / 60 FPS |
 
-### 동작별 인식률 (Recording-based Holdout)
+### 동작별 인식률 (녹화 단위 홀드아웃, 평가 기준 모델)
 
 | 동작 | Recall | Precision |
 |------|--------|-----------|
-| none (idle) | 99.3% | 98.3% |
-| guard (가드) | 99.1% | 99.9% |
-| punch_l (왼펀치) | 99.6% | 99.7% |
-| punch_r (오른펀치) | 97.8% | 98.9% |
-| upper_l (왼어퍼) | 99.6% | 99.8% |
-| upper_r (오른어퍼) | 99.4% | 98.4% |
-| squat (스쿼트) | 99.9% | 100.0% |
+| none (대기) | 98.1% | 99.1% |
+| guard (가드) | 98.7% | 99.8% |
+| punch_l (왼손 펀치) | 99.8% | 99.0% |
+| punch_r (오른손 펀치) | 97.3% | 98.8% |
+| upper_l (왼손 어퍼컷) | 99.9% | 99.8% |
+| upper_r (오른손 어퍼컷) | 99.9% | 97.3% |
+| squat (스쿼트) | 100.0% | 99.8% |
+
+### 인식 프로필
+
+| 프로필 | 직선 펀치 확정 | 어퍼컷 확정 | 특징 |
+|---|---|---|---|
+| **정밀 (Precise, 기본)** | 3프레임 | 2프레임 | 잘못된 입력이 가장 적음 |
+| 균형 (Balanced) | 2프레임 | 2프레임 | 반응이 조금 더 빠름 |
+| 빠름 (Rapid) | 1프레임 | 1프레임 | 기준 확률도 낮춰 빠르지만 오발동이 늘 수 있음 |
+| 최대 속도 (Max Speed) | 1프레임 | 1프레임 | 가장 빠르고 가장 관대함 |
 
 ### ML 모델 구조
 
@@ -131,8 +167,8 @@ graph TD
 |------|-----------|
 | 게임 엔진 | Godot Engine 4.6 |
 | 스크립트 | GDScript 2.0 |
-| ML 프레임워크 | Python 3.10 + TensorFlow/Keras 2.16+ |
-| 포즈 추정 | MediaPipe Pose 0.10+ |
+| ML 프레임워크 | Python 3.10 + TensorFlow 2.21 (Keras 3) |
+| 포즈 추정 | MediaPipe 1.0.1 Pose Landmarker |
 | 통신 | UDP (localhost) |
 | 테스트 | GUT (Godot Unit Test) |
 
@@ -182,7 +218,9 @@ body-hero/
 │   ├── textures/characters/   # 버거/콜라/프라이즈/피자/치킨/마라탕
 │   ├── audio/bgm/             # BGM
 │   └── audio/sfx/             # 효과음
+├── experiments/               # 졸업논문 4장 실험 스크립트·결과
 └── docs/
+    ├── images/actions/        # README 동작 사진
     ├── experiments/           # ML 실험 기록
     │   ├── 2026-05-18-ablation-controlled.md
     │   ├── 2026-05-18-paper-design-decisions.md
@@ -237,4 +275,4 @@ godot --headless -s addons/gut/gut_cmdln.gd -d --path .
 
 MIT License © 2026 JiHyesung
 
-> 이 프로젝트는 **협성대학교 졸업작품**으로 제작되었습니다.
+> 이 프로젝트는 **협성대학교 컴퓨터공학과 졸업작품**으로 제작되었습니다.
